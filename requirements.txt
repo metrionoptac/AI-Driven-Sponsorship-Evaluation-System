@@ -1,0 +1,44 @@
+# Core
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.0
+pydantic-settings>=2.0
+
+# Async
+asyncpg>=0.29.0
+aiofiles>=24.0
+
+# Email watcher
+aioimaplib>=1.1.0
+
+# Folder watcher
+watchdog>=4.0
+
+# Document processing
+PyMuPDF>=1.24.0
+pymupdf4llm>=0.0.17
+pytesseract>=0.3.10
+Pillow>=10.0
+python-docx>=1.0
+
+# LLM
+anthropic>=0.40.0
+instructor>=1.0.0
+
+# Embeddings
+openai>=1.50.0
+
+# PDF generation
+reportlab>=4.0
+
+# HTTP client (for Research Agent web checks)
+aiohttp>=3.9.0
+
+# YAML config
+pyyaml>=6.0
+
+# Jinja2 templates
+jinja2>=3.1.0
+
+# Utilities
+python-multipart>=0.0.9

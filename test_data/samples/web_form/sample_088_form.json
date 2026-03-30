@@ -1,0 +1,30 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Buergerforum Heidenheim e.V.",
+    "type": "EVENT",
+    "description": "Organisation des Strassenfest Heidenheim"
+  },
+  "contact": {
+    "name": "Birgit Krueger",
+    "role": "Festleiter/in",
+    "email": "birgit.krueger@fest-heidenheim.de",
+    "address": "Marktplatz 3, 72339 Heidenheim"
+  },
+  "request": {
+    "purpose": "Strassenfest Heidenheim",
+    "category": "EVENT",
+    "description": "Grossveranstaltung fuer die Buerger und Besucher von Heidenheim",
+    "requested_amount_eur": 2000
+  },
+  "event": {
+    "date": "26.07.2026",
+    "expected_attendance": 988,
+    "target_audience": "Buerger und Besucher der Stadt Heidenheim",
+    "region": "Bayern"
+  },
+  "sponsorship_return": {
+    "visibility_offer": "Stand auf dem Festgelaende, Logoplatzierung auf Bannern"
+  }
+}

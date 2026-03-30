@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponsoring-Anfrage vervollstaendigen</title>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<style>
+  .field-missing { border-left: 4px solid #ef4444; background: #fef2f2; }
+  .field-prefilled { border-left: 4px solid #22c55e; background: #f0fdf4; }
+</style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<div x-data="completionForm()" x-init="init()" class="max-w-3xl mx-auto py-8 px-4">
+
+  <!-- Header -->
+  <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+    <div class="flex items-center gap-3 mb-2">
+      <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">SE</div>
+      <div>
+        <h1 class="text-xl font-bold text-gray-800">Sponsoring-Anfrage vervollstaendigen</h1>
+        <p class="text-sm text-gray-500">Stadtwerke Bodensee GmbH -- Sponsoring-Programm</p>
+      </div>
+    </div>
+    <p class="text-sm text-gray-600 mt-3">
+      Vielen Dank fuer Ihre Sponsoring-Anfrage. Damit wir Ihre Anfrage bearbeiten koennen, benoetigen wir noch einige Angaben.
+      Die bereits vorhandenen Informationen sind vorausgefuellt. Bitte ergaenzen Sie die fehlenden Felder.
+    </p>
+    <div x-show="refId" class="mt-2 text-xs text-gray-400">Referenz: <span x-text="refId"></span></div>
+  </div>
+
+  <!-- Error -->
+  <div x-show="error" class="bg-red-50 border border-red-300 rounded-lg p-4 mb-6 text-red-700 text-sm" x-text="error"></div>
+
+  <!-- Success -->
+  <div x-show="submitted" class="bg-green-50 border border-green-300 rounded-lg p-6 mb-6 text-center">
+    <svg class="w-12 h-12 text-green-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <h2 class="text-lg font-bold text-green-800">Vielen Dank!</h2>
+    <p class="text-green-600 mt-1">Ihre Angaben wurden erfolgreich uebermittelt. Ihre Anfrage wird nun weiter bearbeitet.</p>
+  </div>
+
+  <!-- Loading -->
+  <div x-show="loading && !submitted" class="text-center py-12 text-gray-500">Daten werden geladen...</div>
+
+  <!-- Form -->
+  <form x-show="!loading && !submitted && !error" @submit.prevent="submitForm()" class="space-y-4">
+
+    <!-- Pre-filled fields (read-only, green border) -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Bereits vorhandene Angaben</h2>
+      <div class="space-y-3">
+        <template x-for="field in prefilledFields" :key="field.key">
+          <div class="p-3 rounded-lg field-prefilled">
+            <label class="text-xs font-medium text-green-700" x-text="field.label"></label>
+            <div class="text-sm text-gray-800 mt-1" x-text="field.value"></div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Missing fields (editable, red border) -->
+    <div class="bg-white rounded-xl shadow-sm border p-6">
+      <h2 class="text-sm font-bold text-red-600 uppercase tracking-wider mb-4">Fehlende Angaben -- Bitte ergaenzen</h2>
+      <div class="space-y-4">
+        <template x-for="field in missingFieldsForm" :key="field.key">
+          <div class="p-3 rounded-lg field-missing">
+            <label class="text-xs font-bold text-red-700" x-text="field.label + ' *'"></label>
+            <p class="text-xs text-red-500 mb-2" x-text="field.hint"></p>
+            <template x-if="field.type === 'number'">
+              <input type="number" x-model="formData[field.key]" :required="true" :min="field.min" :max="field.max" :step="field.step"
+                     class="w-full border-2 border-red-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" :placeholder="field.placeholder">
+            </template>
+            <template x-if="field.type === 'date'">
+              <input type="date" x-model="formData[field.key]" :required="true"
+                     class="w-full border-2 border-red-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500">
+            </template>
+            <template x-if="field.type === 'text'">
+              <input type="text" x-model="formData[field.key]" :required="true"
+                     class="w-full border-2 border-red-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" :placeholder="field.placeholder">
+            </template>
+            <template x-if="field.type === 'textarea'">
+              <textarea x-model="formData[field.key]" :required="true" rows="3"
+                        class="w-full border-2 border-red-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" :placeholder="field.placeholder"></textarea>
+            </template>
+            <template x-if="field.type === 'email'">
+              <input type="email" x-model="formData[field.key]" :required="true"
+                     class="w-full border-2 border-red-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-red-500 focus:border-red-500" :placeholder="field.placeholder">
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="flex justify-end">
+      <button type="submit" :disabled="submitting"
+              class="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50">
+        <span x-show="submitting">Wird gesendet...</span>
+        <span x-show="!submitting">Angaben einreichen</span>
+      </button>
+    </div>
+  </form>
+
+  <p class="text-center text-xs text-gray-400 mt-8">Stadtwerke Bodensee GmbH -- Sponsoring-Programm | Powered by Sponsorship Evaluator</p>
+</div>
+
+<script>
+function completionForm() {
+  return {
+    loading: true, submitted: false, submitting: false, error: '',
+    refId: '', requestId: '', extractedData: {}, missingFields: [],
+    formData: {},
+
+    get prefilledFields() {
+      const d = this.extractedData;
+      if (!d) return [];
+      const fields = [];
+      const map = {
+        organization_name: 'Name der Organisation',
+        purpose: 'Anlass / Veranstaltung',
+        event_date: 'Datum',
+        region: 'Ort / Region',
+        description: 'Beschreibung',
+      };
+      const contact = d.contact || {};
+      if (d.organization_name) fields.push({ key: 'organization_name', label: 'Name der Organisation', value: d.organization_name });
+      if (d.purpose) fields.push({ key: 'purpose', label: 'Anlass / Veranstaltung', value: d.purpose });
+      if (d.event_date) fields.push({ key: 'event_date', label: 'Datum', value: d.event_date });
+      if (d.region) fields.push({ key: 'region', label: 'Ort / Region', value: d.region });
+      if (contact.name) fields.push({ key: 'contact_name', label: 'Ansprechpartner', value: contact.name + (contact.email ? ' <' + contact.email + '>' : '') });
+      if (d.requested_amount) fields.push({ key: 'requested_amount', label: 'Betrag (EUR)', value: d.requested_amount + ' EUR' });
+      const vis = d.visibility || {};
+      const visText = [vis.logo_placement, vis.media_coverage, vis.other].filter(Boolean).join('; ');
+      if (visText) fields.push({ key: 'visibility', label: 'Sponsorenpaket', value: visText });
+      return fields;
+    },
+
+    get missingFieldsForm() {
+      const fields = [];
+      const fieldDefs = {
+        requested_amount: { label: 'Beantragter Foerderbetrag (EUR)', type: 'number', min: 100, max: 10000, step: 50, placeholder: 'z.B. 750', hint: 'Wie hoch soll die finanzielle Unterstuetzung sein?' },
+        event_date: { label: 'Datum der Veranstaltung', type: 'date', hint: 'Wann findet die Veranstaltung statt?' },
+        purpose: { label: 'Anlass / Veranstaltung', type: 'text', placeholder: 'z.B. 120-jaehriges Jubilaeumsfest', hint: 'Was ist der Anlass fuer die Anfrage?' },
+        visibility: { label: 'Sponsorenpaket / Gegenleistungen', type: 'textarea', placeholder: 'z.B. Logo auf Plakaten, Banner, Nennung bei Anmoderation...', hint: 'Was bieten Sie im Gegenzug fuer die Unterstuetzung?' },
+        region: { label: 'Ort / Region', type: 'text', placeholder: 'z.B. Meersburg, Baden-Wuerttemberg', hint: 'Wo findet die Veranstaltung statt?' },
+        contact: { label: 'Kontaktperson (Name und E-Mail)', type: 'text', placeholder: 'z.B. Hans Mueller, h.mueller@example.de', hint: 'An wen koennen wir uns wenden?' },
+      };
+      for (const f of this.missingFields) {
+        const def = fieldDefs[f];
+        if (def) fields.push({ key: f, ...def });
+      }
+      return fields;
+    },
+
+    async init() {
+      const params = new URLSearchParams(window.location.search);
+      this.requestId = window.location.pathname.split('/').pop();
+      const token = params.get('token') || '';
+      this.refId = this.requestId ? 'SP-2026-' + this.requestId.substring(this.requestId.length - 8).toUpperCase() : '';
+
+      try {
+        const res = await fetch(`/api/intake/complete/${this.requestId}?token=${token}`);
+        if (!res.ok) { this.error = 'Anfrage nicht gefunden oder abgelaufen.'; this.loading = false; return; }
+        const data = await res.json();
+        this.extractedData = data.extracted_data || {};
+        this.missingFields = data.missing_fields || [];
+        if (this.missingFields.length === 0) { this.error = 'Ihre Anfrage ist bereits vollstaendig. Keine weiteren Angaben erforderlich.'; }
+      } catch (e) { this.error = 'Fehler beim Laden der Daten.'; }
+      this.loading = false;
+    },
+
+    async submitForm() {
+      this.submitting = true;
+      try {
+        const res = await fetch(`/api/intake/complete/${this.requestId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.formData),
+        });
+        if (res.ok) { this.submitted = true; }
+        else { this.error = 'Fehler beim Senden. Bitte versuchen Sie es erneut.'; }
+      } catch (e) { this.error = 'Netzwerkfehler. Bitte versuchen Sie es erneut.'; }
+      this.submitting = false;
+    },
+  };
+}
+</script>
+</body>
+</html>

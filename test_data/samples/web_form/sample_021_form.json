@@ -1,0 +1,31 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "VfB Offenburg e.V.",
+    "type": "SPORTS_CLUB",
+    "description": "Volleyballverein mit 1056 Mitgliedern in Offenburg",
+    "registration_number": "VR 9701",
+    "member_count": 1056
+  },
+  "contact": {
+    "name": "Susanne Hartmann",
+    "role": "Kassenwart",
+    "email": "susanne.hartmann@vfb-offenburg.de",
+    "address": "Sportplatzweg 4, 86640 Offenburg"
+  },
+  "request": {
+    "purpose": "Neue Sportgeraete",
+    "category": "EQUIPMENT",
+    "description": "Anschaffung neuer Trainingsgeraete fuer den Vereinssport",
+    "requested_amount_eur": 500
+  },
+  "event": {
+    "expected_attendance": 564,
+    "target_audience": "Vereinsmitglieder, Familien und sportinteressierte Buerger aus Offenburg",
+    "region": "Baden-Wuerttemberg"
+  },
+  "sponsorship_return": {
+    "visibility_offer": "Nennung in der Vereinszeitung und auf unserer Website"
+  }
+}

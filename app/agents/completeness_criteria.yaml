@@ -1,0 +1,115 @@
+# ============================================================
+# Completeness Criteria — Stadtwerke Bodensee GmbH
+# ============================================================
+# Defines which fields are required at each tier level.
+# Used by quality_gate.py to assess extraction completeness.
+# Configurable per client via the Config dashboard.
+#
+# Source: Laura/Conoscope Anforderungsprofil (11 Pflicht + 5 Optional)
+# Updated: Laura Q&A Session (event_date = absolute blocker)
+
+company:
+  name: "Stadtwerke Bodensee GmbH"
+
+# --- Tier 1: Pipeline Blockers ---
+# Any ONE missing = STOP pipeline, AWAITING_INFO, send follow-up
+tier_1_blockers:
+  description: "Absolute blockers. Pipeline cannot produce meaningful output without these."
+  fields:
+    - name: organization_name
+      german: "Veranstalter / Antragsteller"
+      weight: 0.12
+    - name: requested_amount
+      german: "Angefragter Betrag / Preisrahmen"
+      weight: 0.12
+    - name: event_date
+      german: "Datum / Zeitraum"
+      weight: 0.08
+
+# --- Tier 2: Evaluation Blockers ---
+# Missing degrades evaluation significantly. Asked in follow-up email.
+tier_2_evaluation:
+  description: "Critical for evaluation quality. Asked in follow-up alongside Tier 1."
+  fields:
+    - name: purpose
+      german: "Veranstaltungsname / Anlass"
+      weight: 0.10
+    - name: visibility
+      german: "Sponsorenpaket + Gegenleistungen"
+      weight: 0.08
+    - name: region
+      german: "Ort / Region"
+      weight: 0.07
+    - name: contact
+      german: "Ansprechpartner + Kontaktdaten"
+      weight: 0.07
+
+# --- Tier 3: Score Reducers ---
+# NOT asked in follow-up. LLM infers if missing.
+tier_3_score:
+  description: "Improve evaluation precision but LLM can estimate from context."
+  fields:
+    - name: expected_attendance
+      german: "Erwartete Besucherzahl"
+      weight: 0.06
+    - name: target_audience
+      german: "Zielgruppe"
+      weight: 0.05
+    - name: description
+      german: "Projektbeschreibung"
+      weight: 0.05
+    - name: organization_type
+      german: "Organisationstyp"
+      weight: 0.05
+    - name: purpose_category
+      german: "Thematische Einordnung"
+      weight: 0.05
+
+# --- Tier 4: Optional Context ---
+# Never asked. Pure context enrichment.
+tier_4_optional:
+  description: "Nice-to-have context. Never requested in follow-up."
+  fields:
+    - name: member_count
+      german: "Vereinsgroesse"
+      weight: 0.02
+    - name: usage_breakdown
+      german: "Mittelverwendung"
+      weight: 0.02
+    - name: geographic_reach
+      german: "Mediale Reichweite / Social Media"
+      weight: 0.02
+    - name: organization_description
+      german: "Vereinsbeschreibung / Bisherige Zusammenarbeit"
+      weight: 0.02
+    - name: response_deadline
+      german: "Antwortfrist"
+      weight: 0.02
+
+# --- Email Settings ---
+email:
+  acknowledgment:
+    enabled: true
+    delay_seconds: 30
+  followup:
+    enabled: true
+    max_retries: 2
+    include_form_link: true
+  auto_close:
+    enabled: true
+    timeout_hours: 72
+
+# --- Quality Levels ---
+quality_levels:
+  high:
+    min_score: 0.70
+    action: "proceed"
+  medium:
+    min_score: 0.40
+    action: "proceed_with_caveats"
+  low:
+    min_score: 0.01
+    action: "awaiting_info"
+  failed:
+    min_score: 0.00
+    action: "human_review"

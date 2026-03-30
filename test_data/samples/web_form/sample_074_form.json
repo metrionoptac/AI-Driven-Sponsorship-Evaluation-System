@@ -1,0 +1,22 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Seniorentreff Sindelfingen e.V.",
+    "type": "SOCIAL"
+  },
+  "contact": {
+    "name": "Lena Fuchs",
+    "role": "Vorsitzende/r",
+    "email": "lena.fuchs@sozial-sindelfingen.de"
+  },
+  "request": {
+    "purpose": "Ausfluege fuer Senioren",
+    "category": "TRAVEL"
+  },
+  "event": {
+    "target_audience": "Beduerftige und sozial engagierte Buerger in Sindelfingen",
+    "region": "Rheinland-Pfalz"
+  },
+  "sponsorship_return": {}
+}

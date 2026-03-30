@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+{% block title %}Kalibrierung{% endblock %}
+{% block nav_recalibration %}nav-active{% endblock %}
+
+{% block content %}
+<div x-data="recalibration()" x-init="init()" class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">CIP Kalibrierungs-Dashboard</h1>
+            <p class="text-sm text-gray-500 mt-1">Korrekturverfolgung, Vertrauensdrift-Erkennung und Score-Kalibrierung</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <select x-model="days" @change="load()" class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                <option value="30">Letzte 30 Tage</option>
+                <option value="60">Letzte 60 Tage</option>
+                <option value="90" selected>Letzte 90 Tage</option>
+                <option value="180">Letzte 180 Tage</option>
+                <option value="365">Letzte 365 Tage</option>
+            </select>
+            <button @click="load()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                Aktualisieren
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div x-show="loading" class="flex items-center justify-center py-20">
+        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+    </div>
+
+    <template x-if="!loading && data">
+
+        <div class="space-y-6">
+
+            <!-- Gate 2 Status Banner -->
+            <template x-if="data.gate2_history && data.gate2_history.length > 0">
+                <div :class="data.gate2_history[0].passed ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'"
+                     class="border rounded-xl p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div :class="data.gate2_history[0].passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                             class="w-10 h-10 rounded-full flex items-center justify-center">
+                            <template x-if="data.gate2_history[0].passed">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </template>
+                            <template x-if="!data.gate2_history[0].passed">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </template>
+                        </div>
+                        <div>
+                            <div :class="data.gate2_history[0].passed ? 'text-green-800' : 'text-red-800'" class="font-semibold text-sm">
+                                Gate 2 <span x-text="data.gate2_history[0].passed ? 'PASSED' : 'FAILED'"></span>
+                            </div>
+                            <div :class="data.gate2_history[0].passed ? 'text-green-600' : 'text-red-600'" class="text-xs">
+                                Agreement rate: <span x-text="pct(data.gate2_history[0].agreement_rate)"></span> on
+                                <span x-text="data.gate2_history[0].total_cases"></span> cases &mdash;
+                                Run <span x-text="fmt_date(data.gate2_history[0].run_at)"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold" :class="data.gate2_history[0].passed ? 'text-green-700' : 'text-red-700'"
+                             x-text="pct(data.gate2_history[0].agreement_rate)"></div>
+                        <div class="text-xs text-gray-500">threshold: 75%</div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Pruefungen gesamt</div>
+                    <div class="text-3xl font-bold text-gray-900 mt-1" x-text="data.total_reviews"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="'Letzte ' + data.window_days + ' Tage'"></div>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Korrekturrate</div>
+                    <div class="text-3xl font-bold mt-1"
+                         :class="data.override_rate > 0.3 ? 'text-red-600' : data.override_rate > 0.15 ? 'text-yellow-600' : 'text-green-600'"
+                         x-text="pct(data.override_rate)"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="(data.upgrades + data.downgrades) + ' Korrekturen'"></div>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Hochstufungen</div>
+                    <div class="text-3xl font-bold text-blue-600 mt-1" x-text="data.upgrades"></div>
+                    <div class="text-xs text-gray-400 mt-1">Mensch genehmigte KI-Ablehnungen</div>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Herabstufungen</div>
+                    <div class="text-3xl font-bold text-orange-600 mt-1" x-text="data.downgrades"></div>
+                    <div class="text-xs text-gray-400 mt-1">Mensch lehnte KI-Genehmigungen ab</div>
+                </div>
+            </div>
+
+            <!-- AI Confidence at Override + Agreement breakdown -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Override direction breakdown chart -->
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-4">Entscheidungs-Uebereinstimmung</h3>
+                    <canvas id="alignmentChart" height="220"></canvas>
+                </div>
+
+                <!-- AI confidence stats -->
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-4">KI-Modell Konfidenz</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Durchschn. Konfidenz bei Korrektur</span>
+                                <span class="font-semibold" x-text="pct(data.avg_ai_confidence)"></span>
+                            </div>
+                            <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-primary-500 rounded-full transition-all duration-500"
+                                     :style="'width:' + (data.avg_ai_confidence * 100) + '%'"></div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Niedrig = Modell war unsicher bei Korrektur</p>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-600">Durchschn. Score bei Korrektur</span>
+                                <span class="font-semibold" x-text="(data.avg_ai_score * 100).toFixed(1) + '%'"></span>
+                            </div>
+                            <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-accent-500 rounded-full transition-all duration-500"
+                                     :style="'width:' + (data.avg_ai_score * 100) + '%'"></div>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-1">Durchschn. Bewertungsscore der korrigierten Anfragen</p>
+                        </div>
+                        <div class="pt-2 border-t border-gray-100">
+                            <div class="flex justify-between text-sm">
+                                <span class="text-gray-600">Uebereinstimmungsrate</span>
+                                <span class="font-semibold text-green-600"
+                                      x-text="data.total_reviews > 0 ? pct(data.agreements / data.total_reviews) : '—'"></span>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1">
+                                <span class="text-gray-600">Hochstufungsrate</span>
+                                <span class="font-semibold text-blue-600" x-text="pct(data.upgrade_rate)"></span>
+                            </div>
+                            <div class="flex justify-between text-sm mt-1">
+                                <span class="text-gray-600">Herabstufungsrate</span>
+                                <span class="font-semibold text-orange-600" x-text="pct(data.downgrade_rate)"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Trend -->
+            <template x-if="data.monthly_trend && data.monthly_trend.length > 0">
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-4">Monatlicher Korrektur-Trend</h3>
+                    <canvas id="trendChart" height="120"></canvas>
+                </div>
+            </template>
+
+            <!-- Score Distribution + Reviewer Table side by side -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Score distribution of overridden requests -->
+                <template x-if="data.score_distribution && data.score_distribution.length > 0">
+                    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                        <h3 class="font-semibold text-gray-800 mb-1">Score-Verteilung bei Korrekturen</h3>
+                        <p class="text-xs text-gray-400 mb-4">In welchen KI-Score-Bereichen korrigiert der Mensch?</p>
+                        <canvas id="scoreDistChart" height="220"></canvas>
+                    </div>
+                </template>
+
+                <!-- Reviewer patterns -->
+                <template x-if="data.by_reviewer && data.by_reviewer.length > 0">
+                    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                        <h3 class="font-semibold text-gray-800 mb-4">Pruefer-Muster</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-xs text-gray-500 uppercase border-b">
+                                        <th class="pb-2 font-medium">Pruefer</th>
+                                        <th class="pb-2 font-medium text-right">Pruefungen</th>
+                                        <th class="pb-2 font-medium text-right">Korrekturen</th>
+                                        <th class="pb-2 font-medium text-right">Korrektur %</th>
+                                        <th class="pb-2 font-medium text-right">Durchschn. Konf.</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    <template x-for="r in data.by_reviewer" :key="r.reviewer">
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="py-2 font-medium text-gray-700" x-text="r.reviewer"></td>
+                                            <td class="py-2 text-right text-gray-600" x-text="r.total"></td>
+                                            <td class="py-2 text-right text-gray-600" x-text="r.overrides"></td>
+                                            <td class="py-2 text-right">
+                                                <span :class="r.total > 0 && (r.overrides/r.total) > 0.3 ? 'text-red-600 font-semibold' : 'text-gray-600'"
+                                                      x-text="r.total > 0 ? pct(r.overrides / r.total) : '—'"></span>
+                                            </td>
+                                            <td class="py-2 text-right text-gray-600" x-text="pct(r.avg_ai_confidence)"></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Gate 2 History -->
+            <template x-if="data.gate2_history && data.gate2_history.length > 1">
+                <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+                    <h3 class="font-semibold text-gray-800 mb-4">Gate 2 Backtest-Verlauf</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-xs text-gray-500 uppercase border-b">
+                                    <th class="pb-2 font-medium">Run At</th>
+                                    <th class="pb-2 font-medium text-right">Cases</th>
+                                    <th class="pb-2 font-medium text-right">Agreement</th>
+                                    <th class="pb-2 font-medium text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                <template x-for="g in data.gate2_history" :key="g.run_at">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="py-2 text-gray-600" x-text="fmt_date(g.run_at)"></td>
+                                        <td class="py-2 text-right text-gray-600" x-text="g.total_cases"></td>
+                                        <td class="py-2 text-right font-semibold"
+                                            :class="g.agreement_rate >= 0.75 ? 'text-green-600' : 'text-red-600'"
+                                            x-text="pct(g.agreement_rate)"></td>
+                                        <td class="py-2 text-center">
+                                            <span :class="g.passed ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                                                  class="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                                                  x-text="g.passed ? 'PASS' : 'FAIL'"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Empty state -->
+            <template x-if="data.total_reviews === 0">
+                <div class="bg-white rounded-xl border border-gray-200 p-12 text-center shadow-sm">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <p class="text-gray-500 font-medium">Noch keine manuellen Pruefungen erfasst</p>
+                    <p class="text-gray-400 text-sm mt-1">Korrekturereignisse erscheinen hier, sobald Pruefer Anfragen bearbeiten.</p>
+                </div>
+            </template>
+
+        </div>
+    </template>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function recalibration() {
+    return {
+        loading: true,
+        days: 90,
+        data: null,
+        _charts: {},
+
+        async init() {
+            await this.load();
+        },
+
+        async load() {
+            this.loading = true;
+            this.destroyCharts();
+            try {
+                const res = await fetch(`/api/dashboard/recalibration?days=${this.days}`);
+                if (!res.ok) throw new Error(await res.text());
+                this.data = await res.json();
+                await this.$nextTick();
+                this.buildCharts();
+            } catch (e) {
+                console.error('Recalibration load failed:', e);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        pct(v) {
+            if (v === null || v === undefined) return '—';
+            return (v * 100).toFixed(1) + '%';
+        },
+
+        fmt_date(iso) {
+            if (!iso) return '—';
+            return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' });
+        },
+
+        destroyCharts() {
+            Object.values(this._charts).forEach(c => c.destroy());
+            this._charts = {};
+        },
+
+        buildCharts() {
+            if (!this.data) return;
+            this.buildAlignmentChart();
+            this.buildTrendChart();
+            this.buildScoreDistChart();
+        },
+
+        buildAlignmentChart() {
+            const ctx = document.getElementById('alignmentChart');
+            if (!ctx) return;
+            const d = this.data;
+            this._charts.alignment = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Uebereinstimmung', 'Hochstufung (KI zu streng)', 'Herabstufung (KI zu milde)'],
+                    datasets: [{
+                        data: [d.agreements, d.upgrades, d.downgrades],
+                        backgroundColor: ['#22c55e', '#3b82f6', '#f97316'],
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 16, font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => {
+                                    const total = d.total_reviews || 1;
+                                    return ` ${ctx.label}: ${ctx.raw} (${(ctx.raw/total*100).toFixed(1)}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        },
+
+        buildTrendChart() {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx || !this.data.monthly_trend?.length) return;
+            const t = this.data.monthly_trend;
+            this._charts.trend = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: t.map(r => {
+                        const d = new Date(r.month);
+                        return d.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' });
+                    }),
+                    datasets: [
+                        {
+                            label: 'Uebereinstimmungen',
+                            data: t.map(r => r.total - r.upgrades - r.downgrades),
+                            backgroundColor: '#86efac',
+                            stack: 'stack',
+                        },
+                        {
+                            label: 'Hochstufungen',
+                            data: t.map(r => r.upgrades),
+                            backgroundColor: '#93c5fd',
+                            stack: 'stack',
+                        },
+                        {
+                            label: 'Herabstufungen',
+                            data: t.map(r => r.downgrades),
+                            backgroundColor: '#fdba74',
+                            stack: 'stack',
+                        },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true, grid: { display: false } },
+                        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+                    },
+                    plugins: { legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } } }
+                }
+            });
+        },
+
+        buildScoreDistChart() {
+            const ctx = document.getElementById('scoreDistChart');
+            if (!ctx || !this.data.score_distribution?.length) return;
+
+            // Group by score bucket
+            const buckets = {};
+            for (const row of this.data.score_distribution) {
+                const b = row.score_bucket.toFixed(1);
+                if (!buckets[b]) buckets[b] = { upgrade: 0, downgrade: 0 };
+                if (row.direction === 'UPGRADE') buckets[b].upgrade = row.count;
+                if (row.direction === 'DOWNGRADE') buckets[b].downgrade = row.count;
+            }
+            const labels = Object.keys(buckets).sort((a, b) => parseFloat(a) - parseFloat(b));
+
+            this._charts.scoreDist = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Hochstufungen (KI zu streng)',
+                            data: labels.map(l => buckets[l].upgrade),
+                            backgroundColor: '#93c5fd',
+                        },
+                        {
+                            label: 'Herabstufungen (KI zu milde)',
+                            data: labels.map(l => -buckets[l].downgrade),
+                            backgroundColor: '#fdba74',
+                        },
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { grid: { display: false }, title: { display: true, text: 'AI Score', font: { size: 11 } } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: v => Math.abs(v)
+                            },
+                            title: { display: true, text: 'Count', font: { size: 11 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` ${ctx.dataset.label}: ${Math.abs(ctx.raw)}`
+                            }
+                        }
+                    }
+                }
+            });
+        },
+    };
+}
+</script>
+{% endblock %}

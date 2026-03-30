@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Completeness Criteria — Web Form Channel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; padding: 32px; max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 28px; }
+  .source { font-size: 0.8rem; color: #94a3b8; margin-bottom: 24px; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+  .flow-step { background: #fff; border: 2px solid #e2e8f0; border-radius: 10px; padding: 10px 16px; font-size: 0.82rem; font-weight: 600; text-align: center; min-width: 130px; }
+  .flow-step.active { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+  .flow-step.llm { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
+  .flow-step.pydantic { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+  .flow-step.skip { border-color: #d1d5db; background: #f9fafb; color: #9ca3af; text-decoration: line-through; }
+  .flow-arrow { font-size: 1.2rem; color: #94a3b8; }
+
+  /* Tier sections */
+  .tier { margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .tier-header { padding: 14px 20px; color: #fff; font-weight: 700; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; }
+  .tier-header .tag { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .tier-1 .tier-header { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+  .tier-2 .tier-header { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .tier-3 .tier-header { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+  .tier-4 .tier-header { background: linear-gradient(135deg, #64748b, #475569); }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  th { text-align: left; padding: 10px 16px; font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+  td { padding: 10px 16px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .field-name { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82rem; color: #059669; font-weight: 600; }
+  .form-field { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.8rem; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+  .required { color: #dc2626; font-weight: 700; font-size: 0.75rem; }
+  .optional-tag { color: #64748b; font-size: 0.75rem; }
+
+  /* Key difference box */
+  .diff-box { background: #ecfdf5; border: 2px solid #10b981; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; }
+  .diff-box h3 { font-size: 0.95rem; font-weight: 700; color: #065f46; margin-bottom: 8px; }
+  .diff-box p { font-size: 0.85rem; color: #374151; margin-bottom: 6px; }
+  .diff-box .vs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  .diff-box .vs > div { padding: 12px; border-radius: 8px; }
+  .diff-box .email-path { background: #fff7ed; border: 1px solid #fed7aa; }
+  .diff-box .form-path { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .diff-box .vs h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 4px; }
+  .diff-box .vs small { font-size: 0.78rem; color: #64748b; }
+
+  /* Action boxes */
+  .action-box { background: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; border-left: 4px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .action-box.block { border-color: #dc2626; }
+  .action-box.merge { border-color: #8b5cf6; }
+  .action-box.info { border-color: #3b82f6; }
+  .action-box h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+  .action-box p { font-size: 0.85rem; color: #475569; }
+  .action-box code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 0.82rem; }
+
+  /* LLM box */
+  .llm-box { background: #f5f3ff; border: 2px dashed #8b5cf6; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; }
+  .llm-box h3 { font-size: 0.9rem; font-weight: 700; color: #6d28d9; margin-bottom: 8px; }
+  .llm-box ul { padding-left: 20px; font-size: 0.85rem; color: #475569; }
+  .llm-box li { margin-bottom: 4px; }
+
+  .section-title { font-size: 1.1rem; font-weight: 700; margin: 28px 0 12px 0; }
+
+  /* Form mockup */
+  .form-mockup { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .form-mockup h3 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; color: #1e293b; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 4px; }
+  .form-group label .req { color: #dc2626; }
+  .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; background: #f9fafb; }
+  .form-group textarea { height: 60px; resize: vertical; }
+  .form-group .hint { font-size: 0.75rem; color: #94a3b8; margin-top: 2px; }
+  .form-section { font-size: 0.82rem; font-weight: 700; color: #6366f1; margin: 18px 0 8px 0; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .upload-zone { border: 2px dashed #d1d5db; border-radius: 8px; padding: 20px; text-align: center; color: #94a3b8; font-size: 0.85rem; cursor: pointer; margin-top: 4px; }
+  .upload-zone:hover { border-color: #8b5cf6; color: #6d28d9; }
+</style>
+</head>
+<body>
+
+<h1>Completeness Criteria — Web Form Channel</h1>
+<p class="subtitle">Pillar 1: Vollstaendigkeitspruefung | Pre-Structured Intake via /apply</p>
+<p class="source">Sources: Laura/Conoscope Anforderungsprofil | Stadtwerke Duesseldorf Form Example | Architecture v3.1</p>
+
+<!-- Key Difference -->
+<div class="diff-box">
+  <h3>Web Form vs Email: Two Different Paths</h3>
+  <p>Web form fields are pre-structured — the applicant types into named inputs. No LLM extraction needed for form fields. LLM is only used when an attachment is uploaded.</p>
+  <div class="vs">
+    <div class="email-path">
+      <h4>Email Path</h4>
+      Raw text &#8594; LLM Extraction (Sonnet) &#8594; SponsorshipRequest &#8594; LLM Validation (Haiku) &#8594; Quality Gate<br>
+      <small>Cost: ~$0.01 per request | 2 LLM calls</small>
+    </div>
+    <div class="form-path">
+      <h4>Web Form Path</h4>
+      Form fields &#8594; Pydantic Validation &#8594; SponsorshipRequest &#8594; (+ LLM for attachment if uploaded) &#8594; Quality Gate<br>
+      <small>Cost: $0 if no attachment | 0-1 LLM calls</small>
+    </div>
+  </div>
+</div>
+
+<!-- Pipeline Flow -->
+<div class="flow">
+  <div class="flow-step pydantic">Form Submit<br><small>/apply POST</small></div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step pydantic">Pydantic<br>Validation</div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step skip">LLM Extraction<br><small>SKIPPED</small></div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step llm">Attachment?<br><small>LLM if yes</small></div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step active">Merge +<br>Quality Gate</div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step">Eligibility</div>
+</div>
+
+<!-- Form to Pydantic Mapping -->
+<h2 class="section-title">Form Fields &#8594; SponsorshipRequest Mapping</h2>
+
+<!-- TIER 1 -->
+<div class="tier tier-1">
+  <div class="tier-header">
+    <span>TIER 1 — Pipeline Blockers</span>
+    <span class="tag">REQUIRED IN FORM (HTML required attribute)</span>
+  </div>
+  <table>
+    <tr><th>Form Field</th><th>HTML Input</th><th>Pydantic Mapping</th><th>Validation</th></tr>
+    <tr>
+      <td><span class="field-name">organization_name</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;input type="text" required&gt;</span></td>
+      <td><span class="form-field">request.organization_name</span></td>
+      <td>min_length=2, max_length=200. Pydantic strips whitespace.</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">requested_amount</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;input type="number" min="100" max="10000" required&gt;</span></td>
+      <td><span class="form-field">request.requested_amount</span></td>
+      <td>Must be numeric. Range 100-10,000 EUR enforced at form level AND Pydantic.</td>
+    </tr>
+  </table>
+</div>
+
+<div class="action-box block">
+  <h3>Form enforces Tier 1 at submission</h3>
+  <p>HTML <code>required</code> attribute prevents form submission without these fields. The user physically cannot submit without org name and amount. Unlike email, there is <strong>no AWAITING_INFO state</strong> for web form — the form itself is the gate.</p>
+</div>
+
+<!-- TIER 2 -->
+<div class="tier tier-2">
+  <div class="tier-header">
+    <span>TIER 2 — Evaluation Blockers</span>
+    <span class="tag">REQUIRED IN FORM</span>
+  </div>
+  <table>
+    <tr><th>Form Field</th><th>HTML Input</th><th>Pydantic Mapping</th><th>Validation</th></tr>
+    <tr>
+      <td><span class="field-name">purpose</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;input type="text" required&gt;</span></td>
+      <td><span class="form-field">request.purpose</span></td>
+      <td>min_length=5. "Sponsoring" alone rejected — too vague.</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">event_date</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;input type="date" required&gt;</span></td>
+      <td><span class="form-field">request.event_date</span></td>
+      <td>Date picker enforces valid format. Pydantic checks: must be in the future.</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">region</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;input type="text" required&gt;</span><br>or <span class="form-field">&lt;select&gt;</span> with known regions</td>
+      <td><span class="form-field">request.region</span></td>
+      <td>Free text or dropdown of operating regions. min_length=2.</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">contact_name</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;input type="text" required&gt;</span></td>
+      <td><span class="form-field">request.contact.name</span></td>
+      <td>min_length=2.</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">contact_email</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;input type="email" required&gt;</span></td>
+      <td><span class="form-field">request.contact.email</span></td>
+      <td>HTML email validation + Pydantic EmailStr.</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">visibility_description</span><br><small class="required">* REQUIRED</small></td>
+      <td><span class="form-field">&lt;textarea required&gt;</span></td>
+      <td><span class="form-field">request.visibility.other</span></td>
+      <td>min_length=10. "What do you offer in return for sponsorship?"</td>
+    </tr>
+  </table>
+</div>
+
+<div class="action-box" style="border-color: #10b981;">
+  <h3>Web form advantage: Tier 1 + Tier 2 are ALL required fields</h3>
+  <p>Unlike email where we discover missing fields AFTER LLM extraction, the web form <strong>prevents submission</strong> without all 8 critical fields (2 Tier 1 + 6 Tier 2). Every web form submission enters the pipeline with at least MEDIUM completeness. No follow-up emails needed.</p>
+</div>
+
+<!-- TIER 3 -->
+<div class="tier tier-3">
+  <div class="tier-header">
+    <span>TIER 3 — Score Enrichers</span>
+    <span class="tag">OPTIONAL IN FORM — SHOWN BUT NOT REQUIRED</span>
+  </div>
+  <table>
+    <tr><th>Form Field</th><th>HTML Input</th><th>Pydantic Mapping</th><th>Hint Text</th></tr>
+    <tr>
+      <td><span class="field-name">expected_attendance</span><br><small class="optional-tag">optional</small></td>
+      <td><span class="form-field">&lt;input type="number"&gt;</span></td>
+      <td><span class="form-field">request.expected_attendance</span></td>
+      <td>"Wie viele Besucher erwarten Sie?"</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">target_audience</span><br><small class="optional-tag">optional</small></td>
+      <td><span class="form-field">&lt;input type="text"&gt;</span></td>
+      <td><span class="form-field">request.target_audience</span></td>
+      <td>"Wen erreicht Ihre Veranstaltung? (z.B. Familien, Jugendliche)"</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">description</span><br><small class="optional-tag">optional</small></td>
+      <td><span class="form-field">&lt;textarea&gt;</span></td>
+      <td><span class="form-field">request.description</span></td>
+      <td>"Beschreiben Sie Ihr Projekt oder Ihre Veranstaltung"</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">organization_type</span><br><small class="optional-tag">optional</small></td>
+      <td><span class="form-field">&lt;select&gt;</span> dropdown</td>
+      <td><span class="form-field">request.organization_type</span></td>
+      <td>Sportverein, Kulturverein, Schule, Feuerwehr, Gemeinnuetzig, Sonstiges</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">purpose_category</span><br><small class="optional-tag">optional</small></td>
+      <td><span class="form-field">&lt;select&gt;</span> dropdown</td>
+      <td><span class="form-field">request.purpose_category</span></td>
+      <td>Sport, Kultur, Soziales, Bildung, Umwelt, Stadtfest, Sonstiges</td>
+    </tr>
+  </table>
+</div>
+
+<!-- TIER 4 -->
+<div class="tier tier-4">
+  <div class="tier-header">
+    <span>TIER 4 — Optional Context</span>
+    <span class="tag">SHOWN IN "ADDITIONAL INFO" SECTION</span>
+  </div>
+  <table>
+    <tr><th>Form Field</th><th>HTML Input</th><th>Pydantic Mapping</th></tr>
+    <tr><td><span class="field-name">member_count</span></td><td><span class="form-field">&lt;input type="number"&gt;</span></td><td><span class="form-field">request.member_count</span></td></tr>
+    <tr><td><span class="field-name">usage_breakdown</span></td><td><span class="form-field">&lt;textarea&gt;</span></td><td><span class="form-field">request.usage_breakdown</span></td></tr>
+    <tr><td><span class="field-name">contact_phone</span></td><td><span class="form-field">&lt;input type="tel"&gt;</span></td><td><span class="form-field">request.contact.phone</span></td></tr>
+    <tr><td><span class="field-name">contact_address</span></td><td><span class="form-field">&lt;input type="text"&gt;</span></td><td><span class="form-field">request.contact.address</span></td></tr>
+    <tr><td><span class="field-name">website</span></td><td><span class="form-field">&lt;input type="url"&gt;</span></td><td><span class="form-field">additional_context (Research Agent)</span></td></tr>
+    <tr><td><span class="field-name">response_deadline</span></td><td><span class="form-field">&lt;input type="date"&gt;</span></td><td><span class="form-field">request.response_deadline</span></td></tr>
+  </table>
+</div>
+
+<!-- Attachment Handling -->
+<h2 class="section-title">Attachment Upload Handling</h2>
+
+<div class="action-box merge">
+  <h3>When the applicant uploads an attachment via the web form</h3>
+  <p>The form fields are already structured (Pydantic-validated). The attachment goes through <strong>LLM extraction</strong> (same IntakeAgent path as email). Then the system <strong>merges</strong> both sources:</p>
+  <p style="margin-top: 8px;">
+    <strong>Rule:</strong> Form fields take priority. Attachment fills gaps.<br>
+    <code>merged.amount = form.amount OR attachment.amount</code><br>
+    <code>merged.visibility = form.visibility + attachment.visibility</code> (concatenate, don't override — attachment may have richer package details)<br>
+    <code>merged.additional_context = attachment.additional_context</code> (extra info from the PDF/DOCX)
+  </p>
+</div>
+
+<div class="llm-box">
+  <h3>LLM Involvement by Scenario</h3>
+  <ul>
+    <li><strong>Form only, no attachment:</strong> 0 LLM calls. Pydantic validates. Cost: $0.</li>
+    <li><strong>Form + PDF/DOCX attachment:</strong> 1 LLM call (Sonnet extracts from attachment). Cost: ~$0.005. Merge with form data.</li>
+    <li><strong>Form + image attachment (scan/photo):</strong> 1 LLM call + OCR preprocessing. Cost: ~$0.005.</li>
+    <li><strong>All paths:</strong> Quality gate runs after merge. If form fields covered Tier 1+2, gate passes regardless of attachment quality.</li>
+  </ul>
+</div>
+
+<!-- Form Mockup -->
+<h2 class="section-title">Form Layout (/apply)</h2>
+<div class="form-mockup">
+  <h3>Sponsoring-Anfrage einreichen</h3>
+
+  <div class="form-section">Organisation</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Name der Organisation <span class="req">*</span></label>
+      <input type="text" placeholder="z.B. Musikverein Musterort 1906 e.V." disabled>
+    </div>
+    <div class="form-group">
+      <label>Art der Organisation</label>
+      <select disabled><option>-- Bitte waehlen --</option><option>Sportverein</option><option>Kulturverein</option><option>Schule / Kita</option><option>Feuerwehr</option><option>Gemeinnuetzig (gGmbH/e.V.)</option><option>Sonstiges</option></select>
+    </div>
+  </div>
+
+  <div class="form-section">Kontakt</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Ansprechpartner <span class="req">*</span></label>
+      <input type="text" placeholder="Vor- und Nachname" disabled>
+    </div>
+    <div class="form-group">
+      <label>E-Mail <span class="req">*</span></label>
+      <input type="email" placeholder="name@organisation.de" disabled>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Telefon</label>
+      <input type="tel" placeholder="+49 ..." disabled>
+    </div>
+    <div class="form-group">
+      <label>Adresse</label>
+      <input type="text" placeholder="Strasse, PLZ Ort" disabled>
+    </div>
+  </div>
+
+  <div class="form-section">Veranstaltung / Projekt</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Anlass / Veranstaltung <span class="req">*</span></label>
+      <input type="text" placeholder="z.B. 120-jaehriges Jubilaeumsfest" disabled>
+    </div>
+    <div class="form-group">
+      <label>Kategorie</label>
+      <select disabled><option>-- Bitte waehlen --</option><option>Sport</option><option>Kultur</option><option>Soziales</option><option>Bildung</option><option>Umwelt</option><option>Stadtfest / Event</option><option>Sonstiges</option></select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Datum <span class="req">*</span></label>
+      <input type="date" disabled>
+    </div>
+    <div class="form-group">
+      <label>Ort / Region <span class="req">*</span></label>
+      <input type="text" placeholder="z.B. Meersburg, Baden-Wuerttemberg" disabled>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Erwartete Besucherzahl</label>
+      <input type="number" placeholder="z.B. 500" disabled>
+    </div>
+    <div class="form-group">
+      <label>Zielgruppe</label>
+      <input type="text" placeholder="z.B. Familien, Jugendliche, Senioren" disabled>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Projektbeschreibung</label>
+    <textarea placeholder="Beschreiben Sie Ihr Projekt oder Ihre Veranstaltung..." disabled></textarea>
+  </div>
+
+  <div class="form-section">Sponsoring</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Gewuenschter Betrag (EUR) <span class="req">*</span></label>
+      <input type="number" min="100" max="10000" placeholder="z.B. 2500" disabled>
+      <div class="hint">Minimum 100 EUR, Maximum 10.000 EUR</div>
+    </div>
+    <div class="form-group">
+      <label>Antwort gewuenscht bis</label>
+      <input type="date" disabled>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>Gegenleistungen / Sponsorenpaket <span class="req">*</span></label>
+    <textarea placeholder="Was bieten Sie im Gegenzug? Logo, Banner, Nennung, Programmheft..." disabled></textarea>
+    <div class="hint">Bitte beschreiben Sie konkret, welche Sichtbarkeit Sie anbieten koennen.</div>
+  </div>
+  <div class="form-group">
+    <label>Mittelverwendung</label>
+    <textarea placeholder="Wofuer wird das Geld verwendet? (z.B. Bandkosten, Plakate, Infrastruktur)" disabled></textarea>
+  </div>
+
+  <div class="form-section">Unterlagen (optional)</div>
+  <div class="form-group">
+    <label>Sponsorenmappe, Flyer oder weitere Unterlagen hochladen</label>
+    <div class="upload-zone">
+      PDF, DOCX, JPG oder PNG hochladen (max. 10 MB)<br>
+      <small>Wird automatisch ausgelesen und mit den Formularangaben zusammengefuehrt</small>
+    </div>
+  </div>
+</div>
+
+<!-- Comparison Table -->
+<h2 class="section-title">Email vs Web Form: Completeness Comparison</h2>
+<div class="tier" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+<table>
+  <tr><th>Aspect</th><th>Email Channel</th><th>Web Form Channel</th></tr>
+  <tr><td><strong>Tier 1 enforcement</strong></td><td>Discovered AFTER LLM extraction. May be missing.</td><td>HTML <code>required</code> prevents submission. Always present.</td></tr>
+  <tr><td><strong>Tier 2 enforcement</strong></td><td>Discovered AFTER extraction. Often missing.</td><td>HTML <code>required</code> on all Tier 2 fields. Always present.</td></tr>
+  <tr><td><strong>Follow-up emails needed?</strong></td><td>Yes — frequently. 3 of Laura's 4 samples trigger follow-up.</td><td>No — form is the gate. Applicant can't submit incomplete data.</td></tr>
+  <tr><td><strong>AWAITING_INFO state?</strong></td><td>Yes — common state</td><td>Never — form validates before ingestion</td></tr>
+  <tr><td><strong>LLM cost per request</strong></td><td>~$0.01 (Sonnet extraction + Haiku validation)</td><td>$0 without attachment. ~$0.005 with attachment.</td></tr>
+  <tr><td><strong>Data quality</strong></td><td>Variable — depends on email writing style</td><td>Consistent — structured fields with type validation</td></tr>
+  <tr><td><strong>Minimum completeness</strong></td><td>Can be Sehr niedrig (Laura Req 4)</td><td>Always >= MEDIUM (Tier 1+2 enforced)</td></tr>
+  <tr><td><strong>Attachment handling</strong></td><td>LLM extracts from attachment body</td><td>Form fields = primary. Attachment LLM fills gaps only.</td></tr>
+</table>
+</div>
+
+<p style="margin-top: 20px; font-size: 0.8rem; color: #94a3b8; text-align: center;">
+  Sponsorship Evaluator | Pillar 1: Completeness | Web Form Channel | v3.1 | March 2026
+</p>
+
+</body>
+</html>

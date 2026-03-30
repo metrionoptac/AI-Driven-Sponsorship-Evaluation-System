@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% block title %}Pipeline{% endblock %}
+{% block page_title %}Processing Pipeline{% endblock %}
+{% block nav_pipeline %}active{% endblock %}
+
+{% block content %}
+<div x-data="pipelinePage()" x-init="load(); setInterval(() => load(), 5000)">
+
+    <!-- Live indicator -->
+    <div class="flex items-center gap-2 mb-4">
+        <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+        <span class="text-sm text-gray-500">Live -- auto-refreshing every 5s</span>
+    </div>
+
+    <!-- Pipeline Stages -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-6">
+        <div class="flex items-center justify-between gap-1 overflow-x-auto">
+            <template x-for="(stage, i) in stages" :key="stage.key">
+                <div class="flex items-center flex-1 min-w-0">
+                    <div class="flex flex-col items-center flex-1 cursor-pointer" @click="filterStage = (filterStage === stage.key ? '' : stage.key); load()">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition"
+                             :class="filterStage === stage.key ? 'bg-primary-600 text-white ring-4 ring-primary-200' : stage.count > 0 ? 'bg-primary-100 text-primary-700' : 'bg-gray-100 text-gray-400'">
+                            <span x-text="stage.count"></span>
+                        </div>
+                        <span class="text-xs mt-1 text-center leading-tight" :class="filterStage === stage.key ? 'font-bold text-primary-700' : 'text-gray-500'" x-text="stage.label"></span>
+                    </div>
+                    <svg x-show="i < stages.length - 1" class="w-4 h-4 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Upload -->
+    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-6">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Upload Document</h3>
+        <div class="flex items-center gap-4">
+            <label class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition"
+                   :class="uploading ? 'opacity-50 pointer-events-none' : ''">
+                <input type="file" class="hidden" @change="uploadFile($event)" accept=".pdf,.docx,.doc,.eml,.msg,.jpg,.jpeg,.png,.tiff,.tif,.bmp">
+                <svg class="w-6 h-6 mx-auto text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                <p class="text-sm text-gray-500">Drop PDF, DOCX, image, or email file</p>
+            </label>
+            <div x-show="uploadResult" class="text-sm">
+                <p x-show="uploadResult && !uploadResult.is_duplicate" class="text-green-600 font-medium">Uploaded! Processing...</p>
+                <p x-show="uploadResult && uploadResult.is_duplicate" class="text-yellow-600 font-medium">Duplicate detected</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Cards with Pipeline Detail -->
+    <div class="space-y-4">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-semibold text-gray-700">
+                <span x-show="!filterStage">All Pipeline Requests</span>
+                <span x-show="filterStage">Stage: <span x-text="DE.stateLabel(filterStage)" class="text-primary-600"></span></span>
+            </h3>
+            <button x-show="filterStage" @click="filterStage = ''; load()" class="text-xs text-gray-500 hover:underline">Clear filter</button>
+        </div>
+
+        <template x-for="req in requests" :key="req.id">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden cursor-pointer"
+                 @click="window.location='/dashboard/request/'+req.id">
+
+                <!-- Request header -->
+                <div class="px-5 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800" x-text="req.org_name || req.source_email || 'Processing...'"></h4>
+                            <p class="text-xs text-gray-500">
+                                <span class="font-mono" x-text="req.id.substring(0,8)+'...'"></span>
+                                <span class="mx-1">|</span>
+                                <span x-text="req.received_via || req.source_format || 'email'"></span>
+                                <span class="mx-1">|</span>
+                                <span x-text="formatDate(req.created_at)"></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span x-show="req.overall_score" class="text-lg font-bold"
+                              :class="req.overall_score >= 0.65 ? 'text-green-600' : req.overall_score >= 0.35 ? 'text-yellow-600' : 'text-red-600'"
+                              x-text="req.overall_score ? (req.overall_score * 100).toFixed(0) + '/100' : ''"></span>
+                        <span x-show="req.decision" class="badge text-sm px-3 py-1"
+                              :class="decisionColor(req.decision)" x-text="DE.decisionLabel(req.decision)"></span>
+                        <span class="badge text-sm px-3 py-1" :class="stageColor(req.state)" x-text="DE.stateLabel(req.state)"></span>
+                    </div>
+                </div>
+
+                <!-- Pipeline steps visualization -->
+                <div class="px-5 pb-4">
+                    <div class="flex items-center gap-1">
+                        <template x-for="(step, i) in pipelineSteps" :key="step.key">
+                            <div class="flex items-center" :class="i < pipelineSteps.length - 1 ? 'flex-1' : ''">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-all"
+                                         :class="isStepDone(req.state, step.key) ? 'bg-green-500 text-white' :
+                                                 isStepActive(req.state, step.key) ? 'bg-primary-500 text-white ring-4 ring-primary-100 animate-pulse' :
+                                                 'bg-gray-100 text-gray-400'">
+                                        <svg x-show="isStepDone(req.state, step.key)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                        <span x-show="!isStepDone(req.state, step.key)" x-text="i + 1"></span>
+                                    </div>
+                                    <span class="text-[10px] mt-1 text-center leading-tight w-16"
+                                          :class="isStepDone(req.state, step.key) ? 'text-green-700 font-medium' :
+                                                  isStepActive(req.state, step.key) ? 'text-primary-700 font-bold' : 'text-gray-400'"
+                                          x-text="step.label"></span>
+                                </div>
+                                <div x-show="i < pipelineSteps.length - 1"
+                                     class="flex-1 h-0.5 mx-1 mt-[-16px]"
+                                     :class="isStepDone(req.state, step.key) ? 'bg-green-400' : 'bg-gray-200'"></div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Extra info bar -->
+                <div class="px-5 py-2 bg-gray-50 border-t border-gray-100 flex items-center gap-4 text-xs text-gray-500">
+                    <span x-show="req.requested_amount">
+                        Amount: <span class="font-medium text-gray-700" x-text="formatEUR(req.requested_amount)"></span>
+                    </span>
+                    <span x-show="req.purpose_category">
+                        Category: <span class="badge badge-blue text-[10px]" x-text="req.purpose_category"></span>
+                    </span>
+                    <span x-show="req.completeness_score">
+                        Completeness: <span class="font-medium" x-text="(req.completeness_score * 100).toFixed(0) + '%'"></span>
+                    </span>
+                    <span x-show="req.quality_level">
+                        Quality: <span class="font-medium" :class="req.quality_level === 'high' ? 'text-green-600' : req.quality_level === 'medium' ? 'text-yellow-600' : 'text-red-600'"
+                                       x-text="req.quality_level"></span>
+                    </span>
+                </div>
+            </div>
+        </template>
+
+        <div x-show="requests.length === 0" class="text-center text-gray-400 py-12 bg-white rounded-xl border border-gray-200">
+            No requests in pipeline yet. Send an email or upload a document to start.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function pipelinePage() {
+    return {
+        requests: [],
+        filterStage: '',
+        uploading: false,
+        uploadResult: null,
+        pipelineSteps: [
+            { key: 'received', label: 'Email Detected' },
+            { key: 'extracted', label: 'Data Extracted' },
+            { key: 'eligible', label: 'Eligibility' },
+            { key: 'evaluated', label: 'Evaluation' },
+            { key: 'recommended', label: 'Recommendation' },
+            { key: 'decided', label: 'Decision' },
+            { key: 'completed', label: 'Complete' },
+        ],
+        stages: [
+            { key: 'received', label: 'Received', count: 0 },
+            { key: 'extracted', label: 'Extracted', count: 0 },
+            { key: 'eligible', label: 'Eligible', count: 0 },
+            { key: 'evaluated', label: 'Evaluated', count: 0 },
+            { key: 'recommended', label: 'Recommended', count: 0 },
+            { key: 'human_review', label: 'Review', count: 0 },
+            { key: 'decided', label: 'Decided', count: 0 },
+            { key: 'completed', label: 'Complete', count: 0 },
+        ],
+        formatDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-'; },
+        formatEUR(v) { return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v); },
+        stageColor(s) {
+            const m = { received:'badge-gray', extracted:'badge-blue', eligible:'badge-blue',
+                        evaluated:'badge-yellow', recommended:'badge-yellow', human_review:'badge-yellow',
+                        decided:'badge-green', completed:'badge-green', rejected:'badge-red', failed:'badge-red' };
+            return m[s] || 'badge-gray';
+        },
+        decisionColor(d) {
+            const m = { APPROVED:'badge-green', REJECTED:'badge-red', PARTIAL:'badge-yellow', approved:'badge-green', rejected:'badge-red' };
+            return m[d] || 'badge-gray';
+        },
+        isStepDone(currentState, step) {
+            const order = ['received','extracted','eligible','evaluated','recommended','decided','completed'];
+            const ci = order.indexOf(currentState);
+            const si = order.indexOf(step);
+            if (currentState === 'human_review') return si <= order.indexOf('recommended');
+            if (currentState === 'rejected') return si <= order.indexOf('decided');
+            if (currentState === 'completed') return true;
+            if (ci === -1) return false;
+            return si < ci;
+        },
+        isStepActive(currentState, step) {
+            const order = ['received','extracted','eligible','evaluated','recommended','decided','completed'];
+            const ci = order.indexOf(currentState);
+            const si = order.indexOf(step);
+            if (currentState === 'human_review') return step === 'recommended';
+            if (ci === -1) return false;
+            return si === ci;
+        },
+        async load() {
+            try {
+                const statsR = await fetch('/api/dashboard/stats');
+                const stats = await statsR.json();
+                if (stats.by_state) {
+                    this.stages.forEach(s => { s.count = stats.by_state[s.key] || 0; });
+                }
+                const params = new URLSearchParams({ page: 1, per_page: 50 });
+                if (this.filterStage) params.set('state', this.filterStage);
+                const reqR = await fetch('/api/dashboard/requests?' + params);
+                const data = await reqR.json();
+                this.requests = data.requests || [];
+            } catch(e) { console.error('Pipeline load failed', e); }
+        },
+        async uploadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            this.uploading = true;
+            this.uploadResult = null;
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const r = await fetch('/api/intake/upload', { method: 'POST', body: formData });
+                this.uploadResult = await r.json();
+                setTimeout(() => this.load(), 2000);
+            } catch(e) {
+                console.error('Upload failed', e);
+                this.uploadResult = { error: true };
+            }
+            this.uploading = false;
+        }
+    };
+}
+</script>
+{% endblock %}

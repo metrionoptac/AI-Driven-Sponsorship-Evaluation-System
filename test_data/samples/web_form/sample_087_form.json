@@ -1,0 +1,30 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Foerderverein Weihnachtsmarkt Kirchheim unter Teck e.V.",
+    "type": "EVENT",
+    "description": "Organisation des Weihnachtsmarkt Kirchheim unter Teck"
+  },
+  "contact": {
+    "name": "Heike Braun",
+    "role": "Vorsitzende/r",
+    "email": "heike.braun@fest-kirchheim unter teck.de",
+    "address": "Marktplatz 10, 76482 Kirchheim unter Teck"
+  },
+  "request": {
+    "purpose": "Weihnachtsmarkt Kirchheim unter Teck",
+    "category": "EVENT",
+    "description": "Grossveranstaltung fuer die Buerger und Besucher von Kirchheim unter Teck",
+    "requested_amount_eur": 15000
+  },
+  "event": {
+    "date": "18.06.2026",
+    "expected_attendance": 3982,
+    "target_audience": "Buerger und Besucher der Stadt Kirchheim unter Teck",
+    "region": "Baden-Wuerttemberg"
+  },
+  "sponsorship_return": {
+    "visibility_offer": "Stand auf dem Festgelaende, Logoplatzierung auf Bannern"
+  }
+}

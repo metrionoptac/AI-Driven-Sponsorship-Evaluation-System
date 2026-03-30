@@ -1,0 +1,23 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Lebenshilfe Biberach e.V.",
+    "type": "SOCIAL"
+  },
+  "contact": {
+    "name": "Sophie Scholz",
+    "role": "Koordinator/in",
+    "email": "sophie.scholz@sozial-biberach.de"
+  },
+  "request": {
+    "purpose": "Inklusionstag",
+    "category": "EVENT"
+  },
+  "event": {
+    "date": "23.12.2026",
+    "target_audience": "Beduerftige und sozial engagierte Buerger in Biberach",
+    "region": "Bayern"
+  },
+  "sponsorship_return": {}
+}

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sponsoring-Antrag | Stadtwerke Bodensee GmbH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <div class="max-w-3xl mx-auto py-10 px-4" x-data="sponsorForm()">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-800">Sponsoring-Antrag</h1>
+            <p class="text-gray-600 mt-2">Stadtwerke Bodensee GmbH - Sponsoring-Programm</p>
+            <p class="text-sm text-gray-500 mt-1">Bitte fuellen Sie das Formular vollstaendig aus. Alle Pflichtfelder sind mit * gekennzeichnet.</p>
+        </div>
+
+        <!-- Success message -->
+        <div x-show="submitted" x-cloak class="bg-green-50 border border-green-300 rounded-lg p-6 mb-6 text-center">
+            <svg class="w-12 h-12 text-green-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h2 class="text-xl font-semibold text-green-800">Antrag erfolgreich eingereicht!</h2>
+            <p class="text-green-700 mt-2">Referenznummer: <strong x-text="resultId"></strong></p>
+            <p class="text-sm text-green-600 mt-1">Sie erhalten in Kuerze eine Bestaetigungsmail.</p>
+            <button @click="resetForm()" class="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                Neuen Antrag stellen
+            </button>
+        </div>
+
+        <!-- Form -->
+        <form x-show="!submitted" @submit.prevent="submitForm()" class="bg-white rounded-xl shadow-lg p-8 space-y-6">
+
+            <!-- Section 1: Organization -->
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-lg font-semibold text-blue-800 mb-4">1. Organisation</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name der Organisation *</label>
+                        <input type="text" x-model="form.organization_name" required
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                               placeholder="z.B. TSV Konstanz 1870 e.V.">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Organisationstyp</label>
+                        <select x-model="form.organization_type"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Bitte waehlen...</option>
+                            <option value="sports_club">Sportverein</option>
+                            <option value="cultural_association">Kulturverein</option>
+                            <option value="charity_ngo">Wohlfahrt / NGO</option>
+                            <option value="school_university">Schule / Hochschule</option>
+                            <option value="volunteer_fire_dept">Freiwillige Feuerwehr</option>
+                            <option value="environmental_group">Umweltgruppe</option>
+                            <option value="other">Sonstiges</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                        <input type="text" x-model="form.region"
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                               placeholder="z.B. Baden-Wuerttemberg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 1b: Request Type + Self-Declaration -->
+            <div class="border-b pb-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Sponsorship vs Donation (Laura Q&A: "single choice button") -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Art der Anfrage *</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50" :class="form.request_type === 'sponsorship' ? 'border-blue-500 bg-blue-50' : ''">
+                                <input type="radio" x-model="form.request_type" value="sponsorship" required class="text-blue-600">
+                                <div><span class="font-medium text-sm">Sponsoring</span><p class="text-xs text-gray-500">Finanzielle Unterstuetzung mit Gegenleistung (Logo, Sichtbarkeit, Partnerschaft)</p></div>
+                            </label>
+                            <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50" :class="form.request_type === 'donation' ? 'border-blue-500 bg-blue-50' : ''">
+                                <input type="radio" x-model="form.request_type" value="donation" class="text-blue-600">
+                                <div><span class="font-medium text-sm">Spende</span><p class="text-xs text-gray-500">Rein gemeinnuetzige Unterstuetzung ohne Gegenleistung</p></div>
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Self-declaration (Laura Q&A: "they should check yes, I am a legal organization") -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Erklaerung *</label>
+                        <div class="space-y-2">
+                            <label class="flex items-start gap-2 p-2 border rounded-lg cursor-pointer hover:bg-green-50" :class="form.is_legal_org ? 'border-green-500 bg-green-50' : ''">
+                                <input type="checkbox" x-model="form.is_legal_org" required class="mt-0.5 text-green-600">
+                                <div><span class="text-sm">Hiermit bestaetigen wir, dass unsere Organisation rechtmaessig eingetragen und gemeinnuetzig taetig ist.</span></div>
+                            </label>
+                            <label class="flex items-start gap-2 p-2 border rounded-lg cursor-pointer hover:bg-green-50" :class="form.no_political ? 'border-green-500 bg-green-50' : ''">
+                                <input type="checkbox" x-model="form.no_political" required class="mt-0.5 text-green-600">
+                                <div><span class="text-sm">Unsere Organisation ist weder politisch noch parteigebunden und verfolgt keine diskriminierenden Ziele.</span></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Contact -->
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-lg font-semibold text-blue-800 mb-4">2. Ansprechpartner</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input type="text" x-model="form.contact_name" required
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                               placeholder="Max Mustermann">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+                        <input type="email" x-model="form.contact_email" required
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                               placeholder="max@tsv-konstanz.de">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                        <input type="tel" x-model="form.contact_phone"
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                               placeholder="+49 7531 12345">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Project -->
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-lg font-semibold text-blue-800 mb-4">3. Projekt / Vorhaben</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Zweck / Projekttitel *</label>
+                        <input type="text" x-model="form.purpose" required
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                               placeholder="z.B. Jugendturnier 2026">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+                        <select x-model="form.purpose_category"
+                                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                            <option value="">Bitte waehlen...</option>
+                            <option value="sports">Sport</option>
+                            <option value="culture">Kultur</option>
+                            <option value="social">Soziales</option>
+                            <option value="education">Bildung</option>
+                            <option value="environment">Umwelt</option>
+                            <option value="health">Gesundheit</option>
+                            <option value="community_event">Gemeinschaftsveranstaltung</option>
+                            <option value="other">Sonstiges</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+                        <textarea x-model="form.description" rows="4"
+                                  class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Beschreiben Sie Ihr Projekt und warum Sie Unterstuetzung benoetigen..."></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Gewuenschter Betrag (EUR)</label>
+                            <input type="number" x-model="form.requested_amount" min="100" max="50000" step="50"
+                                   class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                   placeholder="2500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Veranstaltungsdatum</label>
+                            <input type="date" x-model="form.event_date"
+                                   class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Zielgruppe</label>
+                            <input type="text" x-model="form.target_audience"
+                                   class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                                   placeholder="z.B. Jugendliche 12-18">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Erwartete Teilnehmerzahl</label>
+                        <input type="number" x-model="form.expected_attendance" min="0"
+                               class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                               placeholder="z.B. 300">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Visibility / Gegenleistung -->
+            <div class="border-b pb-4 mb-4">
+                <h2 class="text-lg font-semibold text-blue-800 mb-4">4. Gegenleistung / Sichtbarkeit</h2>
+                <p class="text-sm text-gray-500 mb-3">Welche Gegenleistungen bieten Sie dem Sponsor an?</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" x-model="form.vis_logo" class="rounded text-blue-600">
+                        <span>Logo-Platzierung (Trikots, Banner, Flyer)</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" x-model="form.vis_media" class="rounded text-blue-600">
+                        <span>Medienberichterstattung (Presse, Online)</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" x-model="form.vis_social" class="rounded text-blue-600">
+                        <span>Social Media Erwaehnung</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" x-model="form.vis_naming" class="rounded text-blue-600">
+                        <span>Namensrecht / Titelsponsoring</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" x-model="form.vis_event" class="rounded text-blue-600">
+                        <span>Erwaehnung bei Veranstaltung</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" x-model="form.vis_website" class="rounded text-blue-600">
+                        <span>Erwaehnung auf Website</span>
+                    </label>
+                </div>
+                <div class="mt-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Weitere Gegenleistungen</label>
+                    <textarea x-model="form.proposed_visibility" rows="2"
+                              class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                              placeholder="Weitere Angebote an Sichtbarkeit oder Kooperationsmoeglichkeiten..."></textarea>
+                </div>
+            </div>
+
+            <!-- Error -->
+            <div x-show="error" x-cloak class="bg-red-50 border border-red-300 rounded-lg p-4 text-red-700 text-sm" x-text="error"></div>
+
+            <!-- Submit -->
+            <div class="flex justify-end gap-4">
+                <button type="button" @click="resetForm()" class="px-6 py-2 border rounded-lg hover:bg-gray-50">
+                    Zuruecksetzen
+                </button>
+                <button type="submit" :disabled="submitting"
+                        class="px-8 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+                    <span x-show="submitting" class="animate-spin">&#9696;</span>
+                    <span x-text="submitting ? 'Wird gesendet...' : 'Antrag einreichen'"></span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-sm text-gray-400">
+            Stadtwerke Bodensee GmbH - Sponsoring-Programm | Powered by Sponsorship Evaluator
+        </div>
+    </div>
+
+    <script>
+    function sponsorForm() {
+        return {
+            submitted: false,
+            submitting: false,
+            error: '',
+            resultId: '',
+            form: {
+                request_type: 'sponsorship',
+                is_legal_org: false,
+                no_political: false,
+                organization_name: '',
+                organization_type: '',
+                region: '',
+                contact_name: '',
+                contact_email: '',
+                contact_phone: '',
+                purpose: '',
+                purpose_category: '',
+                description: '',
+                requested_amount: null,
+                event_date: '',
+                target_audience: '',
+                expected_attendance: null,
+                proposed_visibility: '',
+                vis_logo: false,
+                vis_media: false,
+                vis_social: false,
+                vis_naming: false,
+                vis_event: false,
+                vis_website: false,
+            },
+
+            async submitForm() {
+                this.error = '';
+                this.submitting = true;
+
+                // Build visibility string
+                const visParts = [];
+                if (this.form.vis_logo) visParts.push('Logo-Platzierung');
+                if (this.form.vis_media) visParts.push('Medienberichterstattung');
+                if (this.form.vis_social) visParts.push('Social Media');
+                if (this.form.vis_naming) visParts.push('Namensrecht');
+                if (this.form.vis_event) visParts.push('Veranstaltungserwaehnung');
+                if (this.form.vis_website) visParts.push('Website-Erwaehnung');
+                if (this.form.proposed_visibility) visParts.push(this.form.proposed_visibility);
+
+                const payload = {
+                    organization_name: this.form.organization_name,
+                    contact_name: this.form.contact_name,
+                    contact_email: this.form.contact_email,
+                    contact_phone: this.form.contact_phone || null,
+                    requested_amount: this.form.requested_amount ? parseFloat(this.form.requested_amount) : null,
+                    purpose: this.form.purpose,
+                    description: this.form.description || null,
+                    event_date: this.form.event_date || null,
+                    target_audience: this.form.target_audience || null,
+                    proposed_visibility: visParts.join(', ') || null,
+                    region: this.form.region || null,
+                };
+
+                try {
+                    const resp = await fetch('/api/intake/form', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await resp.json();
+                    if (resp.ok) {
+                        this.resultId = data.request_id.substring(0, 8).toUpperCase();
+                        this.submitted = true;
+                    } else {
+                        this.error = data.detail || 'Fehler beim Einreichen. Bitte versuchen Sie es erneut.';
+                    }
+                } catch (e) {
+                    this.error = 'Verbindungsfehler. Bitte versuchen Sie es spaeter erneut.';
+                }
+                this.submitting = false;
+            },
+
+            resetForm() {
+                this.submitted = false;
+                this.error = '';
+                this.resultId = '';
+                this.form = {
+                    organization_name: '', organization_type: '', region: '',
+                    contact_name: '', contact_email: '', contact_phone: '',
+                    purpose: '', purpose_category: '', description: '',
+                    requested_amount: null, event_date: '', target_audience: '',
+                    expected_attendance: null, proposed_visibility: '',
+                    vis_logo: false, vis_media: false, vis_social: false,
+                    vis_naming: false, vis_event: false, vis_website: false,
+                };
+            },
+        };
+    }
+    </script>
+</body>
+</html>

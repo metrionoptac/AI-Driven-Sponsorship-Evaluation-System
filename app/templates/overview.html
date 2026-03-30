@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block nav_overview %}active{% endblock %}
+
+{% block content %}
+<div x-data="overviewPage()" x-init="load(); setInterval(() => load(), 15000)">
+
+    <!-- KPI Row -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="kpi-card">
+            <p class="kpi-label">Total Requests</p>
+            <p class="kpi-value" x-text="stats.total_requests || 0"></p>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Pending Review</p>
+            <p class="kpi-value text-yellow-600" x-text="stats.pending_review || 0"></p>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Avg Score</p>
+            <p class="kpi-value" x-text="stats.avg_score ? stats.avg_score.toFixed(1) + '/100' : '-'"></p>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Budget Remaining</p>
+            <p class="kpi-value" :class="stats.budget?.remaining < 20000 ? 'text-red-600' : 'text-accent-600'"
+               x-text="stats.budget ? formatEUR(stats.budget.remaining) : '-'"></p>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Requests by Status</h3>
+            <canvas id="chart-states" height="200"></canvas>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Decisions</h3>
+            <canvas id="chart-decisions" height="200"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function overviewPage() {
+    return {
+        stats: {},
+        _statesChart: null, _decisionsChart: null,
+        formatEUR(v) {
+            return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(v);
+        },
+        async load() {
+            try {
+                const r = await fetch('/api/dashboard/stats');
+                this.stats = await r.json();
+                // Destroy old charts before re-rendering
+                if (this._statesChart) { this._statesChart.destroy(); this._statesChart = null; }
+                if (this._decisionsChart) { this._decisionsChart.destroy(); this._decisionsChart = null; }
+                this.$nextTick(() => this.renderCharts());
+            } catch(e) { console.error('Failed to load stats', e); }
+        },
+        renderCharts() {
+            const colors = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
+            if (this.stats.by_state) {
+                this._statesChart = new Chart(document.getElementById('chart-states'), {
+                    type: 'doughnut',
+                    data: { labels: Object.keys(this.stats.by_state), datasets: [{ data: Object.values(this.stats.by_state), backgroundColor: colors }] },
+                    options: { plugins: { legend: { position: 'right' } } }
+                });
+            }
+            if (this.stats.decisions) {
+                const labels = Object.keys(this.stats.decisions);
+                const dColors = { approved: '#22c55e', rejected: '#ef4444', pending: '#f59e0b', conditionally_approved: '#3b82f6' };
+                this._decisionsChart = new Chart(document.getElementById('chart-decisions'), {
+                    type: 'pie',
+                    data: { labels, datasets: [{ data: Object.values(this.stats.decisions), backgroundColor: labels.map(l => dColors[l] || '#94a3b8') }] },
+                    options: { plugins: { legend: { position: 'right' } } }
+                });
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

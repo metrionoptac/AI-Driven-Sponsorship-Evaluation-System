@@ -1,0 +1,184 @@
+# ============================================================
+# Evaluation Criteria — Stadtwerke Bodensee GmbH
+# ============================================================
+# Configurable per client. This is the "fuel" the engine runs on.
+# Dr. Ansari: "Offer different options, let them decide."
+#
+# Sources:
+#   - Laura/Conoscope Analyse-Raster (19 criteria, 4 categories, 7 sample requests)
+#   - Laura's Anforderungsprofil (11 Pflicht + 5 Optional fields)
+#   - Stadtwerke sponsorship form example
+
+company:
+  name: "Stadtwerke Bodensee GmbH"
+  short_name: "Stadtwerke Bodensee"
+  city: "Konstanz"
+  region: "Bodensee, Baden-Wuerttemberg"
+  focus_statement: "Wir foerdern Projekte, die unsere Region und ihre Menschen staerken"
+  annual_budget:
+    total_eur: 150000
+    fiscal_year_start: "2026-01-01"
+    max_single_eur: 10000
+
+# Company values (from the Stadtwerke Duesseldorf sponsoring form)
+# These 6 values ARE the strategic evaluation dimensions
+company_values:
+  - id: "gesellschaft"
+    label: "Verantwortung fuer die Gesellschaft"
+    translation: "Responsibility for society"
+    weight: 0.20
+  - id: "umwelt"
+    label: "Umwelt bewahren und Klima schuetzen"
+    translation: "Preserve environment and protect climate"
+    weight: 0.18
+  - id: "lebensqualitaet"
+    label: "Lebensqualitaet verbessern"
+    translation: "Improve quality of life"
+    weight: 0.17
+  - id: "nah_am_menschen"
+    label: "Nah am Menschen"
+    translation: "Close to people / Community proximity"
+    weight: 0.17
+  - id: "miteinander"
+    label: "Das Miteinander foerdern"
+    translation: "Promote community togetherness"
+    weight: 0.15
+  - id: "zukunft"
+    label: "Zukunft gestalten"
+    translation: "Shape the future"
+    weight: 0.13
+
+# Scoring dimensions (map company values to pipeline evaluation dimensions)
+# Source: Laura's Analyse-Raster Category 3 "Strategische Passung" +
+#         Stadtwerke form Section 4 "Company Value Alignment"
+scoring_dimensions:
+  strategic_fit:
+    weight: 0.28
+    description: "Alignment with the 6 company values above"
+    sub_dimensions:
+      - "gesellschaft"
+      - "umwelt"
+      - "lebensqualitaet"
+      - "nah_am_menschen"
+      - "miteinander"
+      - "zukunft"
+    # Laura's Analyse-Raster strategic fit criteria (Category 3):
+    laura_criteria:
+      topic_area:
+        description: "Themenbereich — does the event topic match company focus?"
+        examples: "Sport/Fussball, Kultur/Theater, Musik/Vereinsleben, Volkskultur/Fest"
+      regional_anchoring:
+        description: "Regionale Verankerung — is the event local/regional?"
+        scoring: "sehr lokal=1.0, lokal=0.9, regional=0.7, ueberregional=0.4"
+        note: "Volksbank core target: lokal/regional"
+      audience_overlap:
+        description: "Zielgruppe Ueberschneidung — target audience matches company customers?"
+        scoring: "hoch=1.0, mittel=0.6, niedrig=0.3"
+      logo_visibility:
+        description: "Sichtbarkeit/Logonutzung moeglich — can the company get brand presence?"
+        scoring: "ja=1.0, teilweise=0.5, nein/vage=0.2"
+
+  community_impact:
+    weight: 0.22
+    description: "Benefit to the local community"
+    sub_dimensions:
+      - "beneficiary_count"     # Laura: Reichweite/Besucherzahl
+      - "social_value"          # Laura: implicit in Zielgruppe + topic
+      - "geographic_reach"      # Laura: Regionale Verankerung
+
+  visibility_value:
+    weight: 0.19
+    description: "Brand visibility and partnership return for the company"
+    # Laura: "Gegenleistungen klar benannt" + "Konkretes Sponsorenpaket"
+    sub_dimensions:
+      - "logo_exposure"         # Laura: Logoplatzierung, Banner, Trikot
+      - "media_reach"           # Laura: Programmheft, Flyer, Plakate
+      - "digital_presence"      # Laura Optional: Social Media, Website
+      - "audience_size"         # Laura: Besucherzahl, Live-Zuschauer
+
+  cost_effectiveness:
+    weight: 0.16
+    description: "Value delivered per EUR invested"
+    sub_dimensions:
+      - "cost_per_beneficiary"  # amount / expected_attendance
+      - "amount_vs_impact"      # LLM assessment of proportionality
+
+  partnership_depth:
+    weight: 0.09
+    description: "Depth of collaboration beyond simple logo placement"
+    # Laura Hint L3: "Joint Storytelling" — modern sponsorship goes beyond logos
+    levels:
+      logo_only: 0.2           # e.g., Festverein Req #7 — just "Logoplatzierungen"
+      event_mention: 0.4       # e.g., Musikverein Req #6 — sponsor announcement
+      media_partnership: 0.6   # e.g., Volksschauspielverein — program booklet ad
+      content_creation: 0.8    # co-created content, branded workshops
+      deep_collaboration: 1.0  # true partnership: co-branded events, shared narrative
+
+  portfolio_balance:
+    weight: 0.06
+    description: "Portfolio saturation penalty — prevent over-investment in one category"
+    # Laura Hint L4: "Don't assume sports only" — diverse categories matter
+
+# Decision thresholds (configurable per client)
+decision_thresholds:
+  approve_above: 0.65
+  partial_range: [0.35, 0.65]
+  reject_below: 0.35
+  auto_decide_confidence: 0.85
+  auto_decide_max_amount_eur: 3000
+
+# Automation level
+automation_level: "copilot"  # copilot | autopilot
+
+# Focus categories (for portfolio balance tracking)
+# Laura Hint L4: "Don't assume sports only"
+focus_categories:
+  youth_sports:
+    label: "Kinder- und Jugendsport"
+    max_portfolio_share: 0.40
+  culture:
+    label: "Kultur und Gesellschaft"
+    max_portfolio_share: 0.30
+  environment:
+    label: "Umwelt und Nachhaltigkeit"
+    max_portfolio_share: 0.25
+  education:
+    label: "Bildung"
+    max_portfolio_share: 0.25
+  social:
+    label: "Soziales"
+    max_portfolio_share: 0.30
+  community_event:
+    label: "Stadtfeste und Events"
+    max_portfolio_share: 0.20
+
+# ============================================================
+# Format & Quality Signal (from Laura's Analyse-Raster Category 2)
+# NOT a scoring dimension — used as metadata / context signal
+# ============================================================
+format_quality:
+  intake_channels:
+    - "sponsorenmappe"     # Professional sponsor portfolio
+    - "brief_mit_mappe"    # Letter with portfolio
+    - "mail_mit_flyer"     # Email with flyer/brochure
+    - "mail_mit_onepager"  # Email with onepager
+    - "scan_broschuere"    # Scanned brochure
+    - "email_nur"          # Bare email, no attachments
+  professionalism_levels:
+    - "sehr_hoch"          # Very high — full sponsor portfolio with KPIs
+    - "hoch"               # High — structured with clear package
+    - "mittel_hoch"        # Medium-high — good content, basic format
+    - "mittel"             # Medium — basic email with some details
+    - "niedrig"            # Low — bare email, vague, no attachments
+  # Laura note: "Direkte Ansprache / persoenl. Beziehung"
+  # Internal routing (via board member, branch employee) does NOT equal higher priority
+  # "Interner Eingang != automatisch hoehere Prioritaet"
+
+# ============================================================
+# Conoscope KI-Workflow Steps (Laura's expected AI pipeline)
+# Our system implements all 4 steps:
+# ============================================================
+# Step 1: Vollstaendigkeitspruefung -> quality_gate.py
+# Step 2: Thematische Einordnung    -> evaluation.py (strategic_fit)
+# Step 3: Vergleich Bestandsspons.  -> embeddings.py + portfolio.py
+# Step 4: Empfehlungsoutput         -> recommendation.py + completion.py

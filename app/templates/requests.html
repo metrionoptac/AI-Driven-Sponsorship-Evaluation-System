@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Requests{% endblock %}
+{% block page_title %}Sponsorship Requests{% endblock %}
+{% block nav_requests %}active{% endblock %}
+
+{% block content %}
+<div x-data="requestsPage()" x-init="load()">
+
+    <!-- Simple Filters -->
+    <div class="bg-white rounded-xl border border-gray-200 p-4 mb-4 flex flex-wrap gap-3 items-end">
+        <div>
+            <label class="text-xs text-gray-500 block mb-1">Search</label>
+            <input type="text" x-model="filters.search" @input.debounce.300ms="load()"
+                   placeholder="Organization, contact..."
+                   class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-primary-500">
+        </div>
+        <div>
+            <label class="text-xs text-gray-500 block mb-1">Status</label>
+            <select x-model="filters.state" @change="load()"
+                    class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="">All</option>
+                <option value="received">Received</option>
+                <option value="extracted">Extracted</option>
+                <option value="evaluated">Evaluated</option>
+                <option value="decided">Decided</option>
+                <option value="completed">Completed</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+        <button @click="filters = {search:'',state:''}; load()"
+                class="text-sm text-gray-500 hover:text-gray-700 underline">Reset</button>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Organization</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Decision</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="req in requests" :key="req.id">
+                        <tr class="cursor-pointer hover:bg-gray-50" @click="window.location='/dashboard/request/'+req.id">
+                            <td class="font-mono text-xs" x-text="req.display_id || req.id.substring(0,8)+'...'"></td>
+                            <td class="font-medium" x-text="req.org_name || '-'"></td>
+                            <td x-text="req.requested_amount ? formatEUR(req.requested_amount) : '-'"></td>
+                            <td><span class="badge badge-blue" x-text="req.purpose_category || '-'"></span></td>
+                            <td><span class="badge" :class="stateColor(req.state)" x-text="DE.stateLabel(req.state)"></span></td>
+                            <td x-text="req.overall_score ? (req.overall_score * 100).toFixed(0) : '-'"></td>
+                            <td>
+                                <span x-show="req.decision" class="badge" :class="decisionColor(req.decision)" x-text="DE.decisionLabel(req.decision)"></span>
+                                <span x-show="!req.decision" class="text-gray-400">-</span>
+                            </td>
+                            <td class="text-xs text-gray-500" x-text="formatDate(req.created_at)"></td>
+                        </tr>
+                    </template>
+                    <tr x-show="requests.length === 0">
+                        <td colspan="8" class="text-center text-gray-400 py-8">No requests found.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 border-t border-gray-200 flex items-center justify-between text-sm">
+            <span class="text-gray-500">
+                Showing <span x-text="requests.length"></span> of <span x-text="total"></span>
+            </span>
+            <div class="flex gap-2">
+                <button @click="page--; load()" :disabled="page <= 1"
+                        class="px-3 py-1 border rounded text-sm disabled:opacity-40">Prev</button>
+                <span class="px-2 py-1 text-gray-500" x-text="'Page ' + page"></span>
+                <button @click="page++; load()" :disabled="requests.length < pageSize"
+                        class="px-3 py-1 border rounded text-sm disabled:opacity-40">Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function requestsPage() {
+    return {
+        requests: [], total: 0, page: 1, pageSize: 20,
+        filters: { search: '', state: '' },
+        formatEUR(v) { return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v); },
+        formatDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'}) : '-'; },
+        stateColor(s) {
+            const m = { received:'badge-gray', extracted:'badge-blue', eligible:'badge-blue',
+                        evaluated:'badge-yellow', recommended:'badge-yellow', decided:'badge-green',
+                        completed:'badge-green', rejected:'badge-red', human_review:'badge-yellow', failed:'badge-red' };
+            return m[s] || 'badge-gray';
+        },
+        decisionColor(d) {
+            const m = { approved:'badge-green', rejected:'badge-red', conditionally_approved:'badge-yellow',
+                        APPROVED:'badge-green', REJECTED:'badge-red', PARTIAL:'badge-yellow' };
+            return m[d] || 'badge-gray';
+        },
+        async load() {
+            const params = new URLSearchParams({
+                page: this.page, page_size: this.pageSize,
+                ...(this.filters.search && { search: this.filters.search }),
+                ...(this.filters.state && { state: this.filters.state }),
+            });
+            try {
+                const r = await fetch('/api/dashboard/requests?' + params);
+                const data = await r.json();
+                this.requests = data.requests || [];
+                this.total = data.total || 0;
+            } catch(e) { console.error('Failed', e); }
+        }
+    };
+}
+</script>
+{% endblock %}

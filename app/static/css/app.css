@@ -1,0 +1,133 @@
+/* Sponsorship Evaluator - Custom styles */
+/* Using regular CSS since Tailwind CDN doesn't support @apply */
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #bfdbfe; /* primary-200 */
+    transition: background-color 0.15s;
+}
+.nav-link:hover {
+    background-color: #1d4ed8; /* primary-700 */
+}
+.nav-link.active {
+    background-color: #1e3a8a; /* primary-900 */
+    color: white;
+    font-weight: 500;
+}
+
+/* KPI cards */
+.kpi-card {
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    padding: 1.25rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.kpi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-top: 0.25rem;
+}
+.kpi-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Status badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+.badge-green { background: #dcfce7; color: #166534; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-yellow { background: #fef9c3; color: #854d0e; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-gray { background: #f3f4f6; color: #1f2937; }
+
+/* Table */
+.data-table {
+    width: 100%;
+    font-size: 0.875rem;
+}
+.data-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+.data-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+.data-table tr:hover td {
+    background: #f9fafb;
+}
+
+/* Copilot message bubbles */
+.copilot-msg-user {
+    background: #2563eb;
+    color: white;
+    border-radius: 0.5rem;
+    border-bottom-right-radius: 0.125rem;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    margin-left: 2rem;
+}
+.copilot-msg-assistant {
+    background: #f3f4f6;
+    color: #1f2937;
+    border-radius: 0.5rem;
+    border-bottom-left-radius: 0.125rem;
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    margin-right: 2rem;
+}
+.copilot-msg-assistant pre {
+    background: #e5e7eb;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    overflow-x: auto;
+    font-size: 0.75rem;
+}
+
+/* D7: Proactive suggestion bubble */
+.copilot-msg-suggestion {
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 0.5rem;
+    border-left: 3px solid #f59e0b;
+    padding: 0.75rem;
+    font-size: 0.8125rem;
+    margin-right: 1rem;
+    margin-left: 1rem;
+}
+
+/* Scrollbar styling */
+#copilot-messages::-webkit-scrollbar {
+    width: 4px;
+}
+#copilot-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+#copilot-messages::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 2px;
+}

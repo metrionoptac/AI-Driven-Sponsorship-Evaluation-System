@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Completeness Criteria — Email Channel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.5; padding: 32px; max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 4px; }
+  .subtitle { color: #64748b; font-size: 0.95rem; margin-bottom: 28px; }
+  .source { font-size: 0.8rem; color: #94a3b8; margin-bottom: 24px; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; gap: 8px; margin-bottom: 32px; flex-wrap: wrap; }
+  .flow-step { background: #fff; border: 2px solid #e2e8f0; border-radius: 10px; padding: 10px 16px; font-size: 0.82rem; font-weight: 600; text-align: center; min-width: 130px; }
+  .flow-step.active { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+  .flow-step.llm { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
+  .flow-arrow { font-size: 1.2rem; color: #94a3b8; }
+
+  /* Tier sections */
+  .tier { margin-bottom: 24px; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .tier-header { padding: 14px 20px; color: #fff; font-weight: 700; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: center; }
+  .tier-header .tag { background: rgba(255,255,255,0.25); padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+  .tier-1 .tier-header { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+  .tier-2 .tier-header { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  .tier-3 .tier-header { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+  .tier-4 .tier-header { background: linear-gradient(135deg, #64748b, #475569); }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; }
+  th { text-align: left; padding: 10px 16px; font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9; }
+  td { padding: 10px 16px; font-size: 0.85rem; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .field-name { font-family: 'Consolas', 'Monaco', monospace; font-size: 0.82rem; color: #7c3aed; font-weight: 600; }
+  .german { color: #64748b; font-style: italic; font-size: 0.82rem; }
+  .impact { font-size: 0.82rem; }
+
+  /* Action box */
+  .action-box { background: #fff; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; border-left: 4px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .action-box.block { border-color: #dc2626; }
+  .action-box.degrade { border-color: #f59e0b; }
+  .action-box.info { border-color: #3b82f6; }
+  .action-box h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; }
+  .action-box p { font-size: 0.85rem; color: #475569; }
+
+  /* LLM box */
+  .llm-box { background: #f5f3ff; border: 2px dashed #8b5cf6; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; }
+  .llm-box h3 { font-size: 0.9rem; font-weight: 700; color: #6d28d9; margin-bottom: 8px; }
+  .llm-box ul { padding-left: 20px; font-size: 0.85rem; color: #475569; }
+  .llm-box li { margin-bottom: 4px; }
+
+  /* Follow-up email */
+  .email-preview { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 24px; font-family: 'Georgia', serif; font-size: 0.88rem; line-height: 1.7; color: #374151; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .email-preview .header { font-family: 'Segoe UI', sans-serif; font-size: 0.78rem; color: #64748b; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+  .email-preview .missing-field { background: #fef2f2; border-left: 3px solid #dc2626; padding: 2px 8px; margin: 2px 0; display: block; }
+  .email-preview .missing-field.warn { background: #fffbeb; border-color: #f59e0b; }
+
+  /* Two column layout */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+  .stat-card { background: #fff; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .stat-card h4 { font-size: 0.8rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .stat-card .number { font-size: 2rem; font-weight: 700; }
+  .stat-card .number.red { color: #dc2626; }
+  .stat-card .number.amber { color: #f59e0b; }
+  .stat-card .number.blue { color: #3b82f6; }
+  .stat-card .number.gray { color: #64748b; }
+
+  .section-title { font-size: 1.1rem; font-weight: 700; margin: 28px 0 12px 0; }
+
+  .laura-table td:nth-child(1) { font-weight: 600; white-space: nowrap; }
+  .check { color: #16a34a; font-weight: 700; }
+  .cross { color: #dc2626; font-weight: 700; }
+  .partial { color: #f59e0b; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>Completeness Criteria — Email Channel</h1>
+<p class="subtitle">Pillar 1: Vollstaendigkeitspruefung | Quality Gate for Sponsorship Request Processing</p>
+<p class="source">Sources: Laura/Conoscope Anforderungsprofil (11 Pflicht + 5 Optional) | Analyse-Raster (7 scored requests) | Architecture v3.1</p>
+
+<!-- Pipeline Flow -->
+<div class="flow">
+  <div class="flow-step">Email Arrives</div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step">Classification</div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step">Text Extraction</div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step llm">LLM Extraction<br><small>Claude Sonnet</small></div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step active llm">Completeness Gate<br><small>Claude Haiku</small></div>
+  <span class="flow-arrow">&#8594;</span>
+  <div class="flow-step">Eligibility</div>
+</div>
+
+<!-- Stats -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px;">
+  <div class="stat-card"><h4>Tier 1 — Blockers</h4><div class="number red">2</div><small>Any 1 missing = STOP pipeline</small></div>
+  <div class="stat-card"><h4>Tier 2 — Evaluation</h4><div class="number amber">5</div><small>Missing degrades scoring</small></div>
+  <div class="stat-card"><h4>Tier 3 — Score</h4><div class="number blue">5</div><small>LLM infers if missing</small></div>
+  <div class="stat-card"><h4>Tier 4 — Optional</h4><div class="number gray">5</div><small>Context enrichment only</small></div>
+</div>
+
+<!-- TIER 1 -->
+<div class="tier tier-1">
+  <div class="tier-header">
+    <span>TIER 1 — Pipeline Blockers</span>
+    <span class="tag">ANY 1 MISSING = AWAITING_INFO</span>
+  </div>
+  <table>
+    <tr><th>Field</th><th>German (Laura)</th><th>Why It Blocks the Pipeline</th><th>LLM Validates</th></tr>
+    <tr>
+      <td><span class="field-name">organization_name</span></td>
+      <td class="german">Veranstalter / Antragsteller</td>
+      <td class="impact">Eligibility can't check history, blocked orgs. Research can't web-search. Letter can't address. <strong>"Who are you?"</strong></td>
+      <td>Is this a real org name? Not a person name, not a generic phrase?</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">requested_amount</span></td>
+      <td class="german">Angefragter Betrag / Preisrahmen</td>
+      <td class="impact">Budget check impossible. Cost-effectiveness impossible. Research picks wrong depth (QUICK/STANDARD/DEEP). Recommendation can't set amount. <strong>"How much do you want?"</strong></td>
+      <td>Is the amount plausible for the stated purpose? (750 EUR for a festival = OK. 50 EUR for stadium naming = suspicious.)</td>
+    </tr>
+  </table>
+</div>
+
+<div class="action-box block">
+  <h3>When Tier 1 field is missing or invalid</h3>
+  <p>Pipeline STOPS immediately. State set to <code>AWAITING_INFO</code>. Completeness follow-up email sent to applicant listing all missing Tier 1 + Tier 2 fields. Max 2 follow-ups, then route to human review.</p>
+</div>
+
+<!-- TIER 2 -->
+<div class="tier tier-2">
+  <div class="tier-header">
+    <span>TIER 2 — Evaluation Blockers</span>
+    <span class="tag">ASKED IN FOLLOW-UP EMAIL</span>
+  </div>
+  <table>
+    <tr><th>Field</th><th>German (Laura)</th><th>Impact if Missing</th><th>LLM Validates</th></tr>
+    <tr>
+      <td><span class="field-name">purpose</span></td>
+      <td class="german">Veranstaltungsname / Anlass</td>
+      <td>Strategic fit scoring (28% weight) can't score without knowing what the event IS</td>
+      <td>Is this a real event/project description? Not just "Sponsoring" or "Unterstuetzung"?</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">visibility</span></td>
+      <td class="german">Sponsorenpaket + Gegenleistungen</td>
+      <td>Visibility value scoring (19% weight) unmeasurable. Partnership depth unknown.</td>
+      <td>Are concrete benefits named? "Logo" alone is vague. "Logo on 1000 flyers + banner at entrance" is concrete.</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">event_date</span></td>
+      <td class="german">Datum / Zeitraum</td>
+      <td>Eligibility date check skipped. Can't detect past events or scheduling conflicts.</td>
+      <td>Is the date parseable? Is it in the future? Is "Sommer 2026" enough or too vague?</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">region</span></td>
+      <td class="german">Ort / Region</td>
+      <td>Regional anchoring unknown. Eligibility region match skipped.</td>
+      <td>Is this a real location? Can regional relevance be assessed?</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">contact</span></td>
+      <td class="german">Ansprechpartner + Kontaktdaten</td>
+      <td>Can't communicate decision. (Email channel: sender address is fallback.)</td>
+      <td>Is there a name (not just role)? Is there email or phone?</td>
+    </tr>
+  </table>
+</div>
+
+<div class="action-box degrade">
+  <h3>When Tier 2 fields are missing</h3>
+  <p>Pipeline still proceeds if Tier 1 is complete, but evaluation quality is degraded. Missing Tier 2 fields are <strong>included in the follow-up email</strong> alongside any Tier 1 gaps. Confidence score reduced. If 3+ Tier 2 fields missing, route to human review.</p>
+</div>
+
+<!-- TIER 3 -->
+<div class="tier tier-3">
+  <div class="tier-header">
+    <span>TIER 3 — Score Reducers</span>
+    <span class="tag">NOT ASKED — LLM INFERS</span>
+  </div>
+  <table>
+    <tr><th>Field</th><th>German</th><th>Impact if Missing</th><th>LLM Inference</th></tr>
+    <tr>
+      <td><span class="field-name">expected_attendance</span></td>
+      <td class="german">Erwartete Besucherzahl</td>
+      <td>Cost-effectiveness approximate</td>
+      <td>LLM estimates from event type ("4-day festival" &#8594; 500-2000)</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">target_audience</span></td>
+      <td class="german">Zielgruppe</td>
+      <td>Audience overlap scoring approximate</td>
+      <td>LLM infers from org type + purpose ("Sportverein Sommerfest" &#8594; families, members)</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">description</span></td>
+      <td class="german">Projektbeschreibung</td>
+      <td>LLM has less evaluation context</td>
+      <td><code>purpose</code> + <code>visibility</code> usually compensate</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">organization_type</span></td>
+      <td class="german">Organisationstyp</td>
+      <td>Portfolio balance approximate</td>
+      <td>LLM infers from org name ("...e.V." &#8594; association, "Feuerwehr" &#8594; fire dept)</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">purpose_category</span></td>
+      <td class="german">Thematische Einordnung</td>
+      <td>Portfolio categorization approximate</td>
+      <td>LLM infers from purpose ("Jubilaeumsfest" &#8594; community_event)</td>
+    </tr>
+  </table>
+</div>
+
+<!-- TIER 4 -->
+<div class="tier tier-4">
+  <div class="tier-header">
+    <span>TIER 4 — Optional Context</span>
+    <span class="tag">NEVER ASKED</span>
+  </div>
+  <table>
+    <tr><th>Field</th><th>German</th><th>Value if Present</th></tr>
+    <tr>
+      <td><span class="field-name">member_count</span></td>
+      <td class="german">Vereinsgroesse</td>
+      <td>Organization size context for community impact scoring</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">usage_breakdown</span></td>
+      <td class="german">Mittelverwendung</td>
+      <td>Budget detail improves cost-effectiveness analysis</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">geographic_reach</span></td>
+      <td class="german">Mediale Reichweite / Social Media</td>
+      <td>Media reach improves visibility scoring</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">organization_description</span></td>
+      <td class="german">Vereinsbeschreibung / Bisherige Zusammenarbeit</td>
+      <td>Background context for strategic fit, prior partnership signal</td>
+    </tr>
+    <tr>
+      <td><span class="field-name">response_deadline</span></td>
+      <td class="german">Antwortfrist</td>
+      <td>Prioritization signal in processing queue</td>
+    </tr>
+  </table>
+</div>
+
+<!-- LLM Validation -->
+<div class="llm-box">
+  <h3>LLM Validation (Claude Haiku) — Replaces Rule-Based Null Checks</h3>
+  <ul>
+    <li><strong>Field quality:</strong> Is <code>purpose: "Sponsoring"</code> actually useful? (No — too vague, treated as missing.)</li>
+    <li><strong>Amount plausibility:</strong> Does 750 EUR make sense for a 4-day festival with live band? Does 50 EUR make sense for stadium naming rights?</li>
+    <li><strong>Contact validity:</strong> Is <code>contact.name: "Vorsitzender"</code> a name or a role? (Role — treated as incomplete.)</li>
+    <li><strong>Extraction accuracy:</strong> Did the extraction miss something the raw text contains? (e.g., amount in a forwarded section)</li>
+    <li><strong>Overall assessment:</strong> Per-field quality score (present / vague / missing) + overall completeness verdict</li>
+  </ul>
+</div>
+
+<!-- Follow-up Email Preview -->
+<h2 class="section-title">Follow-Up Email Template</h2>
+<div class="email-preview">
+  <div class="header">
+    To: applicant@example.de | Subject: Ihre Sponsoring-Anfrage — fehlende Angaben | Ref: SP-2026-XXXX
+  </div>
+  Sehr geehrte Damen und Herren,<br><br>
+  vielen Dank fuer Ihre Sponsoring-Anfrage (Ref: SP-2026-XXXX).<br><br>
+  Damit wir Ihre Anfrage vollstaendig bearbeiten koennen, benoetigen wir noch folgende Angaben:<br><br>
+  <span class="missing-field">1. Beantragter Foerderbetrag in EUR <em>(Tier 1 — Pflicht)</em></span>
+  <span class="missing-field warn">2. Datum der Veranstaltung <em>(Tier 2)</em></span>
+  <span class="missing-field warn">3. Beschreibung des Sponsorenpakets / Gegenleistungen <em>(Tier 2)</em></span>
+  <span class="missing-field warn">4. Kontaktperson mit E-Mail oder Telefon <em>(Tier 2)</em></span>
+  <br>
+  Bitte antworten Sie direkt auf diese E-Mail mit den fehlenden Informationen.<br><br>
+  Ihre Anfrage bleibt 14 Tage geoeffnet. Sollten wir bis dahin keine Rueckmeldung erhalten,
+  wird die Anfrage archiviert. Sie koennen jederzeit eine neue Anfrage stellen.<br><br>
+  Mit freundlichen Gruessen<br>
+  Sponsoring-Team
+</div>
+
+<!-- Laura's Requests Validation -->
+<h2 class="section-title">Validation Against Laura's 4 Sample Requests</h2>
+<div class="tier" style="box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+<table class="laura-table">
+  <tr>
+    <th>Field</th>
+    <th>Req 1: Golfclub<br><small>Tour Team</small></th>
+    <th>Req 2: Volksschauspiel<br><small>Theater</small></th>
+    <th>Req 3: Musikverein<br><small>120yr Jubilee</small></th>
+    <th>Req 4: Festverein<br><small>Oktoberfest</small></th>
+  </tr>
+  <tr><td colspan="5" style="background:#fef2f2; font-weight:700; font-size:0.82rem; color:#991b1b;">TIER 1 — Pipeline Blockers</td></tr>
+  <tr>
+    <td>organization_name</td>
+    <td class="check">&#10003;</td>
+    <td class="check">&#10003;</td>
+    <td class="check">&#10003;</td>
+    <td class="check">&#10003;</td>
+  </tr>
+  <tr>
+    <td>requested_amount</td>
+    <td class="cross">&#10007; MISSING</td>
+    <td class="partial">~ in attachment</td>
+    <td class="check">&#10003; 750 EUR</td>
+    <td class="cross">&#10007; MISSING</td>
+  </tr>
+  <tr style="background:#fff7ed;">
+    <td><strong>Pipeline Decision</strong></td>
+    <td style="color:#dc2626; font-weight:700;">BLOCK</td>
+    <td style="color:#dc2626; font-weight:700;">BLOCK</td>
+    <td style="color:#16a34a; font-weight:700;">PROCEED</td>
+    <td style="color:#dc2626; font-weight:700;">BLOCK</td>
+  </tr>
+  <tr><td colspan="5" style="background:#fffbeb; font-weight:700; font-size:0.82rem; color:#92400e;">TIER 2 — Evaluation Blockers (asked in follow-up)</td></tr>
+  <tr>
+    <td>purpose</td>
+    <td class="partial">~ vague list</td>
+    <td class="check">&#10003;</td>
+    <td class="check">&#10003;</td>
+    <td class="check">&#10003;</td>
+  </tr>
+  <tr>
+    <td>visibility</td>
+    <td class="partial">~ vague ideas</td>
+    <td class="check">&#10003; Programmheft</td>
+    <td class="check">&#10003; 5-item package</td>
+    <td class="cross">&#10007; vague</td>
+  </tr>
+  <tr>
+    <td>event_date</td>
+    <td class="cross">&#10007;</td>
+    <td class="cross">&#10007;</td>
+    <td class="check">&#10003; 24-27 July</td>
+    <td class="cross">&#10007;</td>
+  </tr>
+  <tr>
+    <td>region</td>
+    <td class="partial">~ implied</td>
+    <td class="partial">~ implied</td>
+    <td class="check">&#10003; Musterort</td>
+    <td class="partial">~ Musterort</td>
+  </tr>
+  <tr>
+    <td>contact</td>
+    <td class="partial">~ role only</td>
+    <td class="check">&#10003;</td>
+    <td class="check">&#10003;</td>
+    <td class="partial">~ role only</td>
+  </tr>
+  <tr><td colspan="5" style="background:#eff6ff; font-weight:700; font-size:0.82rem; color:#1e40af;">TIER 3 — Score Reducers (LLM infers, not asked)</td></tr>
+  <tr><td>expected_attendance</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td></tr>
+  <tr><td>target_audience</td><td class="cross">&#10007;</td><td class="partial">~ generic</td><td class="cross">&#10007;</td><td class="partial">~ generic</td></tr>
+  <tr><td>description</td><td class="partial">~ minimal</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+  <tr style="background:#f8fafc;">
+    <td><strong>Laura's Rating</strong></td>
+    <td>Mittel</td>
+    <td>Mittel</td>
+    <td>Mittel-hoch</td>
+    <td><strong>Sehr niedrig</strong></td>
+  </tr>
+  <tr style="background:#f8fafc;">
+    <td><strong>Expected Result</strong></td>
+    <td style="color:#dc2626;">AWAITING_INFO</td>
+    <td style="color:#dc2626;">AWAITING_INFO</td>
+    <td style="color:#16a34a;">&#8594; Evaluation</td>
+    <td style="color:#dc2626;">AWAITING_INFO</td>
+  </tr>
+</table>
+</div>
+
+<p style="margin-top: 20px; font-size: 0.8rem; color: #94a3b8; text-align: center;">
+  Sponsorship Evaluator | Pillar 1: Completeness | Email Channel | v3.1 | March 2026
+</p>
+
+</body>
+</html>

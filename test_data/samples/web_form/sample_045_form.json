@@ -1,0 +1,23 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Foerderverein Stadtmuseum Biberach e.V.",
+    "type": "CULTURAL"
+  },
+  "contact": {
+    "name": "Birgit Krueger",
+    "role": "Vorsitzende",
+    "email": "birgit.krueger@kultur-biberach.de"
+  },
+  "request": {
+    "purpose": "Konzert im Stadtpark",
+    "category": "EVENT"
+  },
+  "event": {
+    "date": "14.09.2026",
+    "target_audience": "Kulturinteressierte Buerger aus Biberach und Umgebung",
+    "region": "Rheinland-Pfalz"
+  },
+  "sponsorship_return": {}
+}

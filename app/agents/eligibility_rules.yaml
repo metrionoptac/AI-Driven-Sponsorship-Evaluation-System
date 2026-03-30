@@ -1,0 +1,150 @@
+# ============================================================
+# Eligibility Rules — Stadtwerke Bodensee GmbH
+# ============================================================
+# These rules define the formal eligibility criteria for
+# sponsorship requests. Rules are evaluated in order.
+# A request must pass ALL hard rules to be eligible.
+# Soft rules generate warnings but don't reject.
+
+company:
+  name: "Stadtwerke Bodensee GmbH"
+  operating_regions:
+    primary: ["Baden-Wuerttemberg", "Baden-Württemberg", "BW"]
+    secondary: ["Bayern", "Bavaria", "BY"]
+    tertiary: ["Hessen", "HE"]
+
+# --- Hard Rules (failure = rejection) ---
+
+hard_rules:
+
+  required_fields:
+    description: "Minimum required fields to process a request"
+    fields:
+      - organization_name
+      - contact_email_or_name   # at least one contact method
+      - requested_amount
+    rejection_type: INCOMPLETE
+
+  amount_range:
+    description: "Requested amount must be within budget limits"
+    min_eur: 100
+    max_eur: 10000
+    rejection_type: FORMAL
+
+  blocked_org_types:
+    description: "Organization types excluded by company policy"
+    types:
+      - political_org
+    rejection_type: POLICY
+
+  keyword_blacklist:
+    description: "Requests containing these keywords are rejected"
+    keywords_de:
+      - "Partei"
+      - "Wahlkampf"
+      - "Bundestagswahl"
+      - "Landtagswahl"
+      - "Fraktion"
+      - "politische Kampagne"
+    keywords_en:
+      - "political party"
+      - "election campaign"
+      - "political campaign"
+    check_fields:
+      - purpose
+      - description
+      - organization_name
+    rejection_type: POLICY
+
+  no_individuals:
+    description: "Private individuals cannot receive sponsorship (only organizations)"
+    rejection_type: POLICY
+
+  no_commercial_purpose:
+    description: "Purely commercial activities are excluded from sponsorship"
+    keywords_de:
+      - "kommerziell"
+      - "gewinnorientiert"
+      - "Gewinnerzielung"
+      - "Werbeveranstaltung"
+    keywords_en:
+      - "commercial"
+      - "profit-oriented"
+      - "for-profit"
+    check_fields:
+      - purpose
+      - description
+    rejection_type: POLICY
+
+  no_violence:
+    description: "No glorification of violence"
+    keywords_de:
+      - "Gewaltverherrlichung"
+      - "militant"
+      - "extremistisch"
+      - "radikal"
+    keywords_en:
+      - "violence"
+      - "militant"
+      - "extremist"
+    check_fields:
+      - purpose
+      - description
+      - organization_name
+    rejection_type: POLICY
+
+  no_discrimination:
+    description: "No discriminatory organizations or purposes"
+    keywords_de:
+      - "Diskriminierung"
+      - "Rassismus"
+      - "Ausgrenzung"
+    keywords_en:
+      - "discrimination"
+      - "racism"
+      - "exclusion"
+    check_fields:
+      - purpose
+      - description
+      - organization_name
+    rejection_type: POLICY
+
+# --- Soft Rules (failure = warning, not rejection) ---
+
+soft_rules:
+
+  region_match:
+    description: "Organization should be in operating region"
+    warn_if_outside: true
+
+  event_date_future:
+    description: "Event date should be in the future"
+    min_days_ahead: 14
+
+  email_domain_plausibility:
+    description: "Email domain should match organization name for e.V. orgs"
+    warn_on_freemail: true
+    freemail_domains:
+      - gmail.com
+      - gmx.de
+      - web.de
+      - yahoo.com
+      - hotmail.com
+      - outlook.com
+      - t-online.de
+
+  completeness_quality:
+    description: "Warn if extraction quality is low"
+    warn_below_quality: "medium"
+
+# --- LLM Edge Case Check (only triggered if warnings exist) ---
+
+llm_check:
+  enabled: true
+  model: "haiku"
+  trigger_on_warnings: 2            # call LLM if >= N warnings
+  trigger_on_low_confidence: 0.5    # call LLM if eligibility confidence < this
+  checks:
+    - political_disguise             # is the org actually political?
+    - amount_plausibility            # does the amount match the stated purpose?
+    - request_coherence              # is the request internally consistent?

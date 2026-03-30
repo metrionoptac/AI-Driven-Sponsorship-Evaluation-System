@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Berichte{% endblock %}
+{% block page_title %}Berichte & Analysen{% endblock %}
+{% block nav_reports %}active{% endblock %}
+
+{% block content %}
+<div x-data="reportsPage()" x-init="load()">
+
+    <!-- KPI Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="kpi-card">
+            <p class="kpi-label">Genehmigungsrate</p>
+            <p class="kpi-value" x-text="reports.approval_rates?.overall ? reports.approval_rates.overall.toFixed(0)+'%' : '-'"></p>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Durchschn. Score</p>
+            <p class="kpi-value" x-text="reports.avg_scores?.overall ? reports.avg_scores.overall.toFixed(1) : '-'"></p>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Regionen</p>
+            <p class="kpi-value" x-text="reports.by_region?.length || '-'"></p>
+        </div>
+        <div class="kpi-card">
+            <p class="kpi-label">Top Organisationen</p>
+            <p class="kpi-value" x-text="reports.top_orgs?.length || '-'"></p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Approval by Category -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Genehmigungsrate nach Kategorie</h3>
+            <canvas id="chart-approval-cat" height="220"></canvas>
+        </div>
+
+        <!-- By Region -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Anfragen nach Region</h3>
+            <canvas id="chart-region" height="220"></canvas>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Top funded orgs -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Meistgefoerderte Organisationen</h3>
+            <table class="data-table" x-show="reports.top_orgs?.length">
+                <thead><tr><th>Organisation</th><th>Gesamtfoerderung</th><th>Anzahl</th></tr></thead>
+                <tbody>
+                    <template x-for="org in (reports.top_orgs || [])" :key="org.organization_name">
+                        <tr>
+                            <td x-text="org.organization_name"></td>
+                            <td x-text="formatEUR(org.total_amount)"></td>
+                            <td x-text="org.count"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <p x-show="!reports.top_orgs?.length" class="text-gray-400 text-sm">Keine Daten vorhanden.</p>
+        </div>
+
+        <!-- Score Distribution -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Durchschn. Scores nach Dimension</h3>
+            <canvas id="chart-scores" height="220"></canvas>
+        </div>
+    </div>
+
+    <!-- Historical Summary -->
+    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm" x-show="reports.historical?.length">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Historische Sponsoring-Uebersicht</h3>
+        <table class="data-table">
+            <thead><tr><th>Kategorie</th><th>Anzahl</th><th>Durchschn. Betrag</th><th>Durchschn. Ergebnis</th></tr></thead>
+            <tbody>
+                <template x-for="h in (reports.historical || [])" :key="h.category">
+                    <tr>
+                        <td x-text="h.category"></td>
+                        <td x-text="h.count"></td>
+                        <td x-text="formatEUR(h.avg_amount || 0)"></td>
+                        <td x-text="h.avg_outcome_score ? h.avg_outcome_score.toFixed(1) : '-'"></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function reportsPage() {
+    return {
+        reports: {},
+        formatEUR(v) { return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v); },
+        async load() {
+            try {
+                const r = await fetch('/api/dashboard/reports');
+                this.reports = await r.json();
+                this.$nextTick(() => this.renderCharts());
+            } catch(e) { console.error(e); }
+        },
+        renderCharts() {
+            const colors = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
+            // Approval by category
+            if (this.reports.approval_rates?.by_category) {
+                const data = this.reports.approval_rates.by_category;
+                new Chart(document.getElementById('chart-approval-cat'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => d.category),
+                        datasets: [{ label: 'Approval %', data: data.map(d => d.rate), backgroundColor: '#22c55e' }]
+                    },
+                    options: { scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+                });
+            }
+            // By region
+            if (this.reports.by_region?.length) {
+                new Chart(document.getElementById('chart-region'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: this.reports.by_region.map(r => r.region || 'Unknown'),
+                        datasets: [{ data: this.reports.by_region.map(r => r.count), backgroundColor: colors }]
+                    },
+                    options: { plugins: { legend: { position: 'right' } } }
+                });
+            }
+            // Score dimensions
+            if (this.reports.avg_scores?.by_dimension) {
+                const dims = this.reports.avg_scores.by_dimension;
+                new Chart(document.getElementById('chart-scores'), {
+                    type: 'radar',
+                    data: {
+                        labels: dims.map(d => d.dimension),
+                        datasets: [{ label: 'Avg Score', data: dims.map(d => d.avg_score), backgroundColor: 'rgba(59,130,246,0.2)', borderColor: '#3b82f6' }]
+                    },
+                    options: { scales: { r: { beginAtZero: true, max: 100 } } }
+                });
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

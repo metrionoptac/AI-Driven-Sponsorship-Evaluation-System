@@ -1,0 +1,23 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Sustainable Fashion Collective",
+    "type": "OTHER"
+  },
+  "contact": {
+    "name": "Anna Walker",
+    "role": "President",
+    "email": "anna.walker@sustainable-fashion-.org"
+  },
+  "request": {
+    "purpose": "Swap and Style Event",
+    "category": "EVENT"
+  },
+  "event": {
+    "date": "2026-07-06",
+    "target_audience": "International community and residents of Karlsruhe",
+    "region": "Baden-Wuerttemberg"
+  },
+  "sponsorship_return": {}
+}

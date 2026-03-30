@@ -1,0 +1,31 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Musicians Without Borders",
+    "type": "CULTURAL",
+    "description": "Music education in underserved communities",
+    "member_count": 350
+  },
+  "contact": {
+    "name": "Emma Brown",
+    "role": "Chair",
+    "email": "emma.brown@musicians-without-bo.org",
+    "address": "70 Main St, Freiburg"
+  },
+  "request": {
+    "purpose": "Community Concert Series",
+    "category": "EVENT",
+    "description": "Monthly concerts featuring local and international musicians",
+    "requested_amount_eur": 1500
+  },
+  "event": {
+    "date": "2026-04-08",
+    "expected_attendance": 366,
+    "target_audience": "International community and residents of Freiburg",
+    "region": "Baden-Wuerttemberg"
+  },
+  "sponsorship_return": {
+    "visibility_offer": "Logo on participant t-shirts and medals"
+  }
+}

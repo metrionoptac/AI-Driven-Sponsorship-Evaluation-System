@@ -1,0 +1,29 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Jugendrat Heidenheim",
+    "type": "YOUTH",
+    "description": "Jugendorganisation in Heidenheim",
+    "member_count": 145
+  },
+  "contact": {
+    "name": "Maximilian Kaiser",
+    "role": "Jugendleiter/in",
+    "email": "maximilian.kaiser@jugend-heidenheim.de",
+    "address": "Jugendweg 8, 81401 Heidenheim"
+  },
+  "request": {
+    "purpose": "Jugendfreizeit",
+    "category": "EVENT",
+    "description": "Foerderung und Freizeitgestaltung fuer Kinder und Jugendliche",
+    "requested_amount_eur": 1000
+  },
+  "event": {
+    "date": "28.06.2026",
+    "expected_attendance": 61,
+    "target_audience": "Kinder und Jugendliche aus Heidenheim und Umgebung",
+    "region": "Baden-Wuerttemberg"
+  },
+  "sponsorship_return": {}
+}

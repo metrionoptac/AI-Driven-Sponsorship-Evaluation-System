@@ -1,0 +1,33 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Cross-Border Running Club Basel-Freiburg",
+    "type": "SPORTS_CLUB",
+    "description": "Running club spanning Swiss and German border",
+    "registration_number": "VR 8736",
+    "member_count": 154
+  },
+  "contact": {
+    "name": "Lisa Wilson",
+    "role": "Chair",
+    "email": "lisa.wilson@cross-border-running.org",
+    "phone": "+49 167 3426689",
+    "address": "50 Main St, Munich"
+  },
+  "request": {
+    "purpose": "Border Run 2026",
+    "category": "EVENT",
+    "description": "30km charity run along the Rhine",
+    "requested_amount_eur": 2500
+  },
+  "event": {
+    "date": "2026-08-24",
+    "expected_attendance": 356,
+    "target_audience": "International community and residents of Munich",
+    "region": "Baden-Wuerttemberg"
+  },
+  "sponsorship_return": {
+    "visibility_offer": "Logo on event website, banners, and social media"
+  }
+}

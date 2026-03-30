@@ -1,0 +1,31 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Green Energy Initiative Freiburg",
+    "type": "OTHER",
+    "description": "Citizens' initiative for renewable energy",
+    "member_count": 468
+  },
+  "contact": {
+    "name": "Daniel Robinson",
+    "role": "Chair",
+    "email": "daniel.robinson@green-energy-initiat.org",
+    "address": "6 Park Ave, Freiburg"
+  },
+  "request": {
+    "purpose": "Solar Workshop Series",
+    "category": "EVENT",
+    "description": "Free workshops on residential solar installation",
+    "requested_amount_eur": 1000
+  },
+  "event": {
+    "date": "2026-07-23",
+    "expected_attendance": 431,
+    "target_audience": "International community and residents of Freiburg",
+    "region": "Baden-Wuerttemberg"
+  },
+  "sponsorship_return": {
+    "visibility_offer": "Named sponsor on all event materials"
+  }
+}

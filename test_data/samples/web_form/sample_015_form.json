@@ -1,0 +1,31 @@
+{
+  "submission_type": "web_form",
+  "submitted_at": "2026-02-15T14:30:00+01:00",
+  "organization": {
+    "name": "Athletik-Club Reutlingen e.V.",
+    "type": "SPORTS_CLUB",
+    "description": "Leichtathletikverein mit 1184 Mitgliedern in Reutlingen",
+    "registration_number": "VR 8744",
+    "member_count": 1184
+  },
+  "contact": {
+    "name": "Claudia Schroeder",
+    "role": "Kassenwart",
+    "email": "claudia.schroeder@athletik-club-reutlingen.de",
+    "address": "Sportplatzweg 31, 83338 Reutlingen"
+  },
+  "request": {
+    "purpose": "Wintertraining",
+    "category": "YOUTH_PROGRAM",
+    "description": "Wintertrainingsprogramm fuer Kinder und Jugendliche",
+    "requested_amount_eur": 1500
+  },
+  "event": {
+    "expected_attendance": 185,
+    "target_audience": "Vereinsmitglieder, Familien und sportinteressierte Buerger aus Reutlingen",
+    "region": "Bayern"
+  },
+  "sponsorship_return": {
+    "visibility_offer": "Logoanbringung auf Trikots und Bannern"
+  }
+}
