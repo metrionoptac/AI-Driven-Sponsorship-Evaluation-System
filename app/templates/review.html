@@ -86,7 +86,7 @@ function reviewPage() {
                 const r = await fetch('/api/dashboard/review/' + id, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ decision, approved_amount: amount, reviewer: 'dashboard_user', notes })
+                    body: JSON.stringify({ decision, decided_amount: amount, reviewer: 'dashboard_user', notes })
                 });
                 if (r.ok) this.load();
                 else alert('Failed to submit review');

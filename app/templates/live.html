@@ -1,6 +1,7 @@
 {% extends "base.html" %}
-{% block nav_live %}bg-primary-700{% endblock %}
+{% block nav_live %}active{% endblock %}
 {% block title %}Live Demo{% endblock %}
+{% block page_title %}Live Pipeline Monitor{% endblock %}
 
 {% block content %}
 <div x-data="livePage()" x-init="init()" class="space-y-4">

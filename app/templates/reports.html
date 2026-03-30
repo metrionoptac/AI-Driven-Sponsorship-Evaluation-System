@@ -10,11 +10,11 @@
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div class="kpi-card">
             <p class="kpi-label">Genehmigungsrate</p>
-            <p class="kpi-value" x-text="reports.approval_rates?.overall ? reports.approval_rates.overall.toFixed(0)+'%' : '-'"></p>
+            <p class="kpi-value" x-text="approvalRate"></p>
         </div>
         <div class="kpi-card">
             <p class="kpi-label">Durchschn. Score</p>
-            <p class="kpi-value" x-text="reports.avg_scores?.overall ? reports.avg_scores.overall.toFixed(1) : '-'"></p>
+            <p class="kpi-value" x-text="reports.avg_scores?.avg_overall ? (reports.avg_scores.avg_overall * 100).toFixed(0) : '-'"></p>
         </div>
         <div class="kpi-card">
             <p class="kpi-label">Regionen</p>
@@ -22,14 +22,14 @@
         </div>
         <div class="kpi-card">
             <p class="kpi-label">Top Organisationen</p>
-            <p class="kpi-value" x-text="reports.top_orgs?.length || '-'"></p>
+            <p class="kpi-value" x-text="reports.top_organizations?.length || '-'"></p>
         </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <!-- Approval by Category -->
+        <!-- Approval by Decision -->
         <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Genehmigungsrate nach Kategorie</h3>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Entscheidungsverteilung</h3>
             <canvas id="chart-approval-cat" height="220"></canvas>
         </div>
 
@@ -44,19 +44,19 @@
         <!-- Top funded orgs -->
         <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <h3 class="text-sm font-semibold text-gray-700 mb-3">Meistgefoerderte Organisationen</h3>
-            <table class="data-table" x-show="reports.top_orgs?.length">
-                <thead><tr><th>Organisation</th><th>Gesamtfoerderung</th><th>Anzahl</th></tr></thead>
+            <table class="data-table" x-show="reports.top_organizations?.length">
+                <thead><tr><th>Organisation</th><th>Gesamtfoerderung</th><th>Anfragen</th></tr></thead>
                 <tbody>
-                    <template x-for="org in (reports.top_orgs || [])" :key="org.organization_name">
+                    <template x-for="org in (reports.top_organizations || [])" :key="org.organization_name">
                         <tr>
                             <td x-text="org.organization_name"></td>
-                            <td x-text="formatEUR(org.total_amount)"></td>
-                            <td x-text="org.count"></td>
+                            <td x-text="formatEUR(org.total_amount_given)"></td>
+                            <td x-text="org.total_requests"></td>
                         </tr>
                     </template>
                 </tbody>
             </table>
-            <p x-show="!reports.top_orgs?.length" class="text-gray-400 text-sm">Keine Daten vorhanden.</p>
+            <p x-show="!reports.top_organizations?.length" class="text-gray-400 text-sm">Keine Daten vorhanden.</p>
         </div>
 
         <!-- Score Distribution -->
@@ -67,17 +67,17 @@
     </div>
 
     <!-- Historical Summary -->
-    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm" x-show="reports.historical?.length">
+    <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm" x-show="reports.historical_summary?.length">
         <h3 class="text-sm font-semibold text-gray-700 mb-3">Historische Sponsoring-Uebersicht</h3>
         <table class="data-table">
-            <thead><tr><th>Kategorie</th><th>Anzahl</th><th>Durchschn. Betrag</th><th>Durchschn. Ergebnis</th></tr></thead>
+            <thead><tr><th>Jahr</th><th>Kategorie</th><th>Anzahl</th><th>Gesamtbetrag</th></tr></thead>
             <tbody>
-                <template x-for="h in (reports.historical || [])" :key="h.category">
+                <template x-for="h in (reports.historical_summary || [])" :key="h.year + '_' + h.purpose_category">
                     <tr>
-                        <td x-text="h.category"></td>
+                        <td x-text="h.year"></td>
+                        <td x-text="h.purpose_category"></td>
                         <td x-text="h.count"></td>
-                        <td x-text="formatEUR(h.avg_amount || 0)"></td>
-                        <td x-text="h.avg_outcome_score ? h.avg_outcome_score.toFixed(1) : '-'"></td>
+                        <td x-text="formatEUR(h.total_approved || 0)"></td>
                     </tr>
                 </template>
             </tbody>
@@ -91,47 +91,71 @@
 function reportsPage() {
     return {
         reports: {},
+        approvalRate: '-',
         formatEUR(v) { return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v); },
         async load() {
             try {
                 const r = await fetch('/api/dashboard/reports');
                 this.reports = await r.json();
+                // Calculate approval rate from decision counts
+                const rates = this.reports.approval_rates || {};
+                const approved = (rates['APPROVED'] || 0) + (rates['PARTIAL'] || 0);
+                const total = Object.values(rates).reduce((s, v) => s + v, 0);
+                this.approvalRate = total > 0 ? Math.round(approved / total * 100) + '%' : '-';
                 this.$nextTick(() => this.renderCharts());
             } catch(e) { console.error(e); }
         },
         renderCharts() {
-            const colors = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
-            // Approval by category
-            if (this.reports.approval_rates?.by_category) {
-                const data = this.reports.approval_rates.by_category;
+            const colors = ['#22c55e','#ef4444','#f59e0b','#8b5cf6','#3b82f6','#06b6d4','#f97316','#ec4899'];
+            // Decision distribution (bar chart)
+            const rates = this.reports.approval_rates || {};
+            const decisionLabels = Object.keys(rates);
+            if (decisionLabels.length) {
+                const decisionColors = decisionLabels.map(d => {
+                    if (d === 'APPROVED') return '#22c55e';
+                    if (d === 'PARTIAL') return '#f59e0b';
+                    if (d === 'REJECTED') return '#ef4444';
+                    return '#8b5cf6';
+                });
                 new Chart(document.getElementById('chart-approval-cat'), {
                     type: 'bar',
                     data: {
-                        labels: data.map(d => d.category),
-                        datasets: [{ label: 'Approval %', data: data.map(d => d.rate), backgroundColor: '#22c55e' }]
+                        labels: decisionLabels,
+                        datasets: [{ label: 'Anzahl', data: decisionLabels.map(k => rates[k]), backgroundColor: decisionColors }]
                     },
-                    options: { scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+                    options: { scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
                 });
             }
-            // By region
+            // By region (doughnut)
             if (this.reports.by_region?.length) {
                 new Chart(document.getElementById('chart-region'), {
                     type: 'doughnut',
                     data: {
-                        labels: this.reports.by_region.map(r => r.region || 'Unknown'),
-                        datasets: [{ data: this.reports.by_region.map(r => r.count), backgroundColor: colors }]
+                        labels: this.reports.by_region.map(r => r.region || 'Unbekannt'),
+                        datasets: [{ data: this.reports.by_region.map(r => r.total), backgroundColor: colors }]
                     },
                     options: { plugins: { legend: { position: 'right' } } }
                 });
             }
-            // Score dimensions
-            if (this.reports.avg_scores?.by_dimension) {
-                const dims = this.reports.avg_scores.by_dimension;
+            // Score dimensions (radar) -- map flat avg_scores to radar chart
+            const s = this.reports.avg_scores;
+            if (s && s.avg_strategic != null) {
                 new Chart(document.getElementById('chart-scores'), {
                     type: 'radar',
                     data: {
-                        labels: dims.map(d => d.dimension),
-                        datasets: [{ label: 'Avg Score', data: dims.map(d => d.avg_score), backgroundColor: 'rgba(59,130,246,0.2)', borderColor: '#3b82f6' }]
+                        labels: ['Strategische Passung', 'Community Impact', 'Sichtbarkeit', 'Kosten-Effizienz', 'Gesamt'],
+                        datasets: [{
+                            label: 'Durchschnitt',
+                            data: [
+                                (s.avg_strategic || 0) * 100,
+                                (s.avg_community || 0) * 100,
+                                (s.avg_visibility || 0) * 100,
+                                (s.avg_cost_eff || 0) * 100,
+                                (s.avg_overall || 0) * 100,
+                            ],
+                            backgroundColor: 'rgba(59,130,246,0.2)',
+                            borderColor: '#3b82f6'
+                        }]
                     },
                     options: { scales: { r: { beginAtZero: true, max: 100 } } }
                 });
