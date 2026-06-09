@@ -28,15 +28,32 @@ logger = logging.getLogger(__name__)
 RECOMMENDATION_SYSTEM_PROMPT = """You are a sponsorship advisor for Stadtwerke Bodensee GmbH.
 Based on the evaluation scores and context, write a recommendation.
 Be specific and actionable. Your reasoning will be reviewed by management.
+
+CRITICAL: The system has already decided the action ({system_action}) and amount
+({system_amount} EUR) based on deterministic rules. Your job is to write the
+narrative that explains WHY {system_amount} EUR (not the requested amount) is
+appropriate. Do NOT propose a different amount in your reasoning text.
+
+Condition calibration — match stringency to amount:
+  - Under 1,500 EUR  : max 2 lightweight conditions. No "Premium Sponsor" tier,
+                       no ticket allotments, no contractual size ratios.
+  - 1,500 - 5,000    : max 4 conditions. Standard visibility asks.
+  - 5,000 - 15,000   : max 6 conditions. Mid-tier acknowledgment permitted.
+  - Above 15,000     : full conditions list including tier designation.
+
 Respond ONLY in valid JSON format."""
 
-RECOMMENDATION_USER_PROMPT = """Based on this evaluation, provide a sponsorship recommendation:
+RECOMMENDATION_USER_PROMPT = """Based on this evaluation, write a recommendation narrative:
 
 REQUEST SUMMARY:
 Organization: {org_name} ({org_type})
 Purpose: {purpose} ({purpose_category})
 Amount Requested: {amount} EUR
 Region: {region}
+
+SYSTEM DECISION (already computed by deterministic rules — your narrative must match this):
+Action: {system_action}
+Recommended Amount: {system_amount} EUR
 
 EVALUATION SCORES:
 Overall: {overall_score:.2f}/1.0
@@ -55,12 +72,15 @@ Max single sponsorship: {max_single} EUR
 SIMILAR PAST SPONSORSHIPS:
 {benchmarks}
 
-Provide your recommendation in this JSON format:
+Write your recommendation in this JSON format. Use the SYSTEM-RECOMMENDED AMOUNT
+({system_amount} EUR) throughout your reasoning text, not the requested amount.
+If system_amount differs from the requested amount, explain the reduction in the reasoning.
+
 {{
-  "action": "APPROVE|REJECT|PARTIAL|COUNTER_OFFER",
-  "recommended_amount": null or number,
-  "reasoning": "2-3 paragraph explanation for management",
-  "conditions": ["list of conditions if approving"],
+  "action": "{system_action}",
+  "recommended_amount": {system_amount},
+  "reasoning": "2-3 paragraph explanation for management, referencing {system_amount} EUR",
+  "conditions": ["list of conditions — calibrate stringency to the amount tier"],
   "risk_factors": ["potential risks to consider"],
   "comparison_to_past": "how this compares to similar approved requests"
 }}"""
@@ -232,13 +252,16 @@ class RecommendationAgent:
 
         try:
             client = AsyncAnthropic(api_key=self.config.llm.anthropic_api_key)
-            prompt = RECOMMENDATION_USER_PROMPT.format(
+            system_amount_int = int(result.recommended_amount or 0)
+            prompt_kwargs = dict(
                 org_name=extracted_data.get("organization_name", "Unknown"),
                 org_type=extracted_data.get("organization_type", "unknown"),
                 purpose=extracted_data.get("purpose", "Not stated"),
                 purpose_category=extracted_data.get("purpose_category", "unknown"),
-                amount=amount,
+                amount=int(amount),
                 region=extracted_data.get("region", "Not stated"),
+                system_action=result.action,
+                system_amount=system_amount_int,
                 overall_score=overall,
                 strategic_fit=evaluation_scores.get("strategic_fit_score", 0),
                 community_impact=evaluation_scores.get("community_impact_score", 0),
@@ -250,11 +273,16 @@ class RecommendationAgent:
                 max_single=f"{max_single:.2f}",
                 benchmarks=benchmarks_str,
             )
+            prompt = RECOMMENDATION_USER_PROMPT.format(**prompt_kwargs)
+            system_prompt = RECOMMENDATION_SYSTEM_PROMPT.format(
+                system_action=result.action,
+                system_amount=system_amount_int,
+            )
 
             response = await client.messages.create(
                 model=self.config.llm.sonnet_model,
                 max_tokens=1500,
-                system=RECOMMENDATION_SYSTEM_PROMPT,
+                system=system_prompt,
                 messages=[{"role": "user", "content": prompt}],
             )
 

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Kalibrierung{% endblock %}
-{% block page_title %}CIP Kalibrierungs-Dashboard{% endblock %}
+{% block title %}Recalibration{% endblock %}
+{% block page_title %}CIP Recalibration Dashboard{% endblock %}
 {% block nav_recalibration %}active{% endblock %}
 
 {% block content %}
@@ -9,20 +9,20 @@
     <!-- Header -->
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">CIP Kalibrierungs-Dashboard</h1>
-            <p class="text-sm text-gray-500 mt-1">Korrekturverfolgung, Vertrauensdrift-Erkennung und Score-Kalibrierung</p>
+            <h1 class="text-2xl font-bold text-gray-900">CIP Recalibration Dashboard</h1>
+            <p class="text-sm text-gray-500 mt-1">Override tracking, confidence drift detection, and score recalibration</p>
         </div>
         <div class="flex items-center gap-3">
             <select x-model="days" @change="load()" class="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-                <option value="30">Letzte 30 Tage</option>
-                <option value="60">Letzte 60 Tage</option>
-                <option value="90" selected>Letzte 90 Tage</option>
-                <option value="180">Letzte 180 Tage</option>
-                <option value="365">Letzte 365 Tage</option>
+                <option value="30">Last 30 Days</option>
+                <option value="60">Last 60 Days</option>
+                <option value="90" selected>Last 90 Days</option>
+                <option value="180">Last 180 Days</option>
+                <option value="365">Last 365 Days</option>
             </select>
             <button @click="load()" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                Aktualisieren
+                Refresh
             </button>
         </div>
     </div>
@@ -72,24 +72,24 @@
             <!-- KPI Cards -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Pruefungen gesamt</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Total Reviews</div>
                     <div class="text-3xl font-bold text-gray-900 mt-1" x-text="data.total_reviews"></div>
                     <div class="text-xs text-gray-400 mt-1" x-text="'Letzte ' + data.window_days + ' Tage'"></div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Korrekturrate</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Override Rate</div>
                     <div class="text-3xl font-bold mt-1"
                          :class="data.override_rate > 0.3 ? 'text-red-600' : data.override_rate > 0.15 ? 'text-yellow-600' : 'text-green-600'"
                          x-text="pct(data.override_rate)"></div>
-                    <div class="text-xs text-gray-400 mt-1" x-text="(data.upgrades + data.downgrades) + ' Korrekturen'"></div>
+                    <div class="text-xs text-gray-400 mt-1" x-text="(data.upgrades + data.downgrades) + ' Overrides'"></div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Hochstufungen</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Upgrades</div>
                     <div class="text-3xl font-bold text-blue-600 mt-1" x-text="data.upgrades"></div>
                     <div class="text-xs text-gray-400 mt-1">Mensch genehmigte KI-Ablehnungen</div>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Herabstufungen</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">Downgrades</div>
                     <div class="text-3xl font-bold text-orange-600 mt-1" x-text="data.downgrades"></div>
                     <div class="text-xs text-gray-400 mt-1">Mensch lehnte KI-Genehmigungen ab</div>
                 </div>
@@ -100,48 +100,48 @@
 
                 <!-- Override direction breakdown chart -->
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <h3 class="font-semibold text-gray-800 mb-4">Entscheidungs-Uebereinstimmung</h3>
+                    <h3 class="font-semibold text-gray-800 mb-4">Decision Agreement</h3>
                     <canvas id="alignmentChart" height="220"></canvas>
                 </div>
 
                 <!-- AI confidence stats -->
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <h3 class="font-semibold text-gray-800 mb-4">KI-Modell Konfidenz</h3>
+                    <h3 class="font-semibold text-gray-800 mb-4">AI Model Confidence</h3>
                     <div class="space-y-4">
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600">Durchschn. Konfidenz bei Korrektur</span>
+                                <span class="text-gray-600">Avg. Confidence at Override</span>
                                 <span class="font-semibold" x-text="pct(data.avg_ai_confidence)"></span>
                             </div>
                             <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
                                 <div class="h-full bg-primary-500 rounded-full transition-all duration-500"
                                      :style="'width:' + (data.avg_ai_confidence * 100) + '%'"></div>
                             </div>
-                            <p class="text-xs text-gray-400 mt-1">Niedrig = Modell war unsicher bei Korrektur</p>
+                            <p class="text-xs text-gray-400 mt-1">Low = model was uncertain when overridden</p>
                         </div>
                         <div>
                             <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600">Durchschn. Score bei Korrektur</span>
+                                <span class="text-gray-600">Avg. Score at Override</span>
                                 <span class="font-semibold" x-text="(data.avg_ai_score * 100).toFixed(1) + '%'"></span>
                             </div>
                             <div class="h-3 bg-gray-100 rounded-full overflow-hidden">
                                 <div class="h-full bg-accent-500 rounded-full transition-all duration-500"
                                      :style="'width:' + (data.avg_ai_score * 100) + '%'"></div>
                             </div>
-                            <p class="text-xs text-gray-400 mt-1">Durchschn. Bewertungsscore der korrigierten Anfragen</p>
+                            <p class="text-xs text-gray-400 mt-1">Avg. evaluation score of overridden requests</p>
                         </div>
                         <div class="pt-2 border-t border-gray-100">
                             <div class="flex justify-between text-sm">
-                                <span class="text-gray-600">Uebereinstimmungsrate</span>
+                                <span class="text-gray-600">Agreement Rate</span>
                                 <span class="font-semibold text-green-600"
                                       x-text="data.total_reviews > 0 ? pct(data.agreements / data.total_reviews) : '—'"></span>
                             </div>
                             <div class="flex justify-between text-sm mt-1">
-                                <span class="text-gray-600">Hochstufungsrate</span>
+                                <span class="text-gray-600">Upgrade Rate</span>
                                 <span class="font-semibold text-blue-600" x-text="pct(data.upgrade_rate)"></span>
                             </div>
                             <div class="flex justify-between text-sm mt-1">
-                                <span class="text-gray-600">Herabstufungsrate</span>
+                                <span class="text-gray-600">Downgrade Rate</span>
                                 <span class="font-semibold text-orange-600" x-text="pct(data.downgrade_rate)"></span>
                             </div>
                         </div>
@@ -152,7 +152,7 @@
             <!-- Monthly Trend -->
             <template x-if="data.monthly_trend && data.monthly_trend.length > 0">
                 <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                    <h3 class="font-semibold text-gray-800 mb-4">Monatlicher Korrektur-Trend</h3>
+                    <h3 class="font-semibold text-gray-800 mb-4">Monthly Override Trend</h3>
                     <canvas id="trendChart" height="120"></canvas>
                 </div>
             </template>
@@ -163,7 +163,7 @@
                 <!-- Score distribution of overridden requests -->
                 <template x-if="data.score_distribution && data.score_distribution.length > 0">
                     <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                        <h3 class="font-semibold text-gray-800 mb-1">Score-Verteilung bei Korrekturen</h3>
+                        <h3 class="font-semibold text-gray-800 mb-1">Score Distribution at Overrides</h3>
                         <p class="text-xs text-gray-400 mb-4">In welchen KI-Score-Bereichen korrigiert der Mensch?</p>
                         <canvas id="scoreDistChart" height="220"></canvas>
                     </div>
@@ -172,13 +172,13 @@
                 <!-- Reviewer patterns -->
                 <template x-if="data.by_reviewer && data.by_reviewer.length > 0">
                     <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-                        <h3 class="font-semibold text-gray-800 mb-4">Pruefer-Muster</h3>
+                        <h3 class="font-semibold text-gray-800 mb-4">Reviewer Patterns</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="text-left text-xs text-gray-500 uppercase border-b">
-                                        <th class="pb-2 font-medium">Pruefer</th>
-                                        <th class="pb-2 font-medium text-right">Pruefungen</th>
+                                        <th class="pb-2 font-medium">Reviewer</th>
+                                        <th class="pb-2 font-medium text-right">Reviews</th>
                                         <th class="pb-2 font-medium text-right">Korrekturen</th>
                                         <th class="pb-2 font-medium text-right">Korrektur %</th>
                                         <th class="pb-2 font-medium text-right">Durchschn. Konf.</th>
@@ -245,8 +245,8 @@
                     <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                     </svg>
-                    <p class="text-gray-500 font-medium">Noch keine manuellen Pruefungen erfasst</p>
-                    <p class="text-gray-400 text-sm mt-1">Korrekturereignisse erscheinen hier, sobald Pruefer Anfragen bearbeiten.</p>
+                    <p class="text-gray-500 font-medium">Noch keine manuellen Reviews erfasst</p>
+                    <p class="text-gray-400 text-sm mt-1">Korrekturereignisse erscheinen hier, sobald Reviewer Anfragen bearbeiten.</p>
                 </div>
             </template>
 
@@ -358,13 +358,13 @@ function recalibration() {
                             stack: 'stack',
                         },
                         {
-                            label: 'Hochstufungen',
+                            label: 'Upgrades',
                             data: t.map(r => r.upgrades),
                             backgroundColor: '#93c5fd',
                             stack: 'stack',
                         },
                         {
-                            label: 'Herabstufungen',
+                            label: 'Downgrades',
                             data: t.map(r => r.downgrades),
                             backgroundColor: '#fdba74',
                             stack: 'stack',
@@ -402,12 +402,12 @@ function recalibration() {
                     labels,
                     datasets: [
                         {
-                            label: 'Hochstufungen (KI zu streng)',
+                            label: 'Upgrades (KI zu streng)',
                             data: labels.map(l => buckets[l].upgrade),
                             backgroundColor: '#93c5fd',
                         },
                         {
-                            label: 'Herabstufungen (KI zu milde)',
+                            label: 'Downgrades (KI zu milde)',
                             data: labels.map(l => -buckets[l].downgrade),
                             backgroundColor: '#fdba74',
                         },

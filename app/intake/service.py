@@ -260,6 +260,73 @@ class UnifiedIngestionService:
             source_email = req.get("source_email", "") if isinstance(req, dict) else req.get("source_email", "")
             source_subject = req.get("source_subject", "") if isinstance(req, dict) else req.get("source_subject", "")
 
+            # WEB FORM BYPASS: structured data already available, skip IntakeAgent
+            if source_channel == "web_form":
+                import json as _json
+                try:
+                    form_data = _json.loads(raw_bytes.decode("utf-8"))
+                except Exception:
+                    form_data = {}
+
+                # Map form fields to SponsorshipRequest structure
+                extracted_data = {
+                    "organization_name": form_data.get("organization_name"),
+                    "organization_type": form_data.get("organization_type", "unknown"),
+                    "requested_amount": form_data.get("requested_amount"),
+                    "purpose": form_data.get("purpose"),
+                    "purpose_category": form_data.get("purpose_category", "unknown"),
+                    "description": form_data.get("description"),
+                    "event_date": form_data.get("event_date"),
+                    "region": form_data.get("region"),
+                    "target_audience": form_data.get("target_audience"),
+                    "expected_attendance": form_data.get("expected_attendance"),
+                    "member_count": form_data.get("member_count"),
+                    "contact": {
+                        "name": form_data.get("contact_name"),
+                        "email": form_data.get("contact_email"),
+                        "phone": form_data.get("contact_phone"),
+                    },
+                    "visibility": form_data.get("visibility") if isinstance(form_data.get("visibility"), dict) else {
+                        "logo_placement": form_data.get("proposed_visibility", ""),
+                    },
+                    "additional_context": None,
+                    "extraction_language": "de",
+                }
+
+                # Save extraction to DB
+                if self.db:
+                    await self.db.save_extraction(
+                        request_id=request_id,
+                        extracted_data=extracted_data,
+                        raw_text_used="",
+                        extraction_method="web_form_pydantic",
+                        extraction_confidence=0.95,
+                        source_format="web_form",
+                        source_channel="web_form",
+                        completeness_score=0.90,
+                        quality_level="high",
+                        missing_fields=[],
+                        needs_human_review=False,
+                    )
+                    await self.db.update_state(request_id, "extracted")
+
+                logger.info(
+                    "[%s] Web form bypass: extracted %s, amount=%s, quality=high",
+                    request_id, extracted_data.get("organization_name"), extracted_data.get("requested_amount"),
+                )
+
+                # Go directly to pipeline executor
+                if self.pipeline_executor:
+                    await self.pipeline_executor.run(
+                        request_id=request_id,
+                        extracted_data=extracted_data,
+                        completeness_score=0.90,
+                        quality_level="high",
+                        missing_fields=[],
+                        raw_text_used=None,
+                    )
+                return
+
             # Build email metadata and body if this came from email channel
             email_metadata = None
             email_body = None

@@ -118,7 +118,7 @@ async def lifespan(app: FastAPI):
 
     # 3. Email sender (create first so PipelineExecutor can use it)
     from app.agents.email_sender import EmailSender
-    email_sender = EmailSender.from_config(config) if config.smtp.enabled else None
+    email_sender = EmailSender.from_config(config, db=db) if config.smtp.enabled else None
     if email_sender:
         logger.info("Email sender: enabled (SMTP %s:%d)", config.smtp.host, config.smtp.port)
     else:
@@ -259,24 +259,28 @@ async def dashboard_overview(request: Request):
     return templates.TemplateResponse("overview.html", {"request": request})
 
 
-@app.get("/dashboard/pipeline", response_class=HTMLResponse)
-async def dashboard_pipeline(request: Request):
-    return templates.TemplateResponse("pipeline.html", {"request": request})
-
-
 @app.get("/dashboard/requests", response_class=HTMLResponse)
 async def dashboard_requests(request: Request):
     return templates.TemplateResponse("requests.html", {"request": request})
 
 
-@app.get("/dashboard/request/{request_id}", response_class=HTMLResponse)
-async def dashboard_detail(request: Request, request_id: str):
-    return templates.TemplateResponse("detail.html", {"request": request})
+@app.get("/dashboard/pipeline", response_class=HTMLResponse)
+async def dashboard_pipeline():
+    """Redirect old Pipeline page to Requests > In Progress tab."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse("/dashboard/requests?tab=progress", status_code=302)
 
 
 @app.get("/dashboard/review", response_class=HTMLResponse)
-async def dashboard_review(request: Request):
-    return templates.TemplateResponse("review.html", {"request": request})
+async def dashboard_review():
+    """Redirect old Review page to Requests > Needs Review tab."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse("/dashboard/requests?tab=review", status_code=302)
+
+
+@app.get("/dashboard/request/{request_id}", response_class=HTMLResponse)
+async def dashboard_detail(request: Request, request_id: str):
+    return templates.TemplateResponse("detail.html", {"request": request})
 
 
 @app.get("/dashboard/reports", response_class=HTMLResponse)

@@ -231,6 +231,8 @@ async def find_similar_historical(
     Returns:
         List of historical sponsorship dicts, ranked by similarity
     """
+    current_org = (extracted_data.get("organization_name") or "").strip()
+
     if await is_pgvector_available(db):
         text = _request_to_text(extracted_data)
         vector = await embed_text(text, config)
@@ -246,9 +248,10 @@ async def find_similar_historical(
                                1 - (embedding <=> $1::vector) AS similarity
                         FROM historical_sponsorships
                         WHERE embedding IS NOT NULL
+                          AND ($3 = '' OR organization_name NOT ILIKE $3)
                         ORDER BY embedding <=> $1::vector
                         LIMIT $2
-                    """, vector, limit)
+                    """, vector, limit, current_org)
                 results = [dict(r) for r in rows]
                 logger.info(
                     "pgvector similarity search: %d results for %s",
@@ -267,11 +270,16 @@ async def _sql_fallback_search(db, extracted_data: dict, limit: int) -> list[dic
     """SQL fallback: category + org_type + region matching (existing behaviour)."""
     results = []
     seen = set()
+    current_org = (extracted_data.get("organization_name") or "").strip()
 
     async def fetch(where: str, params: list) -> list[dict]:
+        self_filter = ""
+        if current_org:
+            params = params + [current_org]
+            self_filter = f" AND organization_name NOT ILIKE ${len(params)}"
         async with db.acquire() as conn:
             rows = await conn.fetch(
-                f"SELECT * FROM historical_sponsorships WHERE {where} ORDER BY year DESC LIMIT ${ len(params) + 1}",
+                f"SELECT * FROM historical_sponsorships WHERE {where}{self_filter} ORDER BY year DESC LIMIT ${len(params) + 1}",
                 *params, limit,
             )
         return [dict(r) for r in rows]

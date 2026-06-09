@@ -40,7 +40,7 @@
                                 <option value="">Select...</option>
                                 <option value="approved">Approve</option>
                                 <option value="rejected">Reject</option>
-                                <option value="conditionally_approved">Conditional</option>
+                                <option value="conditionally_approved">Put on Hold</option>
                             </select>
                         </div>
                         <div>
@@ -73,7 +73,7 @@
 function reviewPage() {
     return {
         queue: [],
-        formatEUR(v) { return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v); },
+        formatEUR(v) { return Math.round(v).toLocaleString('en-US') + ' EUR'; },
         async load() {
             try {
                 const r = await fetch('/api/dashboard/review-queue');

@@ -9,15 +9,15 @@
   <!-- Header -->
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-xl font-bold text-gray-800">Live Pipeline Monitor</h1>
-      <p class="text-sm text-gray-500" x-text="trackingId ? 'Tracking: ' + trackingId.substring(0,8) + '...' : 'Waiting for new email...'"></p>
+      <h1 class="text-xl font-bold text-gray-800" x-text="t('live.title')">Live Pipeline Monitor</h1>
+      <p class="text-sm text-gray-500" x-text="trackingId ? t('live.tracking') + ' ' + trackingId.substring(0,8) + '...' : t('live.waiting')"></p>
     </div>
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2 text-sm">
         <span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span></span>
-        <span class="text-green-600 font-medium">Polling every 2s</span>
+        <span class="text-green-600 font-medium" x-text="t('live.polling')">Polling every 2s</span>
       </div>
-      <button @click="resetTracking()" class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition">Reset</button>
+      <button @click="resetTracking()" class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition" x-text="t('live.reset')">Reset</button>
     </div>
   </div>
 
@@ -39,19 +39,23 @@
         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
       </div>
       <div class="flex-1">
-        <h3 class="font-bold text-purple-800 text-lg mb-1">Human Review Required</h3>
+        <h3 class="font-bold text-purple-800 text-lg mb-1" x-text="t('live.human_review')">Human Review Required</h3>
         <p class="text-sm text-purple-700 mb-3">
-          AI recommends: <span class="font-bold" x-text="data?.recommendation?.action || '?'"></span>
-          <span x-text="data?.recommendation?.recommended_amount ? data.recommendation.recommended_amount + ' EUR' : ''"></span>
-          (Confidence: <span x-text="Math.round((data?.recommendation?.confidence || 0) * 100) + '%'"></span>)
+          <span x-text="t('live.ai_recommends')">AI recommends:</span> <span class="font-bold" x-text="data?.recommendation?.action === 'PARTIAL' ? t('status.put_on_hold') : (data?.recommendation?.action || '?')"></span>
+          <span x-text="data?.recommendation?.recommended_amount ? Number(data.recommendation.recommended_amount).toLocaleString('de-DE') + ' EUR' : ''"></span>
+          (Confidence: <span class="font-bold" x-text="Math.round((data?.recommendation?.confidence || 0) * 100) + '%'"></span>)
         </p>
         <p x-show="data?.recommendation?.reasoning" class="text-xs text-purple-600 mb-4 italic" x-text="data?.recommendation?.reasoning?.substring(0, 200) + '...'"></p>
         <div class="flex items-center gap-3">
-          <button @click="submitReview('APPROVED')" class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition">Approve</button>
-          <button @click="submitReview('PARTIAL')" class="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition">Partial</button>
-          <button @click="submitReview('REJECTED')" class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition">Reject</button>
-          <input type="number" x-model="reviewAmount" placeholder="Amount (EUR)" class="w-32 px-3 py-2 text-sm border rounded-lg" />
-          <a :href="'/dashboard/review'" class="text-xs text-purple-600 hover:underline ml-2">Open Review Page</a>
+          <button @click="submitReview('APPROVED')" class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition" x-text="t('review.approve')">Approve</button>
+          <button @click="submitReview('PARTIAL')" class="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition" x-text="t('review.hold')">Put on Hold</button>
+          <button @click="submitReview('REJECTED')" class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition" x-text="t('review.reject')">Reject</button>
+          <div class="flex items-center gap-1">
+            <label class="text-xs text-purple-600 font-medium" x-text="t('live.amount')">Amount:</label>
+            <input type="number" x-model="reviewAmount" placeholder="EUR" class="w-28 px-3 py-2 text-sm border rounded-lg" />
+            <span class="text-xs text-purple-400">EUR</span>
+          </div>
+          <a :href="'/dashboard/review'" class="text-xs text-purple-600 hover:underline ml-2" x-text="t('live.open_review')">Open Review Page</a>
         </div>
       </div>
     </div>
@@ -64,8 +68,8 @@
         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
       </div>
       <div>
-        <p class="font-bold text-green-800">Pipeline Complete -- <span x-text="data?.completion?.letter_type"></span> letter generated</p>
-        <p x-show="data?.completion?.sent_at" class="text-xs text-green-600">Decision email sent to applicant</p>
+        <p class="font-bold text-green-800"><span x-text="t('live.pipeline_complete')">Pipeline Complete</span> -- <span x-text="data?.completion?.letter_type"></span> <span x-text="t('live.letter_generated')">letter generated</span></p>
+        <p x-show="data?.completion?.sent_at" class="text-xs text-green-600" x-text="t('live.email_sent')">Decision email sent to applicant</p>
       </div>
     </div>
   </div>
@@ -73,14 +77,14 @@
   <!-- METRO PIPELINE -->
   <div class="bg-white rounded-xl shadow-sm border p-6">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Pipeline Progress</h2>
+      <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('live.pipeline_progress')">Pipeline Progress</h2>
       <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="stateColor()" x-text="data?.request?.state || 'waiting'"></span>
     </div>
     <div class="relative flex items-center justify-between px-4">
       <div class="absolute left-8 right-8 h-1 bg-gray-200 top-1/2 -translate-y-1/2 rounded"></div>
       <div class="absolute left-8 h-1 bg-green-500 top-1/2 -translate-y-1/2 rounded transition-all duration-500" :style="'width:' + progressWidth() + '%'"></div>
       <template x-for="(stage, i) in stages" :key="stage.id">
-        <div class="relative flex flex-col items-center z-10" style="min-width: 80px;">
+        <div class="relative flex flex-col items-center z-10" style="min-width: 100px;">
           <div class="w-8 h-8 rounded-full border-3 flex items-center justify-center text-xs font-bold transition-all duration-300"
                :class="{ 'bg-green-500 border-green-500 text-white': isComplete(stage.id), 'bg-white border-blue-500 text-blue-600 ring-4 ring-blue-100 animate-pulse': isActive(stage.id), 'bg-white border-gray-300 text-gray-400': isFuture(stage.id), 'bg-red-500 border-red-500 text-white': isFailed(stage.id), 'bg-amber-500 border-amber-500 text-white': isBlocked(stage.id), 'bg-purple-500 border-purple-500 text-white ring-4 ring-purple-100': isHumanReview(stage.id) }">
             <span x-show="isComplete(stage.id)">&#10003;</span>
@@ -90,41 +94,22 @@
             <span x-show="isBlocked(stage.id)">!</span>
             <span x-show="isHumanReview(stage.id)"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></span>
           </div>
-          <span class="mt-2 text-xs font-medium text-center leading-tight" :class="isActive(stage.id) ? 'text-blue-600 font-bold' : (isComplete(stage.id) ? 'text-green-600' : (isHumanReview(stage.id) ? 'text-purple-600 font-bold' : 'text-gray-400'))" x-text="stage.label"></span>
+          <span class="mt-2 text-xs font-medium text-center leading-tight" style="hyphens: none; -webkit-hyphens: none; -ms-hyphens: none; word-break: normal; overflow-wrap: normal;" :class="isActive(stage.id) ? 'text-blue-600 font-bold' : (isComplete(stage.id) ? 'text-green-600' : (isHumanReview(stage.id) ? 'text-purple-600 font-bold' : 'text-gray-400'))" x-text="stage.label"></span>
         </div>
       </template>
     </div>
   </div>
 
   <!-- TWO COLUMNS -->
-  <div class="grid grid-cols-12 gap-4">
+  <div class="grid grid-cols-12 gap-4" style="align-items: start;">
 
-    <!-- LEFT (5 cols) -->
+    <!-- ============ LEFT (5 cols) - AI Analysis ============ -->
     <div class="col-span-5 space-y-3">
 
-      <!-- 1. ORIGINAL EMAIL / SOURCE -->
-      <div x-show="data?.request" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
-        <div class="flex items-center justify-between mb-2" @click="sections.source = !sections.source" style="cursor:pointer;">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Source Document</h3>
-          <div class="flex items-center gap-2">
-            <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full" x-text="data?.request?.received_via || 'email'"></span>
-            <svg class="w-4 h-4 text-gray-400 transition-transform" :class="sections.source ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </div>
-        </div>
-        <div x-show="sections.source" x-transition>
-          <div class="text-xs space-y-1 bg-gray-50 rounded p-3">
-            <div><span class="text-gray-400 w-16 inline-block">From:</span> <span class="text-gray-700" x-text="data?.request?.source_email || '-'"></span></div>
-            <div><span class="text-gray-400 w-16 inline-block">Subject:</span> <span class="text-gray-700" x-text="data?.request?.source_subject || '-'"></span></div>
-            <div><span class="text-gray-400 w-16 inline-block">Format:</span> <span class="text-gray-700" x-text="data?.request?.source_format || '-'"></span></div>
-            <div><span class="text-gray-400 w-16 inline-block">Received:</span> <span class="text-gray-700" x-text="data?.request?.created_at ? new Date(data.request.created_at).toLocaleString('de-DE') : '-'"></span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. EXTRACTED DATA -->
+      <!-- 1. EXTRACTED DATA -->
       <div x-show="data?.extraction" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
         <div class="flex items-center justify-between mb-2" @click="sections.extraction = !sections.extraction" style="cursor:pointer;">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Extracted Data</h3>
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.extracted_data')">Extracted Data</h3>
           <svg class="w-4 h-4 text-gray-400 transition-transform" :class="sections.extraction ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
         <div x-show="sections.extraction" x-transition class="space-y-2">
@@ -132,18 +117,18 @@
             <div class="flex items-start gap-2">
               <span class="text-xs font-mono text-gray-400 w-28 flex-shrink-0 pt-0.5" x-text="field.label"></span>
               <template x-if="field.value"><span class="text-sm text-gray-800" x-text="field.value"></span></template>
-              <template x-if="!field.value && field.tier <= 1"><span class="text-xs font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full animate-pulse">MISSING - BLOCKER</span></template>
-              <template x-if="!field.value && field.tier == 2"><span class="text-xs font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">MISSING</span></template>
-              <template x-if="!field.value && field.tier >= 3"><span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">not provided</span></template>
+              <template x-if="!field.value && field.tier <= 1"><span class="text-xs font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-full animate-pulse" x-text="t('comp.blocker')">MISSING - BLOCKER</span></template>
+              <template x-if="!field.value && field.tier == 2"><span class="text-xs font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full" x-text="t('comp.missing_label')">MISSING</span></template>
+              <template x-if="!field.value && field.tier >= 3"><span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full" x-text="t('comp.not_provided')">not provided</span></template>
             </div>
           </template>
         </div>
       </div>
 
-      <!-- 3. COMPLETENESS + FOLLOW-UP -->
+      <!-- 2. COMPLETENESS -->
       <div class="bg-white rounded-xl shadow-sm border p-4">
         <div class="flex items-center justify-between mb-2" @click="sections.completeness = !sections.completeness" style="cursor:pointer;">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Completeness</h3>
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.completeness')">Completeness</h3>
           <svg class="w-4 h-4 text-gray-400 transition-transform" :class="sections.completeness ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
         <div x-show="sections.completeness" x-transition>
@@ -155,101 +140,84 @@
           </div>
           <div class="flex items-center gap-2 mb-2">
             <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="{ 'bg-green-100 text-green-700': data?.extraction?.quality_level === 'high', 'bg-amber-100 text-amber-700': data?.extraction?.quality_level === 'medium', 'bg-red-100 text-red-700': data?.extraction?.quality_level === 'low', 'bg-gray-100 text-gray-500': !data?.extraction?.quality_level }" x-text="(data?.extraction?.quality_level || 'pending').toUpperCase()"></span>
-            <span x-show="data?.request?.state === 'awaiting_info'" class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full animate-pulse">Awaiting reply...</span>
+            <span x-show="data?.request?.state === 'awaiting_info'" class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full animate-pulse" x-text="t('comp.awaiting')">Awaiting reply...</span>
           </div>
-          <!-- Missing fields -->
-          <div x-show="missingFields().length > 0" class="mb-2 space-y-1">
-            <p class="text-xs font-bold text-red-600">Missing fields:</p>
-            <template x-for="f in missingFields()" :key="f"><div class="text-xs text-red-600 pl-2" x-text="'- ' + fieldLabelDE(f)"></div></template>
-          </div>
-          <!-- Follow-up email status -->
-          <div x-show="hasFollowup()" class="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-xs font-bold text-blue-700">Follow-Up Email</span>
-              <span class="text-xs px-1.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700">Sent</span>
-            </div>
-            <p class="text-xs text-blue-600">Missing fields requested:</p>
-            <div class="mt-1 space-y-0.5">
-              <template x-for="f in missingFields()" :key="f">
-                <div class="text-xs text-blue-800 pl-2" x-text="'- ' + fieldLabelDE(f)"></div>
-              </template>
-            </div>
-            <div class="mt-2 flex items-center gap-2">
-              <button @click="showFollowupEmail = !showFollowupEmail" class="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition" x-text="showFollowupEmail ? 'Hide Email' : 'View Sent Email'"></button>
-              <a x-show="trackingId" :href="'/complete/' + trackingId" target="_blank" class="text-xs px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition">Open Form Link</a>
-            </div>
-            <div x-show="showFollowupEmail" class="mt-2 text-xs text-gray-700 whitespace-pre-line bg-white p-2 rounded border max-h-32 overflow-y-auto" x-text="getFollowupEmailPreview()"></div>
-          </div>
-          <!-- Applicant reply status -->
-          <div x-show="hasFollowupReply()" class="mt-2 p-2 bg-green-50 rounded border border-green-200">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-green-700">Applicant Reply Received</span>
-              <span class="text-xs px-1.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700">Merged</span>
-            </div>
-            <p class="text-xs text-green-600 mt-1" x-text="getFollowupFields()"></p>
+          <div x-show="missingFields().length > 0" class="space-y-1">
+            <p class="text-xs font-bold text-red-600" x-text="t('comp.missing')">Missing fields:</p>
+            <template x-for="f in missingFields()" :key="f"><div class="text-xs text-red-600 pl-2" x-text="'- ' + fieldLabel(f)"></div></template>
           </div>
         </div>
       </div>
 
-      <!-- 4. ELIGIBILITY -->
+      <!-- 3. ELIGIBILITY -->
       <div x-show="data?.eligibility" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
         <div class="flex items-center justify-between mb-2" @click="sections.eligibility = !sections.eligibility" style="cursor:pointer;">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Eligibility Check</h3>
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.eligibility')">Eligibility Check</h3>
           <div class="flex items-center gap-2">
-            <span x-show="data?.eligibility?.eligible" class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold">ELIGIBLE</span>
-            <span x-show="data?.eligibility && !data?.eligibility?.eligible" class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-bold">REJECTED</span>
+            <span x-show="data?.eligibility?.eligible" class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-bold" x-text="t('elig.eligible')">ELIGIBLE</span>
+            <span x-show="data?.eligibility && !data?.eligibility?.eligible" class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full font-bold" x-text="t('elig.rejected')">REJECTED</span>
             <svg class="w-4 h-4 text-gray-400 transition-transform" :class="sections.eligibility ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </div>
         </div>
         <div x-show="sections.eligibility" x-transition>
-          <span class="text-xs text-gray-500" x-text="'Confidence: ' + Math.round((data?.eligibility?.confidence || 0) * 100) + '%'"></span>
+          <span class="text-xs text-gray-500" x-text="t('elig.confidence') + ' ' + Math.round((data?.eligibility?.confidence || 0) * 100) + '%'"></span>
           <div class="space-y-1 mt-2">
             <template x-for="rule in (data?.eligibility?.rules_checked || [])" :key="rule.rule">
-              <div class="flex items-center gap-2 text-xs">
-                <span :class="rule.passed ? 'text-green-500' : 'text-red-500'" x-text="rule.passed ? 'PASS' : (rule.skipped ? 'SKIP' : 'FAIL')" class="font-mono w-8"></span>
+              <div class="flex items-center gap-2 text-sm">
+                <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" :class="rule.passed ? 'bg-green-100 text-green-600' : (rule.skipped ? 'bg-gray-100 text-gray-400' : 'bg-red-100 text-red-500')">
+                  <span x-text="rule.passed ? '&#10003;' : (rule.skipped ? '-' : '&#10007;')" class="text-xs font-bold"></span>
+                </span>
                 <span class="text-gray-600" x-text="rule.rule"></span>
-                <span class="text-gray-400 truncate" x-text="rule.details" style="max-width: 180px;"></span>
+                <span class="text-xs text-gray-400 ml-auto truncate" x-text="rule.details" style="max-width: 160px;"></span>
               </div>
             </template>
           </div>
-          <!-- Rejection letter section -->
-          <div x-show="data?.eligibility && !data?.eligibility?.eligible && data?.completion" class="mt-3 p-3 bg-red-50 rounded border border-red-200">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold text-red-700">Rejection Letter</span>
-              <span class="text-xs px-1.5 py-0.5 rounded-full font-medium" :class="data?.completion?.sent_at ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="data?.completion?.sent_at ? 'Sent' : 'Draft'"></span>
-            </div>
-            <div x-show="showRejectionLetter" class="text-xs text-gray-700 whitespace-pre-line bg-white p-2 rounded border max-h-40 overflow-y-auto" x-text="data?.completion?.letter_content"></div>
-            <button @click="showRejectionLetter = !showRejectionLetter" class="text-xs text-red-600 hover:underline mt-1" x-text="showRejectionLetter ? 'Hide Letter' : 'View Letter'"></button>
-          </div>
         </div>
       </div>
 
-      <!-- 5. RESEARCH AGENT -->
+      <!-- 4. RESEARCH AGENT -->
       <div x-show="data?.research" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
         <div class="flex items-center justify-between mb-2" @click="sections.research = !sections.research" style="cursor:pointer;">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Research Agent</h3>
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.research')">Research Agent</h3>
           <svg class="w-4 h-4 text-gray-400 transition-transform" :class="sections.research ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
         </div>
         <div x-show="sections.research" x-transition>
-        <div class="space-y-2">
-          <div class="flex justify-between text-sm"><span class="text-gray-500">Credibility Score</span><span class="font-bold" :class="(data?.research?.credibility_score || 0) >= 0.7 ? 'text-green-600' : 'text-amber-600'" x-text="((data?.research?.credibility_score || 0) * 100).toFixed(0) + '%'"></span></div>
-          <div class="flex justify-between text-sm"><span class="text-gray-500">Web Presence</span><span class="font-bold" x-text="((data?.research?.web_presence_score || 0) * 100).toFixed(0) + '%'"></span></div>
-          <div class="flex justify-between text-xs"><span class="text-gray-400">Freemail</span><span :class="data?.research?.is_freemail ? 'text-amber-500' : 'text-green-500'" x-text="data?.research?.is_freemail ? 'Yes (warning)' : 'No'"></span></div>
-          <div class="flex justify-between text-xs"><span class="text-gray-400">Registered Org (e.V./gGmbH)</span><span :class="data?.research?.registered_association ? 'text-green-500' : 'text-gray-400'" x-text="data?.research?.registered_association ? 'Yes' : 'Unknown'"></span></div>
-          <div class="flex justify-between text-xs"><span class="text-gray-400">Website Active</span><span :class="data?.research?.website_active ? 'text-green-500' : 'text-gray-400'" x-text="data?.research?.website_active ? 'Yes' : 'Not checked'"></span></div>
+        <div class="flex justify-between items-center text-sm mb-3">
+          <span class="text-gray-500 font-medium" x-text="t('research.credibility')">Organisation Credibility</span>
+          <span class="font-bold px-2 py-0.5 rounded-full text-xs" :class="(data?.research?.credibility_score || 0) >= 0.7 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'" x-text="((data?.research?.credibility_score || 0) * 100).toFixed(0) + '%'"></span>
+        </div>
+        <div class="space-y-1.5">
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" :class="!data?.research?.is_freemail ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'"><span x-text="!data?.research?.is_freemail ? '&#10003;' : '&#10007;'" class="text-xs font-bold"></span></span>
+            <span class="text-gray-600" x-text="t('research.org_email')">Organisation Email</span>
+            <span class="text-xs ml-auto" :class="!data?.research?.is_freemail ? 'text-green-600' : 'text-amber-500'" x-text="!data?.research?.is_freemail ? t('research.verified') : t('research.freemail')"></span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" :class="data?.research?.registered_association ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'"><span x-text="data?.research?.registered_association ? '&#10003;' : '?'" class="text-xs font-bold"></span></span>
+            <span class="text-gray-600" x-text="t('research.registered')">Registered Organisation (e.V./gGmbH)</span>
+            <span class="text-xs ml-auto" :class="data?.research?.registered_association ? 'text-green-600' : 'text-gray-400'" x-text="data?.research?.registered_association ? t('research.confirmed') : t('research.unknown')"></span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" :class="data?.research?.website_active ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'"><span x-text="data?.research?.website_active ? '&#10003;' : '&#10007;'" class="text-xs font-bold"></span></span>
+            <span class="text-gray-600" x-text="t('research.website')">Website Active</span>
+            <span class="text-xs ml-auto" :class="data?.research?.website_active ? 'text-green-600' : 'text-gray-400'" x-text="data?.research?.website_active ? t('research.online') : t('research.not_found')"></span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" :class="(!data?.research?.red_flags || data.research.red_flags.length === 0) ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'"><span x-text="(!data?.research?.red_flags || data.research.red_flags.length === 0) ? '&#10003;' : '&#10007;'" class="text-xs font-bold"></span></span>
+            <span class="text-gray-600" x-text="t('research.red_flags')">No Red Flags</span>
+            <span class="text-xs ml-auto" :class="(!data?.research?.red_flags || data.research.red_flags.length === 0) ? 'text-green-600' : 'text-red-500'" x-text="(!data?.research?.red_flags || data.research.red_flags.length === 0) ? t('research.clear') : data.research.red_flags.length + ' ' + t('research.flags')"></span>
+          </div>
           <div x-show="data?.research?.red_flags && data.research.red_flags.length > 0" class="mt-2 p-2 bg-red-50 rounded text-xs text-red-600">
-            <span class="font-bold">Red Flags:</span>
             <template x-for="flag in (data?.research?.red_flags || [])"><span class="block" x-text="'- ' + flag"></span></template>
           </div>
-          <div x-show="!data?.research?.red_flags || data.research.red_flags.length === 0" class="text-xs text-green-500 font-medium">No red flags detected</div>
         </div>
         </div>
       </div>
 
-      <!-- 7. EVALUATION -->
+      <!-- 5. EVALUATION -->
       <div x-show="data?.evaluation" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
         <div class="flex items-center justify-between mb-2" @click="sections.evaluation = !sections.evaluation" style="cursor:pointer;">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Evaluation</h3>
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.evaluation')">Evaluation</h3>
           <div class="flex items-center gap-2">
             <span class="text-sm font-bold" :class="data?.evaluation?.overall_score >= 0.65 ? 'text-green-600' : (data?.evaluation?.overall_score >= 0.35 ? 'text-amber-600' : 'text-red-600')" x-text="data?.evaluation?.overall_score ? (data.evaluation.overall_score * 100).toFixed(0) + '/100' : ''"></span>
             <svg class="w-4 h-4 text-gray-400 transition-transform" :class="sections.evaluation ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -258,43 +226,55 @@
         <div x-show="sections.evaluation" x-transition>
         <template x-for="dim in evalDimensions()" :key="dim.label">
           <div class="mb-2">
-            <div class="flex justify-between text-xs mb-0.5"><span class="text-gray-600" x-text="dim.label"></span><span class="font-bold" x-text="dim.score.toFixed(2)"></span></div>
+            <div class="flex justify-between text-xs mb-0.5"><span class="text-gray-600" x-text="dim.label"></span><span class="font-bold" x-text="Math.round(dim.score * 100) + '%'"></span></div>
             <div class="bg-gray-200 rounded-full h-2"><div class="h-2 rounded-full transition-all duration-500" :class="dim.score >= 0.65 ? 'bg-green-500' : (dim.score >= 0.35 ? 'bg-amber-500' : 'bg-red-500')" :style="'width:' + (dim.score * 100) + '%'"></div></div>
           </div>
         </template>
         <div x-show="data?.evaluation?.overall_score" class="mt-3 pt-3 border-t flex justify-between">
-          <span class="font-bold text-sm">Overall Score</span>
-          <span class="font-bold text-lg" :class="data?.evaluation?.overall_score >= 0.65 ? 'text-green-600' : (data?.evaluation?.overall_score >= 0.35 ? 'text-amber-600' : 'text-red-600')" x-text="data?.evaluation?.overall_score?.toFixed(2)"></span>
+          <span class="font-bold text-sm" x-text="t('eval.overall')">Overall Score</span>
+          <span class="font-bold text-lg" :class="data?.evaluation?.overall_score >= 0.65 ? 'text-green-600' : (data?.evaluation?.overall_score >= 0.35 ? 'text-amber-600' : 'text-red-600')" x-text="Math.round((data?.evaluation?.overall_score || 0) * 100) + ' / 100'"></span>
         </div>
         <div x-show="data?.evaluation?.strengths" class="mt-2">
-          <p class="text-xs font-bold text-green-600">Strengths:</p>
+          <p class="text-xs font-bold text-green-600" x-text="t('eval.strengths')">Strengths:</p>
           <template x-for="s in (data?.evaluation?.strengths || [])"><p class="text-xs text-gray-600 pl-2" x-text="'+ ' + s"></p></template>
         </div>
         <div x-show="data?.evaluation?.weaknesses" class="mt-1">
-          <p class="text-xs font-bold text-red-600">Weaknesses:</p>
+          <p class="text-xs font-bold text-red-600" x-text="t('eval.weaknesses')">Weaknesses:</p>
           <template x-for="w in (data?.evaluation?.weaknesses || [])"><p class="text-xs text-gray-600 pl-2" x-text="'- ' + w"></p></template>
+        </div>
+        <div x-show="data?.evaluation?.benchmark_comparisons?.length" class="mt-3 pt-3 border-t">
+          <p class="text-xs font-bold text-gray-500 mb-2" x-text="t('eval.benchmarks')">Vergleichbare Sponsorings:</p>
+          <div class="space-y-1">
+            <template x-for="b in (data?.evaluation?.benchmark_comparisons || []).slice(0, 5)" :key="b.id || b.org">
+              <div class="flex justify-between text-xs bg-blue-50 rounded px-2 py-1">
+                <span class="text-gray-700" x-text="(b.org || b.organization_name || '?') + ' (' + (b.year || '?') + ')'"></span>
+                <span class="font-medium text-blue-700" x-text="(b.amount || b.amount_approved ? Math.round(b.amount || b.amount_approved).toLocaleString('en-US') + ' EUR' : '-') + (b.rating || b.outcome_rating ? ' / ' + (b.rating || b.outcome_rating) + '/5' : '')"></span>
+              </div>
+            </template>
+          </div>
+          <p x-show="data?.evaluation?.scoring_breakdown?.benchmark_notes" class="mt-1.5 text-xs text-gray-500 italic" x-text="data?.evaluation?.scoring_breakdown?.benchmark_notes"></p>
         </div>
         </div>
       </div>
 
-      <!-- 8. RECOMMENDATION -->
+      <!-- 6. RECOMMENDATION -->
       <div x-show="data?.recommendation" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
         <div class="flex items-center justify-between mb-2" @click="sections.recommendation = !sections.recommendation" style="cursor:pointer;">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">AI Recommendation</h3>
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.recommendation')">AI Recommendation</h3>
           <div class="flex items-center gap-2">
-            <span class="text-sm font-bold px-2 py-0.5 rounded-full" :class="{ 'bg-green-100 text-green-700': data?.recommendation?.action === 'APPROVE', 'bg-amber-100 text-amber-700': data?.recommendation?.action === 'PARTIAL', 'bg-red-100 text-red-700': data?.recommendation?.action === 'REJECT' }" x-text="data?.recommendation?.action"></span>
+            <span class="text-sm font-bold px-2 py-0.5 rounded-full" :class="{ 'bg-green-100 text-green-700': data?.recommendation?.action === 'APPROVE', 'bg-amber-100 text-amber-700': data?.recommendation?.action === 'PARTIAL', 'bg-red-100 text-red-700': data?.recommendation?.action === 'REJECT' }" x-text="data?.recommendation?.action === 'PARTIAL' ? 'PUT ON HOLD' : data?.recommendation?.action"></span>
             <svg class="w-4 h-4 text-gray-400 transition-transform" :class="sections.recommendation ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </div>
         </div>
         <div x-show="sections.recommendation" x-transition>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-sm font-bold" x-text="data?.recommendation?.recommended_amount ? data.recommendation.recommended_amount + ' EUR' : ''"></span>
-            <span class="text-xs text-gray-500" x-text="'(' + Math.round((data?.recommendation?.confidence || 0) * 100) + '% confidence)'"></span>
+          <div class="flex items-center gap-3 mb-2">
+            <span class="text-sm font-bold" x-text="data?.recommendation?.recommended_amount ? Number(data.recommendation.recommended_amount).toLocaleString('de-DE') + ' EUR' : ''"></span>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="(data?.recommendation?.confidence || 0) >= 0.8 ? 'bg-green-100 text-green-700' : (data?.recommendation?.confidence || 0) >= 0.5 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'" x-text="Math.round((data?.recommendation?.confidence || 0) * 100) + '% ' + t('live.confidence').replace(':','')"></span>
           </div>
+          <p x-show="(data?.recommendation?.confidence || 0) < 0.8" class="text-xs text-amber-600 mb-2" x-text="t('rec.confidence_low')">Confidence below 80% -- routed to human review for final decision.</p>
           <p x-show="data?.recommendation?.reasoning" class="text-xs text-gray-600 italic" x-text="data?.recommendation?.reasoning"></p>
-          <!-- Conditions -->
           <div x-show="data?.recommendation?.conditions" class="mt-2">
-            <p class="text-xs font-bold text-gray-600">Conditions:</p>
+            <p class="text-xs font-bold text-gray-600" x-text="t('rec.conditions')">Conditions:</p>
             <template x-for="c in (typeof data?.recommendation?.conditions === 'string' ? [data.recommendation.conditions] : (data?.recommendation?.conditions || []))" :key="c">
               <p class="text-xs text-gray-500 pl-2" x-text="'- ' + c"></p>
             </template>
@@ -302,16 +282,93 @@
         </div>
       </div>
 
-      <!-- 9. DECISION LETTER (approval/partial/rejection after human review) -->
+    </div>
+
+    <!-- ============ RIGHT (7 cols) - Documents & Communications ============ -->
+    <div class="col-span-7 space-y-3">
+
+      <!-- R1. SOURCE DOCUMENT + EMAIL PREVIEW -->
+      <div x-show="data?.request" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.source_doc')">Source Document</h3>
+          <div class="flex items-center gap-2">
+            <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full" x-text="data?.request?.received_via || 'email'"></span>
+            <span class="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full" x-text="sourceFormatLabel()"></span>
+          </div>
+        </div>
+        <!-- Email metadata -->
+        <div class="text-sm space-y-1.5 bg-gray-50 rounded-lg p-3 mb-3">
+          <div class="flex"><span class="text-gray-400 w-20 flex-shrink-0" x-text="t('email.from')">From:</span> <span class="text-gray-700 font-medium" x-text="data?.request?.source_email || '-'"></span></div>
+          <div class="flex"><span class="text-gray-400 w-20 flex-shrink-0" x-text="t('email.subject')">Subject:</span> <span class="text-gray-700" x-text="data?.request?.source_subject || '-'"></span></div>
+          <div class="flex"><span class="text-gray-400 w-20 flex-shrink-0" x-text="t('email.received')">Received:</span> <span class="text-gray-700" x-text="data?.request?.created_at ? new Date(data.request.created_at).toLocaleString('de-DE') : '-'"></span></div>
+        </div>
+        <!-- Email body preview -->
+        <div x-show="data?.extraction?.raw_text_used" class="mb-3">
+          <button @click="showEmailBody = !showEmailBody" class="text-xs px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <span x-text="showEmailBody ? t('src.hide_email') : t('src.view_email')"></span>
+          </button>
+          <div x-show="showEmailBody" x-transition class="mt-2 text-xs text-gray-700 whitespace-pre-line bg-white p-3 rounded-lg border max-h-64 overflow-y-auto font-mono leading-relaxed" x-text="data?.extraction?.raw_text_used"></div>
+        </div>
+        <!-- Attachment -->
+        <div x-show="data?.request?.raw_doc_path" class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border">
+          <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-gray-700 truncate" x-text="data?.request?.raw_doc_path?.split('/').pop() || 'attachment'"></p>
+            <p class="text-xs text-gray-400" x-text="(data?.request?.source_format || '').toUpperCase()"></p>
+          </div>
+          <a x-show="trackingId" :href="'/api/dashboard/request/' + trackingId + '/pdf'" target="_blank" class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition" x-text="t('src.download')">Download</a>
+        </div>
+      </div>
+
+      <!-- R2. FOLLOW-UP EMAIL (if any) -->
+      <div x-show="hasFollowup() || hasFollowupReply()" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
+        <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3" x-text="t('sec.followup')">Follow-Up Communication</h3>
+        <!-- Sent follow-up -->
+        <div x-show="hasFollowup()" class="p-3 bg-blue-50 rounded-lg border border-blue-200 mb-3">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-bold text-blue-700 flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              <span x-text="t('followup.sent')">Follow-Up Sent</span>
+            </span>
+            <span class="text-xs px-1.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700" x-text="t('letter.sent')">Sent</span>
+          </div>
+          <p class="text-xs text-blue-600 mb-1" x-text="t('followup.missing_requested')">Missing fields requested:</p>
+          <div class="space-y-0.5 mb-2">
+            <template x-for="f in missingFields()" :key="f"><div class="text-xs text-blue-800 pl-2" x-text="'- ' + fieldLabel(f)"></div></template>
+          </div>
+          <div class="flex items-center gap-2">
+            <button @click="showFollowupEmail = !showFollowupEmail" class="text-xs px-2.5 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition" x-text="showFollowupEmail ? t('followup.hide_email') : t('followup.view_email')"></button>
+            <a x-show="trackingId" :href="'/complete/' + trackingId" target="_blank" class="text-xs px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition" x-text="t('followup.open_form')">Open Form Link</a>
+          </div>
+          <div x-show="showFollowupEmail" class="mt-2 text-xs text-gray-700 whitespace-pre-line bg-white p-3 rounded border max-h-40 overflow-y-auto" x-text="getFollowupEmailPreview()"></div>
+        </div>
+        <!-- Applicant reply -->
+        <div x-show="hasFollowupReply()" class="p-3 bg-green-50 rounded-lg border border-green-200">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-bold text-green-700 flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+              <span x-text="t('followup.reply_received')">Applicant Reply Received</span>
+            </span>
+            <span class="text-xs px-1.5 py-0.5 rounded-full font-medium bg-green-100 text-green-700" x-text="t('followup.merged')">Merged</span>
+          </div>
+          <p class="text-xs text-green-600 mt-1" x-text="getFollowupFields()"></p>
+        </div>
+      </div>
+
+      <!-- R3. DECISION LETTER -->
       <div x-show="data?.completion" class="bg-white rounded-xl shadow-sm border p-4" x-transition>
         <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider">Decision Letter</h3>
-          <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="data?.completion?.sent_at ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="data?.completion?.sent_at ? 'Sent' : 'Draft'"></span>
+          <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider" x-text="t('sec.decision_letter')">Decision Letter</h3>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="{ 'bg-green-100 text-green-700': data?.completion?.letter_type === 'APPROVAL', 'bg-amber-100 text-amber-700': data?.completion?.letter_type === 'PARTIAL', 'bg-red-100 text-red-700': data?.completion?.letter_type === 'REJECTION' }" x-text="data?.completion?.letter_type === 'PARTIAL' ? 'PUT ON HOLD' : data?.completion?.letter_type"></span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="data?.completion?.sent_at ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'" x-text="data?.completion?.sent_at ? t('letter.sent') : t('letter.draft')"></span>
+          </div>
         </div>
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="{ 'bg-green-100 text-green-700': data?.completion?.letter_type === 'APPROVAL', 'bg-amber-100 text-amber-700': data?.completion?.letter_type === 'PARTIAL', 'bg-red-100 text-red-700': data?.completion?.letter_type === 'REJECTION' }" x-text="data?.completion?.letter_type"></span>
+        <!-- Rejection letter from eligibility -->
+        <div x-show="data?.eligibility && !data?.eligibility?.eligible" class="mb-2 p-2 bg-red-50 rounded border border-red-200">
+          <p class="text-xs text-red-600 font-medium" x-text="t('letter.rejected_elig')">Request rejected at eligibility stage</p>
         </div>
-        <!-- Letter content (collapsible) -->
         <!-- View mode -->
         <div x-show="showLetter && !editingLetter" class="text-xs text-gray-700 whitespace-pre-line bg-gray-50 p-3 rounded border max-h-60 overflow-y-auto mb-2" x-text="data?.completion?.letter_content"></div>
         <!-- Edit mode -->
@@ -319,24 +376,23 @@
           <textarea x-model="editedLetterContent" class="w-full text-xs text-gray-700 bg-white p-3 rounded border h-48 font-mono resize-y"></textarea>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-          <button @click="showLetter = !showLetter; editingLetter = false" class="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition" x-text="showLetter ? 'Hide' : 'View Letter'"></button>
-          <button x-show="showLetter && !editingLetter && !data?.completion?.sent_at" @click="editingLetter = true; editedLetterContent = data?.completion?.letter_content || ''" class="text-xs px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition">Edit</button>
-          <button x-show="editingLetter" @click="editingLetter = false" class="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition">Cancel</button>
-          <button x-show="showLetter && !data?.completion?.sent_at" @click="sendLetter()" class="text-xs px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded transition font-medium">Send to Applicant</button>
-          <span x-show="data?.completion?.sent_at" class="text-xs text-green-600 font-medium">Sent to applicant</span>
+          <button @click="showLetter = !showLetter; editingLetter = false" class="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition" x-text="showLetter ? t('letter.hide') : t('letter.view')"></button>
+          <button x-show="showLetter && !editingLetter && !data?.completion?.sent_at" @click="editingLetter = true; editedLetterContent = data?.completion?.letter_content || ''" class="text-xs px-3 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition" x-text="t('letter.edit')">Edit</button>
+          <button x-show="editingLetter" @click="editingLetter = false" class="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded transition" x-text="t('letter.cancel')">Cancel</button>
+          <button x-show="editingLetter" @click="saveDraft()" class="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition font-medium" x-text="t('letter.save_draft')">Save Draft</button>
+          <button x-show="showLetter && !data?.completion?.sent_at && !letterSent" @click="sendLetter()" :disabled="sendingLetter" class="text-xs px-3 py-1 bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-wait text-white rounded transition font-medium" x-text="sendingLetter ? (t('letter.sending') || 'Sending...') : t('letter.send')">Send to Applicant</button>
+          <span x-show="draftSaved" class="text-xs text-blue-600 font-medium" x-transition x-text="t('letter.draft_saved')">Draft saved</span>
+          <span x-show="data?.completion?.sent_at || letterSent" class="text-xs text-green-600 font-medium" x-text="data?.completion?.sent_at ? (t('letter.sent') + ' ' + formatTime(data?.completion?.sent_at)) : (t('letter.sent') || 'Sent')"></span>
         </div>
       </div>
 
-    </div>
-
-    <!-- RIGHT: Activity Feed (7 cols) -->
-    <div class="col-span-7">
-      <div class="bg-gray-900 rounded-xl shadow-sm border border-gray-700 p-4 h-full flex flex-col" style="min-height: 700px;">
+      <!-- R4. ACTIVITY FEED (at the bottom) -->
+      <div class="bg-gray-900 rounded-xl shadow-sm border border-gray-700 p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-bold text-green-400 uppercase tracking-wider font-mono">Activity Feed</h3>
-          <span class="text-xs text-gray-500 font-mono" x-text="activity.length + ' events'"></span>
+          <h3 class="text-sm font-bold text-green-400 uppercase tracking-wider font-mono" x-text="t('sec.activity')">Activity Feed</h3>
+          <span class="text-xs text-gray-500 font-mono" x-text="activity.length + ' ' + t('activity.events')"></span>
         </div>
-        <div class="flex-1 overflow-y-auto space-y-0.5 font-mono text-xs" x-ref="activityScroll">
+        <div class="overflow-y-auto space-y-0.5 font-mono text-xs" style="max-height: 350px;" x-ref="activityScroll">
           <template x-for="(evt, i) in activity" :key="i">
             <div class="flex gap-2 py-0.5">
               <span class="text-gray-500 flex-shrink-0 w-16" x-text="formatTime(evt.created_at)"></span>
@@ -344,9 +400,10 @@
               <span class="text-gray-300" x-text="formatActivity(evt)"></span>
             </div>
           </template>
-          <div x-show="activity.length === 0" class="text-gray-600 italic">Waiting for pipeline activity...</div>
+          <div x-show="activity.length === 0" class="text-gray-600 italic" x-text="t('activity.waiting')">Waiting for pipeline activity...</div>
         </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -355,21 +412,22 @@
 function livePage() {
   return {
     trackingId: null, lastKnownId: null, data: null, activity: [],
-    notification: '', notificationDetail: '',
+    notification: '', notificationDetail: '', lastKnownState: null,
     pollTimer: null, detectTimer: null, reviewAmount: null,
-    showLetter: false, showRejectionLetter: false, editingLetter: false, editedLetterContent: '', showFollowupEmail: false,
+    showLetter: false, showRejectionLetter: false, editingLetter: false, editedLetterContent: '', showFollowupEmail: false, draftSaved: false, showEmailBody: false,
+    sendingLetter: false, letterSent: false,
     sections: { source: false, extraction: true, completeness: true, eligibility: true, research: true, evaluation: true, recommendation: true },
 
-    stages: [
-      { id: 'received', label: 'Email\nDetected' },
-      { id: 'extracted', label: 'Intake\nAgent' },
-      { id: 'completeness', label: 'Complete-\nness' },
-      { id: 'eligible', label: 'Eligibility\nCheck' },
-      { id: 'evaluated', label: 'Research +\nEvaluation' },
-      { id: 'recommended', label: 'Recommend-\nation' },
-      { id: 'decided', label: 'Decision' },
-      { id: 'completed', label: 'Letter\nSent' },
-    ],
+    get stages() { return [
+      { id: 'received', label: t('stage.email_detected') },
+      { id: 'extracted', label: t('stage.intake_agent') },
+      { id: 'completeness', label: t('stage.completeness') },
+      { id: 'eligible', label: t('stage.eligibility') },
+      { id: 'evaluated', label: t('stage.research_eval') },
+      { id: 'recommended', label: t('stage.recommendation') },
+      { id: 'decided', label: t('stage.decision') },
+      { id: 'completed', label: t('stage.letter_sent') },
+    ]; },
 
     init() {
       const params = new URLSearchParams(window.location.search);
@@ -388,7 +446,7 @@ function livePage() {
             if (!this.trackingId || this.trackingId !== d.id) {
               this.notification = 'New email detected!';
               this.notificationDetail = `From: ${d.source_email || '?'} | Subject: ${d.source_subject || '?'}`;
-              this.trackingId = d.id; this.activity = []; this.data = null;
+              this.trackingId = d.id; this.activity = []; this.data = null; this.reviewAmount = null; this.lastKnownState = null; this.letterSent = false; this.sendingLetter = false;
               history.replaceState(null, '', '/dashboard/live?id=' + d.id);
               this.startPolling();
               setTimeout(() => { this.notification = ''; }, 8000);
@@ -410,7 +468,30 @@ function livePage() {
         const res = await fetch(`/api/dashboard/live/${this.trackingId}`);
         if (!res.ok) return;
         const d = await res.json();
+        const newState = d.request?.state;
+        const prevState = this.lastKnownState;
         this.data = d; this.activity = d.activity || [];
+
+        // Fire state-transition notifications on the currently tracked request.
+        // (Reply-to-followup merges into the same request now — no new ID to
+        // trigger startDetection — so notify on key state changes here.)
+        if (newState && newState !== prevState) {
+          if (prevState === 'awaiting_info' && newState !== 'awaiting_info') {
+            this.notification = t('live.reply_received') || 'Reply received — merged into request';
+            this.notificationDetail = `State: ${newState}`;
+            setTimeout(() => { this.notification = ''; }, 8000);
+          } else if (newState === 'awaiting_info' && prevState && prevState !== 'awaiting_info') {
+            this.notification = t('live.awaiting_followup') || 'Follow-up sent — awaiting reply';
+            this.notificationDetail = '';
+            setTimeout(() => { this.notification = ''; }, 8000);
+          } else if (newState === 'human_review' && prevState !== 'human_review') {
+            this.notification = t('live.needs_review') || 'Human review required';
+            this.notificationDetail = '';
+            setTimeout(() => { this.notification = ''; }, 8000);
+          }
+          this.lastKnownState = newState;
+        }
+
         // Set review amount from recommendation if not set
         if (!this.reviewAmount && d.recommendation?.recommended_amount) {
           this.reviewAmount = d.recommendation.recommended_amount;
@@ -438,23 +519,48 @@ function livePage() {
     },
 
     async sendLetter() {
-      if (!this.trackingId) return;
+      if (!this.trackingId || this.sendingLetter || this.letterSent) return;
       const content = this.editingLetter ? this.editedLetterContent : (this.data?.completion?.letter_content || '');
+      this.sendingLetter = true;
       try {
         const res = await fetch(`/api/dashboard/request/${this.trackingId}/send-letter`, {
           method: 'POST', headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({ letter_content: content, is_edited: this.editingLetter })
         });
         if (res.ok) {
+          // Optimistic UI: flip state immediately, don't wait for the next poll
           this.editingLetter = false;
+          this.letterSent = true;
           this.poll();
+        } else {
+          // Failed — let user retry
+          this.sendingLetter = false;
         }
-      } catch (e) { console.error('Send letter failed:', e); }
+      } catch (e) {
+        console.error('Send letter failed:', e);
+        this.sendingLetter = false;
+      }
+    },
+
+    async saveDraft() {
+      if (!this.trackingId || !this.editedLetterContent) return;
+      try {
+        const res = await fetch(`/api/dashboard/request/${this.trackingId}/save-letter`, {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ letter_content: this.editedLetterContent })
+        });
+        if (res.ok) {
+          this.editingLetter = false;
+          this.draftSaved = true;
+          this.poll();
+          setTimeout(() => { this.draftSaved = false; }, 3000);
+        }
+      } catch (e) { console.error('Save draft failed:', e); }
     },
 
     resetTracking() {
       this.trackingId = null; this.data = null; this.activity = [];
-      this.notification = ''; this.lastKnownId = null; this.reviewAmount = null;
+      this.notification = ''; this.lastKnownId = null; this.reviewAmount = null; this.lastKnownState = null; this.letterSent = false; this.sendingLetter = false;
       if (this.pollTimer) clearInterval(this.pollTimer);
       history.replaceState(null, '', '/dashboard/live');
     },
@@ -476,32 +582,44 @@ function livePage() {
       const ext = this.data?.extraction?.extracted_data; if (!ext) return [];
       const vis = ext.visibility || {}, contact = ext.contact || {};
       return [
-        { key: 'org', label: 'Organization', value: ext.organization_name, tier: 1 },
-        { key: 'amount', label: 'Amount (EUR)', value: ext.requested_amount ? ext.requested_amount + ' EUR' : null, tier: 1 },
-        { key: 'purpose', label: 'Purpose', value: ext.purpose, tier: 2 },
-        { key: 'date', label: 'Event Date', value: ext.event_date, tier: 2 },
-        { key: 'region', label: 'Region', value: ext.region, tier: 2 },
-        { key: 'contact', label: 'Contact', value: contact.name ? (contact.name + (contact.email ? ' <' + contact.email + '>' : '')) : null, tier: 2 },
-        { key: 'visibility', label: 'Visibility', value: [vis.logo_placement, vis.media_coverage, vis.other].filter(Boolean).join('; ') || null, tier: 2 },
-        { key: 'attendance', label: 'Attendance', value: ext.expected_attendance, tier: 3 },
-        { key: 'audience', label: 'Audience', value: ext.target_audience, tier: 3 },
-        { key: 'category', label: 'Category', value: ext.purpose_category && ext.purpose_category !== 'unknown' ? ext.purpose_category : null, tier: 3 },
-        { key: 'context', label: 'Extra Context', value: ext.additional_context ? ext.additional_context.substring(0, 150) + '...' : null, tier: 4 },
+        { key: 'org', label: t('field.organization'), value: ext.organization_name, tier: 1 },
+        { key: 'amount', label: t('field.amount'), value: ext.requested_amount ? ext.requested_amount + ' EUR' : null, tier: 1 },
+        { key: 'purpose', label: t('field.purpose'), value: ext.purpose, tier: 2 },
+        { key: 'date', label: t('field.event_date'), value: ext.event_date, tier: 2 },
+        { key: 'region', label: t('field.region'), value: ext.region, tier: 2 },
+        { key: 'contact', label: t('field.contact'), value: contact.name ? (contact.name + (contact.email ? ' <' + contact.email + '>' : '')) : null, tier: 2 },
+        { key: 'visibility', label: t('field.visibility'), value: [vis.logo_placement, vis.media_coverage, vis.other].filter(Boolean).join('; ') || null, tier: 2 },
+        { key: 'attendance', label: t('field.attendance'), value: ext.expected_attendance, tier: 3 },
+        { key: 'audience', label: t('field.audience'), value: ext.target_audience, tier: 3 },
+        { key: 'category', label: t('field.category'), value: ext.purpose_category && ext.purpose_category !== 'unknown' ? ext.purpose_category : null, tier: 3 },
+        { key: 'context', label: t('field.extra'), value: ext.additional_context ? ext.additional_context.substring(0, 150) + '...' : null, tier: 4 },
       ];
     },
 
     missingFields() { const mf = this.data?.extraction?.missing_fields; if (!mf) return []; if (typeof mf === 'string') { try { return JSON.parse(mf); } catch { return []; } } return mf; },
-    fieldLabelDE(f) { return { 'organization_name':'Name der Organisation', 'requested_amount':'Beantragter Foerderbetrag (EUR)', 'purpose':'Zweck / Anlass', 'visibility':'Sponsorenpaket / Gegenleistungen', 'event_date':'Datum der Veranstaltung', 'region':'Ort / Region', 'contact':'Kontaktperson', 'expected_attendance':'Erwartete Besucherzahl', 'target_audience':'Zielgruppe', 'description':'Projektbeschreibung' }[f] || f; },
+    fieldLabel(f) {
+      const en = { 'organization_name':'Organization', 'requested_amount':'Amount (EUR)', 'purpose':'Purpose', 'visibility':'Visibility', 'event_date':'Event Date', 'region':'Region', 'contact':'Contact', 'expected_attendance':'Attendance', 'target_audience':'Audience', 'description':'Description' };
+      const de = { 'organization_name':'Name der Organisation', 'requested_amount':'Foerderbetrag (EUR)', 'purpose':'Zweck / Anlass', 'visibility':'Gegenleistungen', 'event_date':'Veranstaltungsdatum', 'region':'Ort / Region', 'contact':'Kontaktperson', 'expected_attendance':'Besucherzahl', 'target_audience':'Zielgruppe', 'description':'Projektbeschreibung' };
+      return (getLang() === 'de' ? de : en)[f] || f;
+    },
     hasFollowup() { return (this.activity || []).some(e => e.action === 'state_change' && e.new_state === 'awaiting_info'); },
     hasFollowupReply() { return (this.activity || []).some(e => e.action === 'followup_received'); },
     getFollowupFields() { const evt = (this.activity || []).find(e => e.action === 'followup_received'); if (evt?.details?.new_fields) return 'New fields: ' + evt.details.new_fields.join(', '); return 'Reply processed'; },
     getFollowupEmailPreview() {
       const ref = this.trackingId ? 'SP-2026-' + this.trackingId.substring(this.trackingId.length - 8).toUpperCase() : '';
-      const fields = this.missingFields().map(f => this.fieldLabelDE(f));
+      const fields = this.missingFields().map(f => this.fieldLabel(f));
       const formUrl = window.location.origin + '/complete/' + this.trackingId;
       return `Sehr geehrte Damen und Herren,\n\nvielen Dank fuer Ihre Sponsoring-Anfrage (Ref: ${ref}).\n\nDamit wir Ihre Anfrage bearbeiten koennen, benoetigen wir noch:\n\n${fields.map((f,i) => '  ' + (i+1) + '. ' + f).join('\n')}\n\nOnline-Formular: ${formUrl}\n\nMit freundlichen Gruessen\nSponsoring-Team`;
     },
-    evalDimensions() { const e = this.data?.evaluation; if (!e) return []; return [ { label: 'Strategic Fit (28%)', score: e.strategic_fit_score || 0 }, { label: 'Community Impact (22%)', score: e.community_impact_score || 0 }, { label: 'Visibility Value (19%)', score: e.visibility_value_score || 0 }, { label: 'Cost Effectiveness (16%)', score: e.cost_effectiveness_score || 0 } ]; },
+    sourceFormatLabel() {
+      const via = this.data?.request?.received_via || '';
+      const fmt = this.data?.request?.source_format || '';
+      if (via === 'email' && fmt && fmt !== 'email') return 'Email + ' + fmt.toUpperCase();
+      if (via === 'web_form' && fmt && fmt !== 'web_form') return 'Webform + ' + fmt.toUpperCase();
+      if (via === 'upload') return 'Upload: ' + (fmt || 'document').toUpperCase();
+      return (fmt || via || 'unknown').toUpperCase();
+    },
+    evalDimensions() { const e = this.data?.evaluation; if (!e) return []; return [ { label: t('eval.strategic_fit'), score: e.strategic_fit_score || 0 }, { label: t('eval.community'), score: e.community_impact_score || 0 }, { label: t('eval.visibility'), score: e.visibility_value_score || 0 }, { label: t('eval.cost'), score: e.cost_effectiveness_score || 0 } ]; },
 
     formatTime(ts) { if (!ts) return ''; try { return new Date(ts).toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit', second:'2-digit' }); } catch { return ''; } },
     formatActivity(evt) {

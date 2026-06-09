@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Configuration{% endblock %}
 {% block nav_config %}active{% endblock %}
-{% block page_title %}System Configuration{% endblock %}
+{% block page_title %}<span x-data x-text="t('page.config')">System Configuration</span>{% endblock %}
 
 {% block content %}
 <div x-data="configDashboard()" x-init="init()">
@@ -33,102 +33,94 @@
 
             <!-- Budget Card -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Budget & Limits</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="t('cfg.budget_limits')">Budget & Limits</h3>
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-600 mb-1">Client Name</label>
+                        <label class="block text-sm font-medium text-gray-600 mb-1" x-text="t('cfg.client_name')">Client Name</label>
                         <input type="text" x-model="strategy.client_name" class="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Year</label>
-                            <input type="number" x-model.number="strategy.year" class="w-full border rounded-lg px-3 py-2 text-sm" min="2024" max="2030">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Total Budget (EUR)</label>
-                            <input type="number" x-model.number="strategy.total_budget" class="w-full border rounded-lg px-3 py-2 text-sm" step="1000">
-                        </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1" x-text="t('cfg.year')">Year</label>
+                        <input type="number" x-model.number="strategy.year" class="w-full border rounded-lg px-3 py-2 text-sm" min="2024" max="2030">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Remaining Budget (EUR)</label>
-                            <input type="number" x-model.number="strategy.remaining_budget" class="w-full border rounded-lg px-3 py-2 text-sm bg-gray-50" readonly>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Spent</label>
-                            <div class="border rounded-lg px-3 py-2 text-sm bg-gray-50"
-                                 x-text="'EUR ' + ((strategy.total_budget || 0) - (strategy.remaining_budget || 0)).toLocaleString('de-DE')"></div>
-                        </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-600 mb-1" x-text="t('cfg.set_budget')">Set Budget (EUR)</label>
+                        <input type="number" x-model.number="strategy.total_budget" class="w-full border rounded-lg px-3 py-2 text-sm" min="0" :placeholder="getLang() === 'de' ? 'z.B. 150000' : 'e.g. 150000'">
                     </div>
-                    <!-- Budget progress bar -->
-                    <div class="mt-2">
-                        <div class="flex justify-between text-xs text-gray-500 mb-1">
-                            <span>Budget Usage</span>
-                            <span x-text="Math.round(((strategy.total_budget - strategy.remaining_budget) / strategy.total_budget) * 100) + '%'"></span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2.5">
-                            <div class="h-2.5 rounded-full transition-all"
-                                 :class="((strategy.total_budget - strategy.remaining_budget) / strategy.total_budget) > 0.8 ? 'bg-red-500' : ((strategy.total_budget - strategy.remaining_budget) / strategy.total_budget) > 0.5 ? 'bg-yellow-500' : 'bg-green-500'"
-                                 :style="'width:' + Math.min(100, ((strategy.total_budget - strategy.remaining_budget) / strategy.total_budget) * 100) + '%'"></div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Min Single Amount (EUR)</label>
-                            <input type="number" x-model.number="strategy.min_single_amount" class="w-full border rounded-lg px-3 py-2 text-sm" step="50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-600 mb-1">Max Single Amount (EUR)</label>
-                            <input type="number" x-model.number="strategy.max_single_amount" class="w-full border rounded-lg px-3 py-2 text-sm" step="500">
-                        </div>
-                    </div>
+                    <p class="text-xs text-gray-400" x-text="t('cfg.budget_hint')">Spent and remaining budget are shown on the Dashboard.</p>
                 </div>
             </div>
 
-            <!-- Focus Areas & Regions -->
-            <div class="space-y-6">
-                <!-- Focus Areas -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Focus Areas</h3>
-                    <div class="flex flex-wrap gap-2 mb-3">
-                        <template x-for="(area, idx) in strategy.focus_areas || []" :key="idx">
-                            <span class="inline-flex items-center gap-1 bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm">
-                                <span x-text="area.label || area.category"></span>
-                                <button @click="strategy.focus_areas.splice(idx, 1)" class="hover:text-red-500">&times;</button>
-                            </span>
-                        </template>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" x-model="newFocusArea" placeholder="Add focus area..."
-                               class="flex-1 border rounded-lg px-3 py-1.5 text-sm" @keydown.enter="addFocusArea()">
-                        <button @click="addFocusArea()" class="bg-primary-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-primary-700">Add</button>
-                    </div>
+            <!-- Focus Areas -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-3" x-text="t('cfg.focus_areas')">Focus Areas</h3>
+                <div class="flex flex-wrap gap-2 mb-3">
+                    <template x-for="(area, idx) in strategy.focus_areas || []" :key="idx">
+                        <span class="inline-flex items-center gap-1 bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm">
+                            <span x-text="area.label || area.category"></span>
+                            <button @click="strategy.focus_areas.splice(idx, 1)" class="hover:text-red-500">&times;</button>
+                        </span>
+                    </template>
                 </div>
-
-                <!-- Blocked Categories -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Blocked Organization Types</h3>
-                    <div class="flex flex-wrap gap-2 mb-3">
-                        <template x-for="(cat, idx) in strategy.blocked_categories || []" :key="idx">
-                            <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                                <span x-text="cat"></span>
-                                <button @click="strategy.blocked_categories.splice(idx, 1)" class="hover:text-red-900">&times;</button>
-                            </span>
-                        </template>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" x-model="newBlockedCat" placeholder="Add blocked type..."
-                               class="flex-1 border rounded-lg px-3 py-1.5 text-sm" @keydown.enter="addBlockedCategory()">
-                        <button @click="addBlockedCategory()" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-700">Block</button>
-                    </div>
+                <div class="flex gap-2">
+                    <input type="text" x-model="newFocusArea" :placeholder="t('cfg.add_focus')"
+                           class="flex-1 border rounded-lg px-3 py-1.5 text-sm" @keydown.enter="addFocusArea()">
+                    <button @click="addFocusArea()" class="bg-primary-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-primary-700" x-text="t('cfg.add')">Add</button>
                 </div>
             </div>
         </div>
 
+        <!-- Historical Benchmarking Data -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800" x-text="t('cfg.historical_data')">Historical Sponsorship Data</h3>
+                    <p class="text-sm text-gray-500" x-text="t('cfg.historical_desc')">Past sponsorships used for benchmarking. The AI compares new requests against this data.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-bold text-primary-600" x-text="(historicalCount || 0) + ' ' + t('cfg.records')"></span>
+                    <button @click="showToast(t('cfg.csv_coming'), 'success')"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm rounded-lg hover:bg-primary-700 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        <span x-text="t('cfg.upload_csv')">Upload CSV</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview table -->
+            <div x-show="historicalPreview.length > 0">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200">
+                            <th class="text-left py-2 px-2 text-gray-600 font-medium" x-text="t('cfg.th_organization')">Organization</th>
+                            <th class="text-left py-2 px-2 text-gray-600 font-medium" x-text="t('cfg.th_purpose')">Purpose</th>
+                            <th class="text-left py-2 px-2 text-gray-600 font-medium" x-text="t('cfg.th_year')">Year</th>
+                            <th class="text-right py-2 px-2 text-gray-600 font-medium" x-text="t('cfg.th_approved')">Approved</th>
+                            <th class="text-right py-2 px-2 text-gray-600 font-medium" x-text="t('cfg.th_rating')">Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="h in historicalPreview" :key="h.id">
+                            <tr class="border-b border-gray-100">
+                                <td class="py-2 px-2 text-gray-800" x-text="h.organization_name"></td>
+                                <td class="py-2 px-2 text-gray-500 text-xs" x-text="h.purpose"></td>
+                                <td class="py-2 px-2 text-gray-600" x-text="h.year"></td>
+                                <td class="py-2 px-2 text-right font-medium" x-text="h.amount_approved ? Math.round(h.amount_approved).toLocaleString('en-US') + ' EUR' : '-'"></td>
+                                <td class="py-2 px-2 text-right" x-text="h.outcome_rating ? h.outcome_rating + '/5' : '-'"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <p class="text-xs text-gray-400 mt-2" x-text="t('cfg.showing_of') + ' ' + historicalCount + ' ' + t('cfg.records')"></p>
+            </div>
+            <p x-show="historicalPreview.length === 0" class="text-sm text-gray-400 text-center py-4" x-text="t('cfg.no_historical')">No historical data loaded. Upload a CSV to get started.</p>
+        </div>
+
         <!-- Save button -->
         <div class="mt-6 flex justify-end">
-            <button @click="saveStrategy()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium">
+            <button @click="saveStrategy()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium" x-text="t('cfg.save_strategy')">
                 Save Strategy
             </button>
         </div>
@@ -138,63 +130,169 @@
     <!-- TAB 2: Pipeline & HITL -->
     <!-- ================================================================ -->
     <div x-show="activeTab === 'pipeline'" x-transition>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <!-- Left: Mode + Gate 2 -->
-            <div class="space-y-4">
-                <div class="bg-white rounded-xl shadow-sm border p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Pipeline Mode</h3>
-                    <div class="flex items-center gap-6 mb-4 p-4 rounded-lg" :class="pipelineMode === 'autopilot' ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'">
-                        <div class="flex-1">
-                            <div class="text-lg font-bold" :class="pipelineMode === 'autopilot' ? 'text-green-700' : 'text-blue-700'" x-text="pipelineMode === 'autopilot' ? 'AUTOPILOT' : 'COPILOT'"></div>
-                            <div class="text-sm text-gray-600" x-text="pipelineMode === 'autopilot' ? 'Auto-decides within limits' : 'Every decision needs human approval'"></div>
+        <!-- Section 1: Pipeline Mode -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="t('cfg.pipeline_mode')">Pipeline Mode</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Human Intervention Card -->
+                <div @click="pipelineMode = 'copilot'; applyModePreset()"
+                     class="p-5 rounded-xl border-2 cursor-pointer transition"
+                     :class="pipelineMode !== 'autopilot' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                             :class="pipelineMode !== 'autopilot' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-500'">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold" :class="pipelineMode !== 'autopilot' ? 'text-blue-700' : 'text-gray-600'" x-text="t('cfg.human_intervention')">Human Intervention</div>
+                            <div class="text-sm text-gray-500" x-text="t('cfg.you_control')">You stay in control</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600" x-text="t('cfg.human_desc')">Every decision goes through human review. AI provides recommendations, you make the final call.</p>
+                </div>
+
+                <!-- Autopilot Card -->
+                <div @click="pipelineMode = 'autopilot'; applyModePreset()"
+                     class="p-5 rounded-xl border-2 cursor-pointer transition"
+                     :class="pipelineMode === 'autopilot' ? 'border-green-500 bg-green-50 ring-2 ring-green-200' : 'border-gray-200 hover:border-gray-300'">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center"
+                             :class="pipelineMode === 'autopilot' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        </div>
+                        <div>
+                            <div class="text-lg font-bold" :class="pipelineMode === 'autopilot' ? 'text-green-700' : 'text-gray-600'" x-text="t('cfg.autopilot')">Autopilot</div>
+                            <div class="text-sm text-gray-500" x-text="t('cfg.ai_decides')">AI decides within safety limits</div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-600" x-text="t('cfg.autopilot_desc')">AI auto-decides when confident. Only routes to human when uncertain or amount is high.</p>
+
+                    <!-- Autopilot safety limits (only shown when selected) -->
+                    <div x-show="pipelineMode === 'autopilot'" x-transition class="mt-4 pt-4 border-t border-green-200 space-y-3" @click.stop>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('cfg.ai_confidence')">AI Confidence Required</label>
+                            <input type="range" x-model.number="autoDecideThreshold" min="0.5" max="1.0" step="0.05"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>50%</span>
+                                <span class="font-bold text-green-700" x-text="(autoDecideThreshold * 100).toFixed(0) + '%'"></span>
+                                <span>100%</span>
+                            </div>
+                            <p class="text-xs text-gray-400" x-text="t('cfg.below_human')">Below this -> human reviews even in Autopilot</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1" x-text="t('cfg.max_auto_amount')">Maximum Auto-Approve Amount (EUR)</label>
+                            <input type="number" x-model.number="autoDecideMaxAmount" class="w-full border rounded-lg px-3 py-2 text-sm" step="500" min="0" :placeholder="getLang() === 'de' ? 'z.B. 3000' : 'e.g. 3000'">
+                            <p class="text-xs text-gray-400 mt-1" x-text="t('cfg.above_human')">Above this -> human reviews even in Autopilot</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Human Review Points -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2" x-text="t('cfg.human_review_points')">Human Review Points</h3>
+            <p class="text-sm text-gray-500 mb-4" x-text="t('cfg.hitl_desc')">Where the pipeline pauses for human input. In Human Intervention mode, all are ON by default.</p>
+            <div class="space-y-3">
+                <template x-for="stage in hitlStages" :key="stage.id">
+                    <div class="flex items-center justify-between p-4 rounded-lg border transition"
+                         :class="stage.enabled ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'">
+                        <div>
+                            <div class="text-sm font-medium text-gray-800" x-text="stage.label"></div>
+                            <div class="text-xs text-gray-500" x-text="stage.desc"></div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" :checked="pipelineMode === 'autopilot'" @change="togglePipelineMode()" class="sr-only peer">
-                            <div class="w-14 h-7 bg-gray-300 peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                            <input type="checkbox" x-model="stage.enabled" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                         </label>
                     </div>
-                    <div class="p-3 rounded-lg border text-sm" :class="gate2Passed ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'">
-                        <div class="flex items-center gap-2"><div class="w-2.5 h-2.5 rounded-full" :class="gate2Passed ? 'bg-green-500' : 'bg-yellow-500'"></div><span class="font-medium" x-text="gate2Passed ? 'Gate 2: PASSED' : 'Gate 2: NOT PASSED'"></span></div>
-                        <div class="text-xs text-gray-500 mt-1" x-text="gate2Passed ? 'Backtest >= 75% agreement' : 'Run backtest to unlock AUTOPILOT'"></div>
-                    </div>
-                    <div class="space-y-3 mt-4">
-                        <div><label class="block text-sm font-medium text-gray-600 mb-1">Auto-Decision Confidence Threshold</label><input type="range" x-model.number="autoDecideThreshold" min="0.5" max="1.0" step="0.05" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"><div class="text-right text-xs text-gray-500" x-text="(autoDecideThreshold * 100).toFixed(0) + '%'"></div></div>
-                        <div><label class="block text-sm font-medium text-gray-600 mb-1">Auto-Decision Max Amount (EUR)</label><input type="number" x-model.number="autoDecideMaxAmount" class="w-full border rounded-lg px-3 py-2 text-sm" step="500"></div>
-                    </div>
-                    <div class="mt-4 flex justify-end"><button @click="savePipelineConfig()" class="bg-primary-600 text-white px-5 py-2 rounded-lg hover:bg-primary-700 transition text-sm font-medium">Save</button></div>
-                </div>
+                </template>
             </div>
+        </div>
 
-            <!-- Right: HITL Placement -->
-            <div class="bg-white rounded-xl shadow-sm border p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Human-in-the-Loop Placement</h3>
-                <p class="text-sm text-gray-500 mb-4">Choose where humans review. COPILOT preset: review after recommendation. AUTOPILOT: no review (if Gate 2 passed).</p>
+        <!-- Section 3: Email Automation -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2" x-text="t('cfg.email_automation')">Email Automation</h3>
+            <p class="text-sm text-gray-500 mb-4" x-text="t('cfg.email_auto_desc')">Configure automated emails sent during the pipeline.</p>
+            <div class="space-y-4">
 
-                <!-- Presets -->
-                <div class="flex gap-2 mb-4">
-                    <button @click="setHITLPreset('copilot')" class="px-3 py-1.5 text-xs rounded-lg border transition" :class="hitlPreset === 'copilot' ? 'bg-blue-100 border-blue-400 text-blue-700' : 'bg-gray-50 hover:bg-gray-100'">COPILOT Preset</button>
-                    <button @click="setHITLPreset('autopilot')" class="px-3 py-1.5 text-xs rounded-lg border transition" :class="hitlPreset === 'autopilot' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-gray-50 hover:bg-gray-100'">AUTOPILOT Preset</button>
-                    <button @click="setHITLPreset('custom')" class="px-3 py-1.5 text-xs rounded-lg border transition" :class="hitlPreset === 'custom' ? 'bg-purple-100 border-purple-400 text-purple-700' : 'bg-gray-50 hover:bg-gray-100'">Custom</button>
-                </div>
-
-                <!-- Per-stage toggles -->
-                <div class="space-y-3">
-                    <template x-for="stage in hitlStages" :key="stage.id">
-                        <div class="flex items-center justify-between p-3 rounded-lg border" :class="stage.enabled ? 'bg-purple-50 border-purple-200' : 'bg-gray-50'">
-                            <div>
-                                <div class="text-sm font-medium" x-text="stage.label"></div>
-                                <div class="text-xs text-gray-500" x-text="stage.desc"></div>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" x-model="stage.enabled" @change="hitlPreset = 'custom'" class="sr-only peer">
-                                <div class="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
-                            </label>
+                <!-- Acknowledgment Email -->
+                <div class="p-4 rounded-lg border" :class="emailAckEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <span class="text-sm font-medium text-gray-800" x-text="t('cfg.ack_email')">Acknowledgment Email</span>
+                            <p class="text-xs text-gray-500" x-text="t('cfg.ack_desc')">Send receipt confirmation when a new request arrives.</p>
                         </div>
-                    </template>
+                        <label class="relative inline-flex items-center cursor-pointer ml-4">
+                            <input type="checkbox" x-model="emailAckEnabled" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>
+                    <div x-show="emailAckEnabled" x-transition>
+                        <label class="text-xs font-medium text-gray-600" x-text="t('cfg.send_within')">Send within (seconds)</label>
+                        <input type="number" x-model.number="emailAckDelaySec" min="5" max="300" step="5"
+                               class="w-full border rounded-lg px-3 py-1.5 text-sm mt-1" :placeholder="getLang() === 'de' ? 'z.B. 30' : 'e.g. 30'">
+                        <p class="text-xs text-gray-400 mt-0.5" x-text="t('cfg.ack_speed')">How quickly the applicant receives confirmation</p>
+                    </div>
                 </div>
-                <p class="text-xs text-gray-400 mt-3 italic">Note: In COPILOT mode, pipeline always stops at recommendation for human review regardless of these settings.</p>
+
+                <!-- Follow-Up Email -->
+                <div class="p-4 rounded-lg border" :class="emailFollowupEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <span class="text-sm font-medium text-gray-800" x-text="t('cfg.followup_email')">Follow-Up Email</span>
+                            <p class="text-xs text-gray-500" x-text="t('cfg.followup_desc')">Ask applicant for missing information when request is incomplete.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer ml-4">
+                            <input type="checkbox" x-model="emailFollowupEnabled" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>
+                    <div x-show="emailFollowupEnabled" x-transition class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-medium text-gray-600" x-text="t('cfg.send_after')">Send after (minutes)</label>
+                            <input type="number" x-model.number="emailFollowupDelay" min="0" max="1440" step="5"
+                                   class="w-full border rounded-lg px-3 py-1.5 text-sm mt-1" :placeholder="getLang() === 'de' ? '0 = sofort' : '0 = immediate'">
+                            <p class="text-xs text-gray-400 mt-0.5" x-text="t('cfg.immediate')">0 = send immediately after detection</p>
+                        </div>
+                        <div>
+                            <label class="text-xs font-medium text-gray-600" x-text="t('cfg.max_attempts')">Max attempts per request</label>
+                            <input type="number" x-model.number="emailFollowupMaxRetries" min="1" max="5"
+                                   class="w-full border rounded-lg px-3 py-1.5 text-sm mt-1">
+                            <p class="text-xs text-gray-400 mt-0.5" x-text="t('cfg.after_max')">After max attempts, routes to human review</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auto-Close -->
+                <div class="p-4 rounded-lg border" :class="autoCloseEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <span class="text-sm font-medium text-gray-800" x-text="t('cfg.auto_close')">Auto-Close Unanswered Requests</span>
+                            <p class="text-xs text-gray-500" x-text="t('cfg.auto_close_desc')">Automatically close requests if applicant never replies to follow-up.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer ml-4">
+                            <input type="checkbox" x-model="autoCloseEnabled" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                    </div>
+                    <div x-show="autoCloseEnabled" x-transition>
+                        <label class="text-xs font-medium text-gray-600" x-text="t('cfg.close_after')">Close after (hours)</label>
+                        <input type="number" x-model.number="autoCloseTimeoutHours" min="24" max="720" step="24"
+                               class="w-full border rounded-lg px-3 py-1.5 text-sm mt-1" :placeholder="getLang() === 'de' ? 'z.B. 72' : 'e.g. 72'">
+                        <p class="text-xs text-gray-400 mt-0.5" x-text="t('cfg.marked_abandoned')">Request will be marked as abandoned</p>
+                    </div>
+                </div>
             </div>
+        </div>
+
+        <!-- Save -->
+        <div class="flex justify-end">
+            <button @click="savePipelineConfig()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium" x-text="t('cfg.save_pipeline')">
+                Save Pipeline Settings
+            </button>
         </div>
     </div>
 
@@ -202,101 +300,13 @@
     <!-- TAB 2b: Completeness Criteria -->
     <!-- ================================================================ -->
     <div x-show="activeTab === 'completeness'" x-transition>
-
-        <!-- Email & Letter Settings Row -->
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-6">
-            <!-- Acknowledgment Email -->
-            <div class="bg-white rounded-xl shadow-sm border p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-semibold text-gray-700">Acknowledgment Email</h4>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="emailAckEnabled" class="sr-only peer">
-                        <div class="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                    </label>
-                </div>
-                <p class="text-xs text-gray-500 mb-2">Send receipt confirmation when request arrives</p>
-                <div x-show="emailAckEnabled" class="space-y-2">
-                    <div>
-                        <label class="text-xs text-gray-600">Send within (seconds)</label>
-                        <input type="number" x-model.number="emailAckDelaySec" min="5" max="300" step="5" class="w-full border rounded px-2 py-1.5 text-sm mt-1">
-                    </div>
-                    <p class="text-xs text-gray-400">SLA target: 30 seconds from email receipt</p>
-                </div>
-            </div>
-
-            <!-- Follow-Up Email -->
-            <div class="bg-white rounded-xl shadow-sm border p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-semibold text-gray-700">Follow-Up Email</h4>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="emailFollowupEnabled" class="sr-only peer">
-                        <div class="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                    </label>
-                </div>
-                <p class="text-xs text-gray-500 mb-2">Ask applicant for missing Tier 1 + Tier 2 fields</p>
-                <div x-show="emailFollowupEnabled" class="space-y-2">
-                    <div>
-                        <label class="text-xs text-gray-600">Max follow-up retries</label>
-                        <input type="number" x-model.number="emailFollowupMaxRetries" min="1" max="5" class="w-full border rounded px-2 py-1.5 text-sm mt-1">
-                    </div>
-                    <p class="text-xs text-gray-400">After max retries, route to human review</p>
-                </div>
-            </div>
-
-            <!-- Auto-Close -->
-            <div class="bg-white rounded-xl shadow-sm border p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-semibold text-gray-700">Auto-Close Stale Requests</h4>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="autoCloseEnabled" class="sr-only peer">
-                        <div class="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                    </label>
-                </div>
-                <p class="text-xs text-gray-500 mb-2">Close requests in awaiting_info after timeout</p>
-                <div x-show="autoCloseEnabled" class="space-y-2">
-                    <div>
-                        <label class="text-xs text-gray-600">Timeout (hours)</label>
-                        <input type="number" x-model.number="autoCloseTimeoutHours" min="24" max="720" step="24" class="w-full border rounded px-2 py-1.5 text-sm mt-1">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Rejection Letter Auto-Send -->
-            <div class="bg-white rounded-xl shadow-sm border p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-semibold text-gray-700">Rejection Letter</h4>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="autoSendRejectionLetter" class="sr-only peer">
-                        <div class="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                    </label>
-                </div>
-                <p class="text-xs text-gray-500 mb-1">Auto-send rejection when eligibility fails</p>
-                <p x-show="!autoSendRejectionLetter" class="text-xs text-purple-600 font-medium">OFF: Human reviews draft before sending</p>
-                <p x-show="autoSendRejectionLetter" class="text-xs text-green-600 font-medium">ON: Auto-sent immediately</p>
-            </div>
-
-            <!-- Decision Letter Auto-Send -->
-            <div class="bg-white rounded-xl shadow-sm border p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-sm font-semibold text-gray-700">Decision Letter</h4>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" x-model="autoSendDecisionLetter" class="sr-only peer">
-                        <div class="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                    </label>
-                </div>
-                <p class="text-xs text-gray-500 mb-1">Auto-send after human approves/rejects</p>
-                <p x-show="!autoSendDecisionLetter" class="text-xs text-purple-600 font-medium">OFF: Human reviews letter draft first</p>
-                <p x-show="autoSendDecisionLetter" class="text-xs text-green-600 font-medium">ON: Auto-sent after decision</p>
-            </div>
-        </div>
-
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             <!-- Left: Email Channel -->
             <div class="bg-white rounded-xl shadow-sm border p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">Email Channel Fields</h3>
-                    <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">LLM-validated (Haiku)</span>
+                    <h3 class="text-lg font-semibold text-gray-800" x-text="t('cfg.email_fields')">Email Channel Fields</h3>
+                    <span class="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full" x-text="t('cfg.llm_validated')">LLM-validated (Haiku)</span>
                 </div>
 
                 <template x-for="tier in completenessTiers" :key="tier.id">
@@ -313,10 +323,9 @@
                                             <input type="checkbox" x-model="field.enabled" class="sr-only peer" :checked="field.enabled !== false">
                                             <div class="w-8 h-4 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all" :class="tier.id === 1 ? 'peer-checked:bg-red-500' : tier.id === 2 ? 'peer-checked:bg-amber-500' : tier.id === 3 ? 'peer-checked:bg-blue-500' : 'peer-checked:bg-gray-500'"></div>
                                         </label>
-                                        <span class="font-mono text-xs text-gray-500 w-36" x-text="field.name"></span>
-                                        <span class="text-xs text-gray-400" x-text="field.german"></span>
+                                        <span class="text-sm text-gray-700" x-text="field.description"></span>
                                     </div>
-                                    <span class="text-xs font-bold" :class="tier.id === 1 ? 'text-red-500' : tier.id === 2 ? 'text-amber-600' : 'text-gray-400'" x-text="tier.id === 1 ? 'BLOCKER' : tier.id === 2 ? 'REQUIRED' : 'OPTIONAL'"></span>
+                                    <span class="text-xs font-bold" :class="tier.id === 1 ? 'text-red-500' : tier.id === 2 ? 'text-amber-600' : 'text-gray-400'" x-text="tier.id === 1 ? t('cfg.blocker') : tier.id === 2 ? t('cfg.required_label') : t('cfg.optional_label')"></span>
                                 </div>
                             </template>
                         </div>
@@ -327,10 +336,10 @@
             <!-- Right: Web Form Channel -->
             <div class="bg-white rounded-xl shadow-sm border p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800">Web Form Fields</h3>
-                    <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Pydantic-validated</span>
+                    <h3 class="text-lg font-semibold text-gray-800" x-text="t('cfg.web_form_fields')">Web Form Fields</h3>
+                    <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full" x-text="t('cfg.pydantic_validated')">Pydantic-validated</span>
                 </div>
-                <p class="text-sm text-gray-500 mb-4">Form enforces required fields at submission. No follow-up needed.</p>
+                <p class="text-sm text-gray-500 mb-4" x-text="t('cfg.form_enforces')">Form enforces required fields at submission. No follow-up needed.</p>
 
                 <div class="space-y-1">
                     <template x-for="field in formFields" :key="field.name">
@@ -340,18 +349,20 @@
                                     <input type="checkbox" x-model="field.required" class="sr-only peer">
                                     <div class="w-8 h-4 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-green-500"></div>
                                 </label>
-                                <span class="font-mono text-xs text-gray-500 w-36" x-text="field.name"></span>
-                                <span class="text-xs text-gray-400" x-text="field.label"></span>
+                                <span class="text-sm text-gray-700" x-text="field.label"></span>
                             </div>
-                            <span class="text-xs font-bold" :class="field.required ? 'text-green-600' : 'text-gray-400'" x-text="field.required ? 'REQUIRED' : 'optional'"></span>
+                            <span class="text-xs font-bold" :class="field.required ? 'text-green-600' : 'text-gray-400'" x-text="field.required ? t('cfg.required_label') : t('cfg.optional_lower')"></span>
                         </div>
                     </template>
                 </div>
 
-                <div class="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <p class="text-xs text-amber-700"><span class="font-bold">Attachment upload:</span> If PDF/DOCX uploaded, LLM extracts (Sonnet). Form values take priority; attachment fills gaps.</p>
-                </div>
             </div>
+        </div>
+
+        <div class="mt-6 flex justify-end">
+            <button @click="saveCompleteness()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium" x-text="t('cfg.save_completeness')">
+                Save Completeness Settings
+            </button>
         </div>
     </div>
 
@@ -363,18 +374,18 @@
 
             <!-- Hard Rules -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Hard Rules (Auto-Reject)</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="t('cfg.hard_rules')">Hard Rules (Eligibility Constraints)</h3>
                 <div class="space-y-4">
-                    <div class="p-3 bg-red-50 rounded-lg border border-red-100">
-                        <div class="font-medium text-sm text-red-800 mb-1">Amount Range</div>
+                    <div class="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div class="font-medium text-sm text-blue-800 mb-1" x-text="t('cfg.amount_range')">Amount Range</div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="text-xs text-gray-500">Min (EUR)</label>
+                                <label class="text-xs text-gray-500" x-text="t('cfg.min_eur')">Min (EUR)</label>
                                 <input type="number" x-model.number="eligibility.hard_rules.amount_range.min_eur"
                                        class="w-full border rounded px-2 py-1 text-sm" step="50">
                             </div>
                             <div>
-                                <label class="text-xs text-gray-500">Max (EUR)</label>
+                                <label class="text-xs text-gray-500" x-text="t('cfg.max_eur')">Max (EUR)</label>
                                 <input type="number" x-model.number="eligibility.hard_rules.amount_range.max_eur"
                                        class="w-full border rounded px-2 py-1 text-sm" step="500">
                             </div>
@@ -382,7 +393,7 @@
                     </div>
 
                     <div class="p-3 bg-red-50 rounded-lg border border-red-100">
-                        <div class="font-medium text-sm text-red-800 mb-2">Keyword Blacklist</div>
+                        <div class="font-medium text-sm text-red-800 mb-2" x-text="t('cfg.keyword_blacklist')">Keyword Blacklist</div>
                         <div class="flex flex-wrap gap-1.5 mb-2">
                             <template x-for="(kw, idx) in eligibility.hard_rules.keyword_blacklist.keywords_de || []" :key="'de-'+idx">
                                 <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs">
@@ -392,15 +403,15 @@
                             </template>
                         </div>
                         <div class="flex gap-2">
-                            <input type="text" x-model="newKeyword" placeholder="Add keyword..."
+                            <input type="text" x-model="newKeyword" :placeholder="t('cfg.add_keyword')"
                                    class="flex-1 border rounded px-2 py-1 text-sm" @keydown.enter="addKeyword()">
-                            <button @click="addKeyword()" class="bg-red-600 text-white px-2 py-1 rounded text-xs">Add</button>
+                            <button @click="addKeyword()" class="bg-red-600 text-white px-2 py-1 rounded text-xs" x-text="t('cfg.add')">Add</button>
                         </div>
                     </div>
 
                     <div class="p-3 bg-red-50 rounded-lg border border-red-100">
-                        <div class="font-medium text-sm text-red-800 mb-2">Blocked Organization Types</div>
-                        <div class="flex flex-wrap gap-1.5">
+                        <div class="font-medium text-sm text-red-800 mb-2" x-text="t('cfg.blocked_org_types')">Blocked Organization Types</div>
+                        <div class="flex flex-wrap gap-1.5 mb-2">
                             <template x-for="(t, idx) in eligibility.hard_rules.blocked_org_types.types || []" :key="idx">
                                 <span class="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs">
                                     <span x-text="t"></span>
@@ -408,66 +419,62 @@
                                 </span>
                             </template>
                         </div>
+                        <div class="flex gap-2">
+                            <select x-model="newBlockedOrgType" class="flex-1 border rounded px-2 py-1 text-sm">
+                                <option value="" x-text="t('cfg.select_type')">Select type to block...</option>
+                                <option value="political_org" x-text="t('cfg.political_org')">Political Organization</option>
+                                <option value="religious_org" x-text="t('cfg.religious_org')">Religious Organization</option>
+                                <option value="individual" x-text="t('cfg.individual')">Individual / Person</option>
+                                <option value="commercial" x-text="t('cfg.commercial')">Commercial Company</option>
+                                <option value="gambling" x-text="t('cfg.gambling')">Gambling Organization</option>
+                                <option value="tobacco_alcohol" x-text="t('cfg.tobacco_alcohol')">Tobacco / Alcohol Industry</option>
+                                <option value="custom" x-text="t('cfg.custom')">Custom...</option>
+                            </select>
+                            <button @click="addBlockedOrgType()" class="bg-red-600 text-white px-2 py-1 rounded text-xs" x-text="t('cfg.block_btn')">Block</button>
+                        </div>
+                        <div x-show="newBlockedOrgType === 'custom'" x-transition class="mt-2">
+                            <input type="text" x-model="customBlockedOrgType" :placeholder="t('cfg.type_custom')"
+                                   class="w-full border rounded px-2 py-1 text-sm" @keydown.enter="addCustomBlockedOrgType()">
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Soft Rules -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Soft Rules (Warnings)</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="t('cfg.soft_rules')">Soft Rules (Warnings)</h3>
                 <div class="space-y-3">
                     <label class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">
                         <div>
-                            <div class="font-medium text-sm text-yellow-800">Region Match Warning</div>
-                            <div class="text-xs text-gray-500">Warn if org is outside operating region</div>
+                            <div class="font-medium text-sm text-yellow-800" x-text="t('cfg.region_match')">Region Match Warning</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.region_outside')">Warn if org is outside operating region</div>
                         </div>
                         <input type="checkbox" x-model="eligibility.soft_rules.region_match.warn_if_outside" class="h-4 w-4 text-primary-600 rounded">
                     </label>
                     <label class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">
                         <div>
-                            <div class="font-medium text-sm text-yellow-800">Event Date Check</div>
+                            <div class="font-medium text-sm text-yellow-800" x-text="t('cfg.event_date_check')">Event Date Check</div>
                             <div class="text-xs text-gray-500">
-                                Min <input type="number" x-model.number="eligibility.soft_rules.event_date_future.min_days_ahead"
-                                           class="w-12 border rounded px-1 text-center inline" min="1" max="90"> days ahead
+                                <span x-text="t('cfg.min_label')">Min</span> <input type="number" x-model.number="eligibility.soft_rules.event_date_future.min_days_ahead"
+                                           class="w-12 border rounded px-1 text-center inline" min="1" max="90"> <span x-text="t('cfg.days_before')">days before event</span>
                             </div>
                         </div>
-                        <input type="checkbox" checked class="h-4 w-4 text-primary-600 rounded">
+                        <input type="checkbox" x-model="eligibility.soft_rules.event_date_future.enabled" class="h-4 w-4 text-primary-600 rounded">
                     </label>
                     <label class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">
                         <div>
-                            <div class="font-medium text-sm text-yellow-800">Freemail Domain Warning</div>
-                            <div class="text-xs text-gray-500">Warn on Gmail, GMX, Yahoo, etc.</div>
+                            <div class="font-medium text-sm text-yellow-800" x-text="t('cfg.freemail_warning')">Freemail Domain Warning</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.freemail_desc')">Warn on Gmail, GMX, Yahoo, etc.</div>
                         </div>
                         <input type="checkbox" x-model="eligibility.soft_rules.email_domain_plausibility.warn_on_freemail" class="h-4 w-4 text-primary-600 rounded">
                     </label>
 
-                    <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-100">
-                        <div class="font-medium text-sm text-yellow-800 mb-2">LLM Edge-Case Check</div>
-                        <label class="flex items-center gap-2 mb-2">
-                            <input type="checkbox" x-model="eligibility.llm_check.enabled" class="h-4 w-4 text-primary-600 rounded">
-                            <span class="text-sm">Enable LLM edge-case analysis</span>
-                        </label>
-                        <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div>
-                                <label class="text-xs text-gray-500">Trigger on N warnings</label>
-                                <input type="number" x-model.number="eligibility.llm_check.trigger_on_warnings"
-                                       class="w-full border rounded px-2 py-1 text-sm" min="1" max="5">
-                            </div>
-                            <div>
-                                <label class="text-xs text-gray-500">Model</label>
-                                <select x-model="eligibility.llm_check.model" class="w-full border rounded px-2 py-1 text-sm">
-                                    <option value="haiku">Haiku (fast)</option>
-                                    <option value="sonnet">Sonnet (accurate)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
 
         <div class="mt-6 flex justify-end">
-            <button @click="saveEligibilityRules()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium">
+            <button @click="saveEligibilityRules()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium" x-text="t('cfg.save_eligibility')">
                 Save Eligibility Rules
             </button>
         </div>
@@ -477,17 +484,19 @@
     <!-- TAB 4: Evaluation Criteria -->
     <!-- ================================================================ -->
     <div x-show="activeTab === 'evaluation'" x-transition>
+
+        <!-- Section 1: Scoring Dimensions -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Scoring Dimensions</h3>
-            <p class="text-sm text-gray-500 mb-4">Weights must sum to 100%. Adjust sliders or enter values directly.</p>
+            <h3 class="text-lg font-semibold text-gray-800 mb-1" x-text="t('cfg.scoring_dims')">Scoring Dimensions</h3>
+            <p class="text-sm text-gray-500 mb-4" x-text="t('cfg.scoring_desc')">How each request is scored. Weights must sum to 100%. Click a dimension to see what it evaluates.</p>
 
             <!-- Weight total indicator -->
             <div class="mb-4 p-3 rounded-lg" :class="weightTotal() === 100 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
                 <div class="flex justify-between items-center">
                     <span class="text-sm font-medium" :class="weightTotal() === 100 ? 'text-green-700' : 'text-red-700'"
-                          x-text="'Total Weight: ' + weightTotal() + '%'"></span>
+                          x-text="t('cfg.total_weight') + ' ' + weightTotal() + '%'"></span>
                     <span class="text-xs" :class="weightTotal() === 100 ? 'text-green-600' : 'text-red-600'"
-                          x-text="weightTotal() === 100 ? 'Valid' : 'Must equal 100%'"></span>
+                          x-text="weightTotal() === 100 ? t('cfg.valid') : t('cfg.must_100')"></span>
                 </div>
                 <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
                     <div class="h-2 rounded-full transition-all" :class="weightTotal() === 100 ? 'bg-green-500' : 'bg-red-500'"
@@ -495,59 +504,71 @@
                 </div>
             </div>
 
-            <!-- Dimensions table -->
-            <div class="space-y-3">
-                <template x-for="(dim, key) in evalCriteria.scoring_dimensions || {}" :key="key">
-                    <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                        <div class="flex-1">
-                            <div class="font-medium text-sm text-gray-800" x-text="key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())"></div>
-                            <div class="text-xs text-gray-500" x-text="dim.description"></div>
+            <!-- Expandable Dimension Cards -->
+            <div class="space-y-2">
+                <template x-for="dim in evalDimensions" :key="dim.key">
+                    <div class="rounded-lg border overflow-hidden">
+                        <!-- Header (always visible) -->
+                        <div class="flex items-center gap-4 p-4 bg-gray-50 cursor-pointer" @click="dim.open = !dim.open">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm text-gray-800" x-text="dim.label"></div>
+                                <div class="text-xs text-gray-500" x-text="dim.description"></div>
+                            </div>
+                            <div class="w-32">
+                                <input type="range" x-model.number="dim.weight" min="0" max="0.5" step="0.01"
+                                       class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600" @click.stop>
+                            </div>
+                            <div class="w-16 text-right">
+                                <span class="text-sm font-bold text-primary-600" x-text="Math.round(dim.weight * 100) + '%'"></span>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400 transition-transform" :class="dim.open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
-                        <div class="w-32">
-                            <input type="range" x-model.number="dim.weight" min="0" max="0.5" step="0.01"
-                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
-                        </div>
-                        <div class="w-16 text-right">
-                            <span class="text-sm font-bold text-primary-600" x-text="Math.round(dim.weight * 100) + '%'"></span>
+                        <!-- Sub-dimensions (expandable) -->
+                        <div x-show="dim.open" x-transition class="px-4 pb-3 pt-1 bg-white border-t">
+                            <p class="text-xs text-gray-400 mb-2" x-text="t('cfg.ai_evaluates')">What the AI evaluates for this dimension:</p>
+                            <div class="space-y-1">
+                                <template x-for="sub in dim.subs" :key="sub">
+                                    <div class="flex items-center gap-2 text-xs text-gray-600 py-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-primary-400 flex-shrink-0"></span>
+                                        <span x-text="sub"></span>
+                                    </div>
+                                </template>
+                            </div>
                         </div>
                     </div>
                 </template>
             </div>
-
-            <!-- Decision thresholds -->
-            <h4 class="text-md font-semibold text-gray-800 mt-6 mb-3">Decision Thresholds</h4>
-            <div class="grid grid-cols-3 gap-4">
-                <div class="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <label class="text-xs text-green-700 font-medium">Approve Above</label>
-                    <input type="number" x-model.number="evalCriteria.decision_thresholds.approve_above"
-                           class="w-full border rounded px-2 py-1 text-sm mt-1" step="0.05" min="0" max="1">
-                </div>
-                <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <label class="text-xs text-yellow-700 font-medium">Partial Range</label>
-                    <div class="text-sm text-gray-500 mt-1"
-                         x-text="(evalCriteria.decision_thresholds.reject_below || 0.35) + ' - ' + (evalCriteria.decision_thresholds.approve_above || 0.65)"></div>
-                </div>
-                <div class="p-3 bg-red-50 rounded-lg border border-red-200">
-                    <label class="text-xs text-red-700 font-medium">Reject Below</label>
-                    <input type="number" x-model.number="evalCriteria.decision_thresholds.reject_below"
-                           class="w-full border rounded px-2 py-1 text-sm mt-1" step="0.05" min="0" max="1">
-                </div>
-            </div>
         </div>
 
-        <!-- Company Values -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Company Values (Strategic Dimensions)</h3>
+        <!-- Section 2: Company Values -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1" x-text="t('cfg.company_values')">Company Values</h3>
+            <p class="text-sm text-gray-500 mb-4"><span x-text="t('cfg.values_desc_1')">These values drive the</span> <span class="font-medium text-primary-600" x-text="t('cfg.values_desc_2')">Strategic Fit</span> <span x-text="t('cfg.values_desc_3')">score. The AI checks how well each request aligns with these values.</span></p>
+
+            <!-- Values weight total -->
+            <div class="mb-4 p-3 rounded-lg" :class="valuesTotal() === 100 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium" :class="valuesTotal() === 100 ? 'text-green-700' : 'text-red-700'"
+                          x-text="t('cfg.total_weight') + ' ' + valuesTotal() + '%'"></span>
+                    <span class="text-xs" :class="valuesTotal() === 100 ? 'text-green-600' : 'text-red-600'"
+                          x-text="valuesTotal() === 100 ? t('cfg.valid') : t('cfg.must_100')"></span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div class="h-2 rounded-full transition-all" :class="valuesTotal() === 100 ? 'bg-green-500' : 'bg-red-500'"
+                         :style="'width:' + Math.min(100, valuesTotal()) + '%'"></div>
+                </div>
+            </div>
+
             <div class="space-y-2">
                 <template x-for="(val, idx) in evalCriteria.company_values || []" :key="idx">
                     <div class="flex items-center gap-3 p-3 bg-primary-50 rounded-lg">
                         <div class="flex-1">
-                            <div class="font-medium text-sm text-primary-800" x-text="val.label"></div>
-                            <div class="text-xs text-gray-500" x-text="val.translation"></div>
+                            <div class="font-medium text-sm text-primary-800" x-text="val.translation"></div>
+                            <div class="text-xs text-gray-500" x-text="val.label"></div>
                         </div>
-                        <div class="w-20">
-                            <input type="number" x-model.number="val.weight" class="w-full border rounded px-2 py-1 text-sm text-center"
-                                   step="0.01" min="0" max="1">
+                        <div class="w-24">
+                            <input type="range" x-model.number="val.weight" min="0" max="0.5" step="0.01"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600">
                         </div>
                         <span class="text-sm font-bold text-primary-600 w-12 text-right" x-text="Math.round(val.weight * 100) + '%'"></span>
                     </div>
@@ -555,8 +576,77 @@
             </div>
         </div>
 
-        <div class="mt-6 flex justify-end">
-            <button @click="saveEvaluationCriteria()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium">
+        <!-- Section 3: Decision Thresholds (visual scale) -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1" x-text="t('cfg.decision_thresholds')">Decision Thresholds</h3>
+            <p class="text-sm text-gray-500 mb-4" x-text="t('cfg.threshold_desc')">How the overall score maps to a recommendation.</p>
+
+            <!-- Visual scale bar -->
+            <div class="relative h-14 rounded-lg overflow-hidden flex mb-2">
+                <div class="h-full bg-red-200 flex flex-col items-center justify-center"
+                     :style="'width:' + Math.round((evalCriteria.decision_thresholds.reject_below || 0.35) * 100) + '%'">
+                    <span class="text-xs font-bold text-red-800" x-text="t('cfg.reject_label')">REJECT</span>
+                    <span class="text-xs text-red-600" x-text="'0 - ' + Math.round((evalCriteria.decision_thresholds.reject_below || 0.35) * 100) + '%'"></span>
+                </div>
+                <div class="h-full bg-yellow-200 flex flex-col items-center justify-center"
+                     :style="'width:' + Math.round(((evalCriteria.decision_thresholds.approve_above || 0.65) - (evalCriteria.decision_thresholds.reject_below || 0.35)) * 100) + '%'">
+                    <span class="text-xs font-bold text-yellow-800" x-text="t('cfg.on_hold_label')">ON HOLD</span>
+                    <span class="text-xs text-yellow-600" x-text="Math.round((evalCriteria.decision_thresholds.reject_below || 0.35) * 100) + ' - ' + Math.round((evalCriteria.decision_thresholds.approve_above || 0.65) * 100) + '%'"></span>
+                </div>
+                <div class="h-full bg-green-200 flex flex-col items-center justify-center"
+                     :style="'width:' + Math.round((1 - (evalCriteria.decision_thresholds.approve_above || 0.65)) * 100) + '%'">
+                    <span class="text-xs font-bold text-green-800" x-text="t('cfg.approve_label')">APPROVE</span>
+                    <span class="text-xs text-green-600" x-text="Math.round((evalCriteria.decision_thresholds.approve_above || 0.65) * 100) + ' - 100%'"></span>
+                </div>
+            </div>
+            <!-- Scale markers -->
+            <div class="flex justify-between text-xs text-gray-400 mb-4 px-1">
+                <span>0%</span>
+                <span x-text="Math.round((evalCriteria.decision_thresholds.reject_below || 0.35) * 100) + '%'"></span>
+                <span x-text="Math.round((evalCriteria.decision_thresholds.approve_above || 0.65) * 100) + '%'"></span>
+                <span>100%</span>
+            </div>
+
+            <!-- Threshold inputs -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-sm font-medium text-gray-600" x-text="t('cfg.reject_below')">Reject below (%)</label>
+                    <input type="number" :value="Math.round((evalCriteria.decision_thresholds.reject_below || 0.35) * 100)"
+                           @change="evalCriteria.decision_thresholds.reject_below = $event.target.value / 100"
+                           class="w-full border rounded-lg px-3 py-2 text-sm mt-1" min="0" max="100" step="5">
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-600" x-text="t('cfg.approve_above')">Approve above (%)</label>
+                    <input type="number" :value="Math.round((evalCriteria.decision_thresholds.approve_above || 0.65) * 100)"
+                           @change="evalCriteria.decision_thresholds.approve_above = $event.target.value / 100"
+                           class="w-full border rounded-lg px-3 py-2 text-sm mt-1" min="0" max="100" step="5">
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2" x-text="t('cfg.scores_between')">Scores between these two values get a "Put on Hold" recommendation.</p>
+        </div>
+
+        <!-- Section 4: Portfolio Limits -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-1" x-text="t('cfg.portfolio_limits')">Portfolio Limits</h3>
+            <p class="text-sm text-gray-500 mb-4" x-text="t('cfg.portfolio_desc')">Prevent over-investment in a single category. If a category exceeds its limit, new requests in that category receive a score penalty.</p>
+            <div class="space-y-3">
+                <template x-for="(cat, key) in evalCriteria.focus_categories || {}" :key="key">
+                    <div class="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-1">
+                            <div class="font-medium text-sm text-gray-800" x-text="portfolioLabel(key)"></div>
+                        </div>
+                        <div class="w-32">
+                            <input type="range" x-model.number="cat.max_portfolio_share" min="0.1" max="0.7" step="0.05"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                        </div>
+                        <span class="text-sm font-bold text-amber-600 w-16 text-right" x-text="Math.round(cat.max_portfolio_share * 100) + '%'"></span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button @click="saveEvaluationCriteria()" class="bg-primary-600 text-white px-6 py-2.5 rounded-lg hover:bg-primary-700 transition font-medium" x-text="t('cfg.save_evaluation')">
                 Save Evaluation Criteria
             </button>
         </div>
@@ -566,66 +656,125 @@
     <!-- TAB: Agent Controls -->
     <!-- ================================================================ -->
     <div x-show="activeTab === 'agents'" x-transition>
-        <div class="max-w-2xl">
+        <div class="max-w-3xl">
             <div class="bg-white rounded-xl shadow-sm border p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Agent Controls</h3>
-                <p class="text-sm text-gray-500 mb-4">Toggle agents on/off and configure their behavior. Useful for demos (disable slow agents) or cost control.</p>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2" x-text="t('cfg.agent_controls')">Agent Controls</h3>
+                <p class="text-sm text-gray-500 mb-4" x-text="t('cfg.agent_desc')">Configure each agent in the pipeline. Select the AI model and toggle optional agents.</p>
 
-                <!-- Research Agent -->
-                <div class="p-4 rounded-lg border mb-4" :class="agentResearchEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
-                    <div class="flex items-center justify-between mb-3">
-                        <div>
-                            <div class="font-medium text-gray-800">Research Agent</div>
-                            <div class="text-xs text-gray-500">Web verification, org credibility check, freemail detection</div>
+                <div class="space-y-3">
+                    <!-- Intake Agent -->
+                    <div class="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800" x-text="t('cfg.intake_agent')">Intake Agent</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.intake_desc')">Document parsing, text extraction, structured data extraction</div>
+                        </div>
+                        <select x-model="agentModels.intake" class="border rounded-lg px-3 py-1.5 text-sm w-36">
+                            <option value="sonnet">Sonnet</option>
+                            <option value="haiku">Haiku</option>
+                        </select>
+                    </div>
+
+                    <!-- Completeness Agent -->
+                    <div class="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800" x-text="t('cfg.completeness_agent')">Completeness Agent</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.completeness_agent_desc')">Validates field quality, catches vague or incomplete values</div>
+                        </div>
+                        <select x-model="agentModels.quality_gate" class="border rounded-lg px-3 py-1.5 text-sm w-36">
+                            <option value="haiku">Haiku</option>
+                            <option value="sonnet">Sonnet</option>
+                        </select>
+                    </div>
+
+                    <!-- Eligibility Agent -->
+                    <div class="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800" x-text="t('cfg.eligibility_agent')">Eligibility Agent</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.eligibility_agent_desc')">Rule-based checks + AI safety check for edge cases</div>
+                        </div>
+                        <select x-model="agentModels.eligibility" class="border rounded-lg px-3 py-1.5 text-sm w-36">
+                            <option value="haiku">Haiku</option>
+                            <option value="sonnet">Sonnet</option>
+                        </select>
+                    </div>
+
+                    <!-- Research Agent -->
+                    <div class="p-4 rounded-lg border" :class="agentResearchEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="font-medium text-gray-800" x-text="t('cfg.research_agent')">Research Agent</div>
+                                <div class="text-xs text-gray-500" x-text="t('cfg.research_desc')">Web verification, org credibility check, freemail detection</div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <select x-model="agentModels.research" class="border rounded-lg px-3 py-1.5 text-sm w-36">
+                                    <option value="sonnet">Sonnet</option>
+                                    <option value="haiku">Haiku</option>
+                                </select>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" x-model="agentResearchEnabled" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                        <div x-show="agentResearchEnabled" x-transition class="space-y-2">
+                            <label class="block text-xs font-medium text-gray-600" x-text="t('cfg.research_depth')">Research Depth</label>
+                            <div class="flex gap-2">
+                                <button @click="agentResearchDepth = 'auto'" :class="agentResearchDepth === 'auto' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'bg-white'" class="px-3 py-1.5 text-xs rounded-lg border transition" x-text="t('cfg.depth_auto')">Auto</button>
+                                <button @click="agentResearchDepth = 'quick'" :class="agentResearchDepth === 'quick' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-white'" class="px-3 py-1.5 text-xs rounded-lg border transition" x-text="t('cfg.depth_quick')">Quick</button>
+                                <button @click="agentResearchDepth = 'standard'" :class="agentResearchDepth === 'standard' ? 'bg-amber-100 border-amber-400 text-amber-700' : 'bg-white'" class="px-3 py-1.5 text-xs rounded-lg border transition" x-text="t('cfg.depth_standard')">Standard</button>
+                                <button @click="agentResearchDepth = 'deep'" :class="agentResearchDepth === 'deep' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-white'" class="px-3 py-1.5 text-xs rounded-lg border transition" x-text="t('cfg.depth_deep')">Deep</button>
+                            </div>
+                            <p class="text-xs text-gray-400" x-text="t('cfg.depth_desc')">Auto: Quick (&lt;1000 EUR), Standard (1000-5000), Deep (&gt;5000)</p>
+                        </div>
+                    </div>
+
+                    <!-- Evaluation Agent -->
+                    <div class="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800" x-text="t('cfg.evaluation_agent')">Evaluation Agent</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.evaluation_agent_desc')">Scores requests on strategic fit, community impact, visibility, cost effectiveness</div>
+                        </div>
+                        <select x-model="agentModels.evaluation" class="border rounded-lg px-3 py-1.5 text-sm w-36">
+                            <option value="sonnet">Sonnet</option>
+                            <option value="haiku">Haiku</option>
+                        </select>
+                    </div>
+
+                    <!-- Recommendation Agent -->
+                    <div class="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800" x-text="t('cfg.recommendation_agent')">Recommendation Agent</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.recommendation_desc')">Generates approve/reject/hold recommendation with reasoning</div>
+                        </div>
+                        <select x-model="agentModels.recommendation" class="border rounded-lg px-3 py-1.5 text-sm w-36">
+                            <option value="sonnet">Sonnet</option>
+                            <option value="haiku">Haiku</option>
+                        </select>
+                    </div>
+
+                    <!-- Completion Agent -->
+                    <div class="flex items-center justify-between p-4 rounded-lg border bg-gray-50">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800" x-text="t('cfg.completion_agent')">Completion Agent</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.completion_desc')">Generates decision letters, updates org profile, tracks budget</div>
+                        </div>
+                        <select x-model="agentModels.completion" class="border rounded-lg px-3 py-1.5 text-sm w-36">
+                            <option value="sonnet">Sonnet</option>
+                            <option value="haiku">Haiku</option>
+                        </select>
+                    </div>
+
+                    <!-- Ask Me (Copilot) -->
+                    <div class="flex items-center justify-between p-4 rounded-lg border" :class="copilotEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-800" x-text="t('cfg.copilot_agent')">Ask Me (Copilot Assistant)</div>
+                            <div class="text-xs text-gray-500" x-text="t('cfg.copilot_desc')">AI chat assistant available on every page via the Ask Me button</div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" x-model="agentResearchEnabled" class="sr-only peer">
+                            <input type="checkbox" x-model="copilotEnabled" class="sr-only peer">
                             <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                         </label>
                     </div>
-                    <div x-show="agentResearchEnabled" class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-600">Research Depth Override</label>
-                        <div class="flex gap-2">
-                            <button @click="agentResearchDepth = 'auto'" :class="agentResearchDepth === 'auto' ? 'bg-primary-100 border-primary-400 text-primary-700' : 'bg-gray-50'" class="px-3 py-1.5 text-xs rounded-lg border transition">Auto (by amount)</button>
-                            <button @click="agentResearchDepth = 'quick'" :class="agentResearchDepth === 'quick' ? 'bg-green-100 border-green-400 text-green-700' : 'bg-gray-50'" class="px-3 py-1.5 text-xs rounded-lg border transition">Quick</button>
-                            <button @click="agentResearchDepth = 'standard'" :class="agentResearchDepth === 'standard' ? 'bg-amber-100 border-amber-400 text-amber-700' : 'bg-gray-50'" class="px-3 py-1.5 text-xs rounded-lg border transition">Standard</button>
-                            <button @click="agentResearchDepth = 'deep'" :class="agentResearchDepth === 'deep' ? 'bg-red-100 border-red-400 text-red-700' : 'bg-gray-50'" class="px-3 py-1.5 text-xs rounded-lg border transition">Deep</button>
-                        </div>
-                        <p class="text-xs text-gray-400">Auto: Quick (&lt;1000 EUR), Standard (1000-5000), Deep (&gt;5000)</p>
-                    </div>
-                </div>
-
-                <!-- LLM Quality Gate -->
-                <div class="p-4 rounded-lg border mb-4" :class="agentQualityGateLLM ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="font-medium text-gray-800">LLM Quality Gate (Haiku)</div>
-                            <div class="text-xs text-gray-500">Validates field quality beyond null checks. Catches vague/garbage values.</div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" x-model="agentQualityGateLLM" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                    </div>
-                    <p x-show="!agentQualityGateLLM" class="text-xs text-amber-600 mt-2">Fallback: rule-based null checks (less accurate, but free and instant)</p>
-                </div>
-
-                <!-- LLM Eligibility Edge-Case -->
-                <div class="p-4 rounded-lg border mb-4" :class="agentEligibilityLLM ? 'bg-green-50 border-green-200' : 'bg-gray-50'">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="font-medium text-gray-800">LLM Eligibility Edge-Case (Haiku)</div>
-                            <div class="text-xs text-gray-500">Checks political disguise, amount plausibility, coherence when warnings present.</div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" x-model="agentEligibilityLLM" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 text-xs text-blue-700">
-                    <span class="font-bold">Cost info:</span> Research Agent = $0 (HTTP calls). LLM Quality Gate = ~$0.001/request (Haiku). LLM Eligibility = ~$0.001/request (Haiku, only when triggered).
                 </div>
             </div>
         </div>
@@ -636,34 +785,41 @@
     <!-- ================================================================ -->
     <div x-show="activeTab === 'system'" x-transition>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <template x-for="section in systemSections" :key="section.title">
+            <template x-for="section in systemCards" :key="section.id">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="section.title"></h3>
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800" x-text="section.title"></h3>
+                        <button @click="section.editing = !section.editing"
+                                class="text-xs px-3 py-1 rounded-lg border transition"
+                                :class="section.editing ? 'bg-primary-100 border-primary-400 text-primary-700' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'"
+                                x-text="section.editing ? t('cfg.done') : t('cfg.edit_btn')"></button>
+                    </div>
                     <div class="space-y-2">
                         <template x-for="(value, key) in section.data" :key="key">
                             <div class="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-0">
                                 <span class="text-sm text-gray-600" x-text="key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())"></span>
-                                <span class="text-sm font-mono text-gray-800" x-text="typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value"></span>
+                                <span x-show="!section.editing" class="text-sm font-mono text-gray-800" x-text="typeof value === 'boolean' ? (value ? (getLang() === 'de' ? 'Ja' : 'Yes') : (getLang() === 'de' ? 'Nein' : 'No')) : value"></span>
+                                <input x-show="section.editing" type="text" :value="typeof value === 'boolean' ? (value ? (getLang() === 'de' ? 'Ja' : 'Yes') : (getLang() === 'de' ? 'Nein' : 'No')) : value"
+                                       class="text-sm font-mono text-gray-800 border rounded px-2 py-1 w-56 text-right">
                             </div>
                         </template>
                     </div>
                 </div>
             </template>
         </div>
-    </div>
 
-    <!-- Audit Log (merged into System tab) -->
-    <div x-show="activeTab === 'system'" class="mt-6">
+        <!-- Audit Log -->
+        <div class="mt-6">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Configuration Change History</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4" x-text="t('cfg.config_history')">Configuration Change History</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-200">
-                            <th class="text-left py-2 px-3 text-gray-600 font-medium">Time</th>
-                            <th class="text-left py-2 px-3 text-gray-600 font-medium">Action</th>
-                            <th class="text-left py-2 px-3 text-gray-600 font-medium">Actor</th>
-                            <th class="text-left py-2 px-3 text-gray-600 font-medium">Details</th>
+                            <th class="text-left py-2 px-3 text-gray-600 font-medium" x-text="t('cfg.th_time')">Time</th>
+                            <th class="text-left py-2 px-3 text-gray-600 font-medium" x-text="t('cfg.th_action')">Action</th>
+                            <th class="text-left py-2 px-3 text-gray-600 font-medium" x-text="t('cfg.th_actor')">Actor</th>
+                            <th class="text-left py-2 px-3 text-gray-600 font-medium" x-text="t('cfg.th_details')">Details</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -679,11 +835,12 @@
                             </tr>
                         </template>
                         <tr x-show="auditLog.length === 0">
-                            <td colspan="4" class="py-8 text-center text-gray-400">No configuration changes recorded yet.</td>
+                            <td colspan="4" class="py-8 text-center text-gray-400" x-text="t('cfg.no_changes')">No configuration changes recorded yet.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+        </div>
         </div>
     </div>
 
@@ -694,88 +851,105 @@
 <script>
 function configDashboard() {
     return {
-        activeTab: 'strategy',
+        activeTab: 'evaluation',
         tabs: [
-            { id: 'strategy', label: 'Strategy & Budget' },
-            { id: 'pipeline', label: 'Pipeline & HITL' },
-            { id: 'completeness', label: 'Completeness' },
-            { id: 'eligibility', label: 'Eligibility Rules' },
-            { id: 'evaluation', label: 'Evaluation Criteria' },
-            { id: 'agents', label: 'Agent Controls' },
-            { id: 'system', label: 'System & Audit' },
+            { id: 'evaluation', label: t('config.evaluation') },
+            { id: 'strategy', label: t('config.budget_strategy') },
+            { id: 'completeness', label: t('config.completeness') },
+            { id: 'eligibility', label: t('config.eligibility') },
+            { id: 'pipeline', label: t('config.pipeline') },
+            { id: 'agents', label: t('config.agents') },
+            { id: 'system', label: t('config.system') },
         ],
         toast: { show: false, message: '', type: 'success' },
         strategy: {},
         strategyId: null,
+        historicalCount: 0,
+        historicalPreview: [],
         pipelineMode: 'copilot',
         gate2Passed: false,
         autoDecideThreshold: 0.85,
         autoDecideMaxAmount: 3000,
         eligibility: { hard_rules: { amount_range: {}, keyword_blacklist: { keywords_de: [] }, blocked_org_types: { types: [] } }, soft_rules: { region_match: {}, event_date_future: {}, email_domain_plausibility: {} }, llm_check: {} },
-        evalCriteria: { scoring_dimensions: {}, decision_thresholds: {}, company_values: [] },
+        evalCriteria: { scoring_dimensions: {}, decision_thresholds: {}, company_values: [], focus_categories: {} },
+        evalDimensions: [
+            { key: 'strategic_fit', label: t('cfg.dim_strategic'), description: t('cfg.dim_strategic_desc'), weight: 0.28, open: false,
+              subs: [t('cfg.sub_focus_match'), t('cfg.sub_regional'), t('cfg.sub_audience_overlap'), t('cfg.sub_logo_brand')] },
+            { key: 'community_impact', label: t('cfg.dim_community'), description: t('cfg.dim_community_desc'), weight: 0.22, open: false,
+              subs: [t('cfg.sub_beneficiaries'), t('cfg.sub_social_value'), t('cfg.sub_geographic')] },
+            { key: 'visibility_value', label: t('cfg.dim_visibility'), description: t('cfg.dim_visibility_desc'), weight: 0.19, open: false,
+              subs: [t('cfg.sub_logo_exposure'), t('cfg.sub_media_reach'), t('cfg.sub_digital'), t('cfg.sub_audience_size')] },
+            { key: 'cost_effectiveness', label: t('cfg.dim_cost'), description: t('cfg.dim_cost_desc'), weight: 0.16, open: false,
+              subs: [t('cfg.sub_cost_per'), t('cfg.sub_proportional')] },
+            { key: 'partnership_depth', label: t('cfg.dim_partnership'), description: t('cfg.dim_partnership_desc'), weight: 0.09, open: false,
+              subs: [t('cfg.sub_logo_only'), t('cfg.sub_event_mention'), t('cfg.sub_media_partner'), t('cfg.sub_content'), t('cfg.sub_deep_collab')] },
+            { key: 'portfolio_balance', label: t('cfg.dim_portfolio'), description: t('cfg.dim_portfolio_desc'), weight: 0.06, open: false,
+              subs: [t('cfg.sub_cat_share'), t('cfg.sub_penalty'), t('cfg.sub_diversity')] },
+        ],
         clients: [],
         systemSettings: {},
         auditLog: [],
         newFocusArea: '',
         newBlockedCat: '',
         newKeyword: '',
+        newBlockedOrgType: '',
+        customBlockedOrgType: '',
 
         // HITL settings
-        hitlPreset: 'copilot',
         hitlStages: [
-            { id: 'after_intake', label: 'After Intake / Extraction', desc: 'Review extracted data before proceeding', enabled: false },
-            { id: 'before_followup', label: 'Before Sending Follow-Up Email', desc: 'Review completeness email before sending to applicant', enabled: false },
-            { id: 'after_eligibility', label: 'After Eligibility Check', desc: 'Review eligibility result before evaluation', enabled: false },
-            { id: 'after_evaluation', label: 'After Evaluation Scoring', desc: 'Review scores before recommendation', enabled: false },
-            { id: 'after_recommendation', label: 'After Recommendation', desc: 'Review AI recommendation before final decision', enabled: true },
-            { id: 'before_send', label: 'Before Sending Decision Letter', desc: 'Review and optionally edit letter before sending', enabled: true },
+            { id: 'before_followup', label: t('cfg.hitl_followup'), desc: t('cfg.hitl_followup_desc'), enabled: true },
+            { id: 'after_recommendation', label: t('cfg.hitl_recommendation'), desc: t('cfg.hitl_recommendation_desc'), enabled: true },
+            { id: 'before_send', label: t('cfg.hitl_send'), desc: t('cfg.hitl_send_desc'), enabled: true },
         ],
+
+        // Follow-up delay
+        emailFollowupDelay: 0,
 
         // Completeness criteria
         completenessTiers: [
-            { id: 1, label: 'TIER 1 -- Pipeline Blockers', rule: 'Any 1 missing = STOP pipeline', color: 'bg-red-100 text-red-700', fields: [
-                { name: 'organization_name', german: 'Veranstalter / Antragsteller', enabled: true },
-                { name: 'requested_amount', german: 'Angefragter Betrag', enabled: true },
+            { id: 1, label: t('cfg.tier1'), rule: t('cfg.tier1_rule'), color: 'bg-red-100 text-red-700', fields: [
+                { name: 'organization_name', description: t('cfg.field_org_name'), enabled: true },
+                { name: 'requested_amount', description: t('cfg.field_amount'), enabled: true },
             ]},
-            { id: 2, label: 'TIER 2 -- Evaluation Blockers', rule: 'Asked in follow-up email', color: 'bg-amber-100 text-amber-700', fields: [
-                { name: 'purpose', german: 'Veranstaltungsname / Anlass', enabled: true },
-                { name: 'visibility', german: 'Sponsorenpaket + Gegenleistungen', enabled: true },
-                { name: 'event_date', german: 'Datum / Zeitraum', enabled: true },
-                { name: 'region', german: 'Ort / Region', enabled: true },
-                { name: 'contact', german: 'Ansprechpartner + Kontaktdaten', enabled: true },
+            { id: 2, label: t('cfg.tier2'), rule: t('cfg.tier2_rule'), color: 'bg-amber-100 text-amber-700', fields: [
+                { name: 'purpose', description: t('cfg.field_purpose'), enabled: true },
+                { name: 'visibility', description: t('cfg.field_visibility'), enabled: true },
+                { name: 'event_date', description: t('cfg.field_event_date'), enabled: true },
+                { name: 'region', description: t('cfg.field_region'), enabled: true },
+                { name: 'contact', description: t('cfg.field_contact'), enabled: true },
             ]},
-            { id: 3, label: 'TIER 3 -- Score Reducers', rule: 'LLM infers if missing', color: 'bg-blue-100 text-blue-700', fields: [
-                { name: 'expected_attendance', german: 'Erwartete Besucherzahl', enabled: true },
-                { name: 'target_audience', german: 'Zielgruppe', enabled: true },
-                { name: 'description', german: 'Projektbeschreibung', enabled: true },
-                { name: 'organization_type', german: 'Organisationstyp', enabled: true },
-                { name: 'purpose_category', german: 'Thematische Einordnung', enabled: true },
+            { id: 3, label: t('cfg.tier3'), rule: t('cfg.tier3_rule'), color: 'bg-blue-100 text-blue-700', fields: [
+                { name: 'expected_attendance', description: t('cfg.field_attendance'), enabled: true },
+                { name: 'target_audience', description: t('cfg.field_audience'), enabled: true },
+                { name: 'description', description: t('cfg.field_description'), enabled: true },
+                { name: 'organization_type', description: t('cfg.field_org_type'), enabled: true },
+                { name: 'purpose_category', description: t('cfg.field_category'), enabled: true },
             ]},
-            { id: 4, label: 'TIER 4 -- Optional Context', rule: 'Never asked, context only', color: 'bg-gray-100 text-gray-600', fields: [
-                { name: 'member_count', german: 'Vereinsgroesse', enabled: true },
-                { name: 'usage_breakdown', german: 'Mittelverwendung', enabled: true },
-                { name: 'geographic_reach', german: 'Mediale Reichweite', enabled: true },
-                { name: 'organization_description', german: 'Vereinsbeschreibung', enabled: true },
-                { name: 'response_deadline', german: 'Antwortfrist', enabled: true },
+            { id: 4, label: t('cfg.tier4'), rule: t('cfg.tier4_rule'), color: 'bg-gray-100 text-gray-600', fields: [
+                { name: 'member_count', description: t('cfg.field_members'), enabled: true },
+                { name: 'usage_breakdown', description: t('cfg.field_usage'), enabled: true },
+                { name: 'geographic_reach', description: t('cfg.field_reach'), enabled: true },
+                { name: 'organization_description', description: t('cfg.field_org_desc'), enabled: true },
+                { name: 'response_deadline', description: t('cfg.field_deadline'), enabled: true },
             ]},
         ],
 
         formFields: [
-            { name: 'organization_name', label: 'Name der Organisation', required: true },
-            { name: 'requested_amount', label: 'Gewuenschter Betrag (EUR)', required: true },
-            { name: 'purpose', label: 'Anlass / Veranstaltung', required: true },
-            { name: 'event_date', label: 'Datum', required: true },
-            { name: 'region', label: 'Ort / Region', required: true },
-            { name: 'contact_name', label: 'Ansprechpartner', required: true },
-            { name: 'contact_email', label: 'E-Mail', required: true },
-            { name: 'visibility', label: 'Gegenleistungen / Sponsorenpaket', required: true },
-            { name: 'expected_attendance', label: 'Erwartete Besucherzahl', required: false },
-            { name: 'target_audience', label: 'Zielgruppe', required: false },
-            { name: 'description', label: 'Projektbeschreibung', required: false },
-            { name: 'organization_type', label: 'Art der Organisation', required: false },
-            { name: 'contact_phone', label: 'Telefon', required: false },
-            { name: 'member_count', label: 'Mitgliederzahl', required: false },
-            { name: 'usage_breakdown', label: 'Mittelverwendung', required: false },
+            { name: 'organization_name', label: t('cfg.field_org_name'), required: true },
+            { name: 'requested_amount', label: t('cfg.field_amount_eur'), required: true },
+            { name: 'purpose', label: t('cfg.field_purpose'), required: true },
+            { name: 'event_date', label: t('cfg.field_event_date'), required: true },
+            { name: 'region', label: t('cfg.field_region'), required: true },
+            { name: 'contact_name', label: t('cfg.field_contact'), required: true },
+            { name: 'contact_email', label: t('cfg.field_email'), required: true },
+            { name: 'visibility', label: t('cfg.field_visibility'), required: true },
+            { name: 'expected_attendance', label: t('cfg.field_attendance'), required: false },
+            { name: 'target_audience', label: t('cfg.field_audience'), required: false },
+            { name: 'description', label: t('cfg.field_description'), required: false },
+            { name: 'organization_type', label: t('cfg.field_org_type'), required: false },
+            { name: 'contact_phone', label: t('cfg.field_phone'), required: false },
+            { name: 'member_count', label: t('cfg.field_members'), required: false },
+            { name: 'usage_breakdown', label: t('cfg.field_usage'), required: false },
         ],
 
         // Email settings
@@ -789,21 +963,37 @@ function configDashboard() {
         autoSendDecisionLetter: false,
 
         // Agent controls
+        agentModels: {
+            intake: 'sonnet',
+            quality_gate: 'haiku',
+            eligibility: 'haiku',
+            research: 'sonnet',
+            evaluation: 'sonnet',
+            recommendation: 'sonnet',
+            completion: 'sonnet',
+        },
+        copilotEnabled: true,
         agentResearchEnabled: true,
         agentResearchDepth: 'auto',
         agentQualityGateLLM: true,
         agentEligibilityLLM: true,
 
-        get systemSections() {
-            const s = this.systemSettings;
-            return [
-                { title: 'Email (IMAP)', data: s.imap || {} },
-                { title: 'Email (SMTP)', data: s.smtp || {} },
-                { title: 'LLM Models', data: s.llm || {} },
-                { title: 'Database', data: s.database || {} },
-                { title: 'Pipeline', data: s.pipeline || {} },
-                { title: 'Storage', data: s.storage || {} },
-            ];
+        systemCards: [],
+
+        // Budget helpers -- spent comes from DB (sum of approved decisions), not from total - remaining
+        get budgetSpent() {
+            return this.strategy.actual_spent || 0;
+        },
+        get budgetRemaining() {
+            return Math.max(0, (this.strategy.total_budget || 0) - this.budgetSpent);
+        },
+        get budgetPct() {
+            return this.strategy.total_budget > 0
+                ? Math.round((this.budgetSpent / this.strategy.total_budget) * 100)
+                : 0;
+        },
+        fmtEUR(v) {
+            return Math.round(v || 0).toLocaleString('en-US') + ' EUR';
         },
 
         async init() {
@@ -815,6 +1005,7 @@ function configDashboard() {
                 this.loadClients(),
                 this.loadSystemSettings(),
                 this.loadAuditLog(),
+                this.loadHistorical(),
             ]);
         },
 
@@ -860,8 +1051,26 @@ function configDashboard() {
         async loadEvaluationCriteria() {
             try {
                 const res = await fetch('/api/config/evaluation-criteria');
-                if (res.ok) this.evalCriteria = await res.json();
+                if (res.ok) {
+                    this.evalCriteria = await res.json();
+                    // Sync YAML weights into evalDimensions
+                    const dims = this.evalCriteria.scoring_dimensions || {};
+                    for (const d of this.evalDimensions) {
+                        if (dims[d.key]) d.weight = dims[d.key].weight || d.weight;
+                    }
+                }
             } catch (e) { console.error('Failed to load evaluation criteria:', e); }
+        },
+
+        async loadHistorical() {
+            try {
+                const res = await fetch('/api/config/historical');
+                if (res.ok) {
+                    const data = await res.json();
+                    this.historicalCount = data.count || 0;
+                    this.historicalPreview = data.preview || [];
+                }
+            } catch (e) { console.error('Failed to load historical data:', e); }
         },
 
         async loadClients() {
@@ -877,7 +1086,17 @@ function configDashboard() {
         async loadSystemSettings() {
             try {
                 const res = await fetch('/api/config/system');
-                if (res.ok) this.systemSettings = await res.json();
+                if (res.ok) {
+                    const s = await res.json();
+                    this.systemSettings = s;
+                    const dbStorage = { ...(s.database || {}), ...(s.storage || {}) };
+                    this.systemCards = [
+                        { id: 'incoming', title: t('cfg.incoming_email'), data: s.imap || {}, editing: false },
+                        { id: 'outgoing', title: t('cfg.outgoing_email'), data: s.smtp || {}, editing: false },
+                        { id: 'llm', title: t('cfg.llm_models'), data: s.llm || {}, editing: false },
+                        { id: 'db', title: t('cfg.db_storage'), data: dbStorage, editing: false },
+                    ];
+                }
             } catch (e) { console.error('Failed to load system settings:', e); }
         },
 
@@ -893,14 +1112,14 @@ function configDashboard() {
 
         // --- Save operations ---
         async saveStrategy() {
-            if (!this.strategyId) return this.showToast('No strategy loaded', 'error');
+            if (!this.strategyId) return this.showToast(t('cfg.toast_no_strategy'), 'error');
             try {
                 const res = await fetch(`/api/config/strategy/${this.strategyId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         total_budget: this.strategy.total_budget,
-                        remaining_budget: this.strategy.remaining_budget,
+                        remaining_budget: this.budgetRemaining,  // sync: total - actual_spent
                         max_single_amount: this.strategy.max_single_amount,
                         min_single_amount: this.strategy.min_single_amount,
                         focus_areas: this.strategy.focus_areas,
@@ -910,13 +1129,13 @@ function configDashboard() {
                     }),
                 });
                 if (res.ok) {
-                    this.showToast('Strategy saved successfully!');
+                    this.showToast(t('cfg.toast_strategy_saved'));
                     this.loadAuditLog();
                 } else {
                     const err = await res.json();
-                    this.showToast(err.detail || 'Save failed', 'error');
+                    this.showToast(err.detail || t('cfg.toast_save_failed'), 'error');
                 }
-            } catch (e) { this.showToast('Network error', 'error'); }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
         },
 
         async savePipelineConfig() {
@@ -931,13 +1150,13 @@ function configDashboard() {
                     }),
                 });
                 if (res.ok) {
-                    this.showToast('Pipeline config saved!');
+                    this.showToast(t('cfg.toast_pipeline_saved'));
                     this.loadAuditLog();
                 } else {
                     const err = await res.json();
-                    this.showToast(err.detail || 'Save failed', 'error');
+                    this.showToast(err.detail || t('cfg.toast_save_failed'), 'error');
                 }
-            } catch (e) { this.showToast('Network error', 'error'); }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
         },
 
         async saveEligibilityRules() {
@@ -948,17 +1167,23 @@ function configDashboard() {
                     body: JSON.stringify(this.eligibility),
                 });
                 if (res.ok) {
-                    this.showToast('Eligibility rules saved!');
+                    this.showToast(t('cfg.toast_eligibility_saved'));
                     this.loadAuditLog();
                 } else {
-                    this.showToast('Save failed', 'error');
+                    this.showToast(t('cfg.toast_save_failed'), 'error');
                 }
-            } catch (e) { this.showToast('Network error', 'error'); }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
         },
 
         async saveEvaluationCriteria() {
             if (this.weightTotal() !== 100) {
-                return this.showToast('Weights must sum to 100%', 'error');
+                return this.showToast(t('cfg.toast_weights_error'), 'error');
+            }
+            // Sync evalDimensions weights back into evalCriteria before saving
+            for (const d of this.evalDimensions) {
+                if (this.evalCriteria.scoring_dimensions[d.key]) {
+                    this.evalCriteria.scoring_dimensions[d.key].weight = d.weight;
+                }
             }
             try {
                 const res = await fetch('/api/config/evaluation-criteria', {
@@ -967,12 +1192,32 @@ function configDashboard() {
                     body: JSON.stringify(this.evalCriteria),
                 });
                 if (res.ok) {
-                    this.showToast('Evaluation criteria saved!');
+                    this.showToast(t('cfg.toast_evaluation_saved'));
                     this.loadAuditLog();
                 } else {
-                    this.showToast('Save failed', 'error');
+                    this.showToast(t('cfg.toast_save_failed'), 'error');
                 }
-            } catch (e) { this.showToast('Network error', 'error'); }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
+        },
+
+        async saveCompleteness() {
+            try {
+                const payload = {
+                    tiers: this.completenessTiers,
+                    form_fields: this.formFields,
+                };
+                const res = await fetch('/api/config/completeness', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (res.ok) {
+                    this.showToast(t('cfg.toast_completeness_saved'));
+                    this.loadAuditLog();
+                } else {
+                    this.showToast(t('cfg.toast_save_failed'), 'error');
+                }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
         },
 
         // --- Client operations ---
@@ -986,23 +1231,23 @@ function configDashboard() {
                     body: JSON.stringify({ client_name: name, year: 2026, total_budget: 100000 }),
                 });
                 if (res.ok) {
-                    this.showToast(`Client "${name}" created!`);
+                    this.showToast(t('cfg.toast_client_created'));
                     this.loadClients();
                     this.loadAuditLog();
                 }
-            } catch (e) { this.showToast('Failed to create client', 'error'); }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
         },
 
         async activateClient(id) {
             try {
                 const res = await fetch(`/api/config/strategy/${id}/activate`, { method: 'POST' });
                 if (res.ok) {
-                    this.showToast('Client activated!');
+                    this.showToast(t('cfg.toast_client_activated'));
                     this.loadClients();
                     this.loadStrategy();
                     this.loadAuditLog();
                 }
-            } catch (e) { this.showToast('Failed to activate', 'error'); }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
         },
 
         async cloneClient(id) {
@@ -1011,11 +1256,11 @@ function configDashboard() {
             try {
                 const res = await fetch(`/api/config/strategy/${id}/clone?client_name=${encodeURIComponent(name)}`, { method: 'POST' });
                 if (res.ok) {
-                    this.showToast(`Client "${name}" cloned!`);
+                    this.showToast(t('cfg.toast_client_cloned'));
                     this.loadClients();
                     this.loadAuditLog();
                 }
-            } catch (e) { this.showToast('Failed to clone', 'error'); }
+            } catch (e) { this.showToast(t('cfg.toast_network_error'), 'error'); }
         },
 
         // --- Helpers ---
@@ -1037,23 +1282,54 @@ function configDashboard() {
             this.eligibility.hard_rules.keyword_blacklist.keywords_de.push(this.newKeyword);
             this.newKeyword = '';
         },
-        togglePipelineMode() {
-            this.pipelineMode = this.pipelineMode === 'copilot' ? 'autopilot' : 'copilot';
+        addBlockedOrgType() {
+            if (!this.newBlockedOrgType || this.newBlockedOrgType === 'custom') return;
+            if (!this.eligibility.hard_rules.blocked_org_types.types) this.eligibility.hard_rules.blocked_org_types.types = [];
+            if (!this.eligibility.hard_rules.blocked_org_types.types.includes(this.newBlockedOrgType)) {
+                this.eligibility.hard_rules.blocked_org_types.types.push(this.newBlockedOrgType);
+            }
+            this.newBlockedOrgType = '';
         },
-        setHITLPreset(preset) {
-            this.hitlPreset = preset;
-            if (preset === 'copilot') {
-                this.hitlStages.forEach(s => s.enabled = ['after_recommendation', 'before_send'].includes(s.id));
-            } else if (preset === 'autopilot') {
+        addCustomBlockedOrgType() {
+            if (!this.customBlockedOrgType) return;
+            if (!this.eligibility.hard_rules.blocked_org_types.types) this.eligibility.hard_rules.blocked_org_types.types = [];
+            if (!this.eligibility.hard_rules.blocked_org_types.types.includes(this.customBlockedOrgType)) {
+                this.eligibility.hard_rules.blocked_org_types.types.push(this.customBlockedOrgType);
+            }
+            this.customBlockedOrgType = '';
+            this.newBlockedOrgType = '';
+        },
+        applyModePreset() {
+            if (this.pipelineMode !== 'autopilot') {
+                // Human Intervention: all HITL stages ON
+                this.hitlStages.forEach(s => s.enabled = true);
+            } else {
+                // Autopilot: all HITL stages OFF
                 this.hitlStages.forEach(s => s.enabled = false);
             }
-            // 'custom' leaves current state as-is
         },
         weightTotal() {
-            const dims = this.evalCriteria.scoring_dimensions || {};
             let total = 0;
-            for (const key in dims) {
-                total += (dims[key].weight || 0);
+            for (const dim of this.evalDimensions) {
+                total += (dim.weight || 0);
+            }
+            return Math.round(total * 100);
+        },
+        portfolioLabel(key) {
+            const labels = {
+                youth_sports: t('cfg.port_youth'),
+                culture: t('cfg.port_culture'),
+                environment: t('cfg.port_environment'),
+                education: t('cfg.port_education'),
+                social: t('cfg.port_social'),
+                community_event: t('cfg.port_community'),
+            };
+            return labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        },
+        valuesTotal() {
+            let total = 0;
+            for (const val of (this.evalCriteria.company_values || [])) {
+                total += (val.weight || 0);
             }
             return Math.round(total * 100);
         },

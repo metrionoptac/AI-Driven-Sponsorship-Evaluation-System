@@ -89,16 +89,17 @@ class EmailSender:
 
     def __init__(self, smtp_host: str, smtp_port: int, username: str,
                  password: str, from_name: str = "Sponsoring-Team",
-                 enabled: bool = True):
+                 enabled: bool = True, db=None):
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
         self.username = username
         self.password = password
         self.from_name = from_name
         self.enabled = enabled
+        self.db = db
 
     @classmethod
-    def from_config(cls, config) -> "EmailSender":
+    def from_config(cls, config, db=None) -> "EmailSender":
         """Create from AppConfig.smtp"""
         smtp = config.smtp
         return cls(
@@ -108,6 +109,7 @@ class EmailSender:
             password=smtp.password or config.intake.imap_password,
             from_name=smtp.from_name,
             enabled=smtp.enabled,
+            db=db,
         )
 
     async def send_acknowledgment(
@@ -175,7 +177,30 @@ class EmailSender:
             form_url=form_url,
         )
 
-        return await self._send(to_email, subject, body, request_id, "completeness_request")
+        sent = await self._send(to_email, subject, body, request_id, "completeness_request")
+
+        # Persist to follow_ups table (tracks retries + missing fields per request)
+        if sent and self.db:
+            try:
+                async with self.db.acquire() as conn:
+                    existing = await conn.fetchval(
+                        "SELECT COUNT(*) FROM follow_ups WHERE request_id = $1",
+                        request_id,
+                    )
+                    await conn.execute(
+                        """
+                        INSERT INTO follow_ups
+                            (request_id, follow_up_number, sent_at, missing_fields, response_received, created_at)
+                        VALUES ($1, $2, NOW(), $3, FALSE, NOW())
+                        """,
+                        request_id,
+                        (existing or 0) + 1,
+                        list(missing_fields or []),
+                    )
+            except Exception as e:
+                logger.warning("Failed to persist follow_ups row for %s: %s", request_id, e)
+
+        return sent
 
     async def send_letter(
         self,

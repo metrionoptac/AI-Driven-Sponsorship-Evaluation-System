@@ -7,37 +7,129 @@
 <div x-data="overviewPage()" x-init="load(); setInterval(() => load(), 15000)">
 
     <!-- KPI Row -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
         <div class="kpi-card">
-            <p class="kpi-label">Total Requests</p>
+            <p class="kpi-label" x-text="t('kpi.total_requests')">Total Requests</p>
             <p class="kpi-value" x-text="stats.total_requests || 0"></p>
         </div>
         <div class="kpi-card">
-            <p class="kpi-label">Pending Review</p>
-            <p class="kpi-value text-yellow-600" x-text="stats.pending_review || 0"></p>
+            <p class="kpi-label" x-text="t('kpi.approved')">Approved</p>
+            <p class="kpi-value text-green-600" x-text="decisionCount('APPROVED')"></p>
         </div>
         <div class="kpi-card">
-            <p class="kpi-label">Avg Score</p>
-            <p class="kpi-value" x-text="stats.avg_score ? stats.avg_score.toFixed(1) + '/100' : '-'"></p>
+            <p class="kpi-label" x-text="t('kpi.rejected')">Rejected</p>
+            <p class="kpi-value text-red-600" x-text="decisionCount('REJECTED')"></p>
         </div>
         <div class="kpi-card">
-            <p class="kpi-label">Budget Remaining</p>
-            <p class="kpi-value" :class="stats.budget?.remaining < 20000 ? 'text-red-600' : 'text-accent-600'"
+            <p class="kpi-label" x-text="t('kpi.on_hold')">Put on Hold</p>
+            <p class="kpi-value text-amber-600" x-text="decisionCount('PARTIAL')"></p>
+        </div>
+        <a href="/dashboard/requests?tab=review" class="kpi-card hover:ring-2 hover:ring-purple-300 transition cursor-pointer"
+           :class="(stats.pending_review || 0) > 0 ? 'border-purple-300 bg-purple-50' : ''">
+            <p class="kpi-label" x-text="t('kpi.needs_review')">Needs Review</p>
+            <p class="kpi-value" :class="(stats.pending_review || 0) > 0 ? 'text-purple-600 animate-pulse' : ''"
+               x-text="stats.pending_review || 0"></p>
+        </a>
+        <div class="kpi-card">
+            <p class="kpi-label" x-text="t('kpi.budget_remaining')">Budget Remaining</p>
+            <p class="kpi-value" :class="stats.budget?.remaining < 20000 ? 'text-red-600' : 'text-green-600'"
                x-text="stats.budget ? formatEUR(stats.budget.remaining) : '-'"></p>
         </div>
     </div>
 
-    <!-- Charts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Requests by Status</h3>
-            <canvas id="chart-states" height="200"></canvas>
+    <!-- Budget Progress Bar -->
+    <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-6" x-show="stats.budget && stats.budget.total > 0">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-semibold text-gray-700" x-text="t('kpi.budget_usage')">Budget Usage</h3>
+            <span class="text-sm text-gray-600">
+                <span class="font-medium" x-text="formatEUR(stats.budget?.spent || 0)"></span>
+                <span class="text-gray-400" x-text="t('kpi.spent_of')">spent of</span>
+                <span class="font-medium" x-text="formatEUR(stats.budget?.total || 0)"></span>
+            </span>
         </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Decisions</h3>
-            <canvas id="chart-decisions" height="200"></canvas>
+        <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
+            <div class="h-full rounded-full transition-all"
+                 :class="budgetPct > 80 ? 'bg-red-500' : budgetPct > 50 ? 'bg-yellow-500' : 'bg-green-500'"
+                 :style="'width:' + Math.min(100, budgetPct) + '%'"></div>
+        </div>
+        <div class="flex justify-between text-xs text-gray-500 mt-1">
+            <span x-text="budgetPct + '% ' + t('kpi.used')"></span>
+            <span x-text="formatEUR(stats.budget?.remaining || 0) + ' ' + t('kpi.remaining')"></span>
         </div>
     </div>
+
+    <!-- Recent Requests + Budget by Category -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+
+        <!-- Recent Requests Table (2 cols wide) -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-gray-700" x-text="t('dash.recent_requests')">Recent Requests</h3>
+                <a href="/dashboard/requests" class="text-xs text-primary-600 hover:underline" x-text="t('dash.view_all')">View All</a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 text-left">
+                            <th class="py-2 px-2 text-gray-500 font-medium text-xs" x-text="t('th.organisation')">Organisation</th>
+                            <th class="py-2 px-2 text-gray-500 font-medium text-xs" x-text="t('th.category')">Category</th>
+                            <th class="py-2 px-2 text-gray-500 font-medium text-xs text-right" x-text="t('th.amount')">Amount</th>
+                            <th class="py-2 px-2 text-gray-500 font-medium text-xs" x-text="t('th.status')">Status</th>
+                            <th class="py-2 px-2 text-gray-500 font-medium text-xs" x-text="t('th.decision')">Decision</th>
+                            <th class="py-2 px-2 text-gray-500 font-medium text-xs text-right" x-text="t('th.date')">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="req in (stats.recent_requests || [])" :key="req.id">
+                            <tr class="border-b border-gray-50 hover:bg-gray-50 cursor-pointer" @click="window.location.href='/dashboard/request/' + req.id">
+                                <td class="py-2.5 px-2 text-gray-800 font-medium" x-text="req.org_name"></td>
+                                <td class="py-2.5 px-2">
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600" x-text="categoryLabel(req.category)"></span>
+                                </td>
+                                <td class="py-2.5 px-2 text-right text-gray-700" x-text="req.amount ? formatEUR(req.amount) : '-'"></td>
+                                <td class="py-2.5 px-2">
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-medium"
+                                          :class="stateColor(req.state)"
+                                          x-text="DE.stateLabel(req.state)"></span>
+                                </td>
+                                <td class="py-2.5 px-2">
+                                    <span x-show="req.decision" class="text-xs px-2 py-0.5 rounded-full font-medium"
+                                          :class="decisionColor(req.decision)"
+                                          x-text="DE.decisionLabel(req.decision)"></span>
+                                    <span x-show="!req.decision" class="text-xs text-gray-400">-</span>
+                                </td>
+                                <td class="py-2.5 px-2 text-right text-xs text-gray-400" x-text="formatDate(req.created_at)"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+                <p x-show="!stats.recent_requests || stats.recent_requests.length === 0"
+                   class="text-gray-400 text-sm text-center py-6" x-text="t('dash.no_requests')">No requests yet.</p>
+            </div>
+        </div>
+
+        <!-- Budget by Category -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="text-sm font-semibold text-gray-700 mb-4" x-text="t('dash.budget_by_category')">Budget by Category</h3>
+            <div class="space-y-3">
+                <template x-for="cat in (stats.budget_by_category || [])" :key="cat.category">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-gray-600 font-medium" x-text="categoryLabel(cat.category)"></span>
+                            <span class="text-gray-500" x-text="formatEUR(cat.total_amount) + ' (' + cat.count + ')'"></span>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="h-full rounded-full transition-all" :class="categoryColor(cat.category)"
+                                 :style="'width:' + Math.min(100, categoryPct(cat.total_amount)) + '%'"></div>
+                        </div>
+                    </div>
+                </template>
+                <p x-show="!stats.budget_by_category || stats.budget_by_category.length === 0"
+                   class="text-gray-400 text-sm text-center py-4" x-text="t('dash.no_approved')">No approved requests yet.</p>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 
@@ -46,38 +138,53 @@
 function overviewPage() {
     return {
         stats: {},
-        _statesChart: null, _decisionsChart: null,
+        budgetPct: 0,
         formatEUR(v) {
-            return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(v);
+            return Math.round(v).toLocaleString('de-DE') + ' EUR';
+        },
+        formatDate(d) {
+            if (!d) return '';
+            try { return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }); } catch { return ''; }
+        },
+        formatProcessingTime(seconds) {
+            if (!seconds) return '-';
+            if (seconds < 60) return Math.round(seconds) + ' ' + t('time.sec');
+            if (seconds < 3600) return Math.round(seconds / 60) + ' ' + t('time.min');
+            return Math.round(seconds / 3600) + ' ' + t('time.hrs');
+        },
+        decisionCount(key) {
+            const d = this.stats.decisions || {};
+            return d[key]?.count || 0;
+        },
+        categoryLabel(cat) {
+            const m = { sports: t('cat.sports'), culture: t('cat.culture'), education: t('cat.education'), social: t('cat.social'), community_event: t('cat.community') };
+            if (!cat || cat === 'unknown' || cat === '-') return t('cat.other');
+            return m[cat] || t('cat.other');
+        },
+        categoryColor(cat) {
+            const m = { sports: 'bg-blue-500', culture: 'bg-purple-500', education: 'bg-green-500', social: 'bg-pink-500', community_event: 'bg-amber-500' };
+            return m[cat] || 'bg-gray-400';
+        },
+        categoryPct(amount) {
+            const total = this.stats.budget?.total || 1;
+            return Math.round((amount / total) * 100);
+        },
+        stateColor(state) {
+            const m = { completed: 'bg-green-100 text-green-700', rejected: 'bg-red-100 text-red-700', failed: 'bg-red-100 text-red-700', human_review: 'bg-purple-100 text-purple-700', awaiting_info: 'bg-amber-100 text-amber-700' };
+            return m[state] || 'bg-blue-100 text-blue-700';
+        },
+        decisionColor(d) {
+            const m = { APPROVED: 'bg-green-100 text-green-700', REJECTED: 'bg-red-100 text-red-700', PARTIAL: 'bg-amber-100 text-amber-700' };
+            return m[d] || 'bg-gray-100 text-gray-600';
         },
         async load() {
             try {
                 const r = await fetch('/api/dashboard/stats');
                 this.stats = await r.json();
-                // Destroy old charts before re-rendering
-                if (this._statesChart) { this._statesChart.destroy(); this._statesChart = null; }
-                if (this._decisionsChart) { this._decisionsChart.destroy(); this._decisionsChart = null; }
-                this.$nextTick(() => this.renderCharts());
+                if (this.stats.budget && this.stats.budget.total > 0) {
+                    this.budgetPct = Math.round((this.stats.budget.spent / this.stats.budget.total) * 100);
+                }
             } catch(e) { console.error('Failed to load stats', e); }
-        },
-        renderCharts() {
-            const colors = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899'];
-            if (this.stats.by_state) {
-                this._statesChart = new Chart(document.getElementById('chart-states'), {
-                    type: 'doughnut',
-                    data: { labels: Object.keys(this.stats.by_state), datasets: [{ data: Object.values(this.stats.by_state), backgroundColor: colors }] },
-                    options: { plugins: { legend: { position: 'right' } } }
-                });
-            }
-            if (this.stats.decisions) {
-                const labels = Object.keys(this.stats.decisions);
-                const dColors = { approved: '#22c55e', rejected: '#ef4444', pending: '#f59e0b', conditionally_approved: '#3b82f6' };
-                this._decisionsChart = new Chart(document.getElementById('chart-decisions'), {
-                    type: 'pie',
-                    data: { labels, datasets: [{ data: Object.values(this.stats.decisions), backgroundColor: labels.map(l => dColors[l] || '#94a3b8') }] },
-                    options: { plugins: { legend: { position: 'right' } } }
-                });
-            }
         }
     };
 }

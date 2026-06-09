@@ -216,10 +216,29 @@ class EmailWatcher:
             parsed["from"], parsed["subject"], len(parsed["attachments"]),
         )
 
-        # Check if this is a reply to a completeness request (route to FollowupHandler)
-        if self.followup_handler and self._looks_like_reply(parsed):
+        # Mark as seen up-front so any exception cannot cause reprocessing
+        # by a later poll (the main cause of duplicate requests).
+        try:
+            await self._client.store(msg_id, "+FLAGS", r"(\Seen)")
+        except Exception as e:
+            logger.warning("Failed to mark %s as seen (continuing): %s", msg_id, e)
+
+        # Determine routing deterministically:
+        # If this sender has an ACTIVE request in a state that expects follow-up
+        # input, this email is a reply — not a new request. Route to
+        # FollowupHandler and NEVER fall through to new-request ingest.
+        sender_has_active = False
+        if self.followup_handler:
+            sender_has_active = await self._sender_has_active_request(parsed["from"])
+
+        should_route_to_followup = sender_has_active or (
+            self.followup_handler and self._looks_like_reply(parsed)
+        )
+
+        if should_route_to_followup:
             logger.info(
-                "Email looks like a reply, routing to FollowupHandler: from=%s, subject=%s",
+                "Routing to FollowupHandler (active_request=%s, heuristic=%s): from=%s, subject=%s",
+                sender_has_active, self._looks_like_reply(parsed),
                 parsed["from"], parsed["subject"],
             )
             try:
@@ -232,15 +251,20 @@ class EmailWatcher:
                     attachments=parsed["attachments"],
                 )
                 logger.info("FollowupHandler result: %s", followup_result)
-
-                if followup_result.get("status") != "not_a_followup":
-                    # Successfully handled as a follow-up — mark seen and return
-                    await self._client.store(msg_id, "+FLAGS", r"(\Seen)")
-                    return
-                # If FollowupHandler says "not_a_followup", fall through to normal ingest
-                logger.info("Not a follow-up, processing as new request")
             except Exception:
-                logger.exception("FollowupHandler failed, processing as new request")
+                logger.exception("FollowupHandler raised")
+                followup_result = {"status": "error"}
+
+            # If the sender has an active request, this email is ALWAYS a reply.
+            # Under no circumstances fall through to new-request ingest.
+            if sender_has_active:
+                return
+
+            # No active request — only fall through if FollowupHandler explicitly
+            # said "not_a_followup". Otherwise treat it as handled.
+            if followup_result.get("status") != "not_a_followup":
+                return
+            logger.info("Not a follow-up, processing as new request")
 
         # Ingest via UnifiedIngestionService (new request path)
         result = await self.ingestion.ingest_email_with_attachments(
@@ -263,8 +287,32 @@ class EmailWatcher:
                 result.request_id, parsed["from"],
             )
 
-        # Mark as seen so we don't process again
-        await self._client.store(msg_id, "+FLAGS", r"(\Seen)")
+    async def _sender_has_active_request(self, sender: str) -> bool:
+        """
+        Direct DB check: does this sender already have a request in a state
+        that expects a reply (i.e., awaiting_info, extracted, received,
+        human_review)? If yes, any incoming email from this sender is a
+        reply, not a new request.
+        """
+        handler = self.followup_handler
+        db = getattr(handler, "db", None) if handler else None
+        if not db or not sender:
+            return False
+        try:
+            async with db.acquire() as conn:
+                row = await conn.fetchval(
+                    """
+                    SELECT 1 FROM requests
+                    WHERE source_email = $1
+                      AND state IN ('received', 'extracted', 'awaiting_info', 'human_review')
+                    LIMIT 1
+                    """,
+                    sender,
+                )
+                return row is not None
+        except Exception as e:
+            logger.warning("Active-request lookup failed for %s: %s", sender, e)
+            return False
 
     @staticmethod
     def _looks_like_reply(parsed: dict) -> bool:

@@ -168,7 +168,7 @@ function pipelinePage() {
             { key: 'completed', label: 'Complete', count: 0 },
         ],
         formatDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '-'; },
-        formatEUR(v) { return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(v); },
+        formatEUR(v) { return Math.round(v).toLocaleString('en-US') + ' EUR'; },
         stageColor(s) {
             const m = { received:'badge-gray', extracted:'badge-blue', eligible:'badge-blue',
                         evaluated:'badge-yellow', recommended:'badge-yellow', human_review:'badge-yellow',

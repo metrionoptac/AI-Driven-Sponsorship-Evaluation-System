@@ -1,0 +1,1107 @@
+/**
+ * Internationalization (i18n) for Sponsorship Evaluator
+ * Supports: English (en), German (de)
+ *
+ * Usage in Alpine.js templates:
+ *   x-text="t('nav.dashboard')"
+ *   x-text="t('kpi.total_requests')"
+ */
+
+const I18N = {
+  en: {
+    // Navigation
+    'nav.app_name': 'Sponsorship AI',
+    'nav.dashboard': 'Dashboard',
+    'nav.requests': 'Requests',
+    'nav.live': 'Live Monitoring',
+    'nav.config': 'Configuration',
+
+    // Page titles
+    'page.dashboard': 'Dashboard',
+    'page.requests': 'Sponsorship Requests',
+    'page.live': 'Live Pipeline Monitor',
+    'page.config': 'System Configuration',
+    'page.detail': 'Request Detail',
+    'page.reports': 'Reports & Analytics',
+
+    // Copilot
+    'copilot.title': 'Ask Me',
+    'copilot.greeting': 'Hi! Ask me anything about requests, budgets, evaluations, or any data in the system.',
+    'copilot.placeholder': 'Ask about sponsorship data...',
+    'copilot.send': 'Send',
+    'copilot.clear': 'Clear chat',
+    'live.reply_received': 'Reply received — merged into request',
+    'live.awaiting_followup': 'Follow-up sent — awaiting reply',
+    'live.needs_review': 'Human review required',
+
+    // Dashboard KPI
+    'kpi.total_requests': 'Total Requests',
+    'kpi.approved': 'Approved',
+    'kpi.rejected': 'Rejected',
+    'kpi.on_hold': 'Put on Hold',
+    'kpi.needs_review': 'Needs Review',
+    'kpi.budget_remaining': 'Budget Remaining',
+    'kpi.budget_usage': 'Budget Usage',
+    'kpi.spent_of': 'spent of',
+    'kpi.used': 'used',
+    'kpi.remaining': 'remaining',
+
+    // Dashboard sections
+    'dash.recent_requests': 'Recent Requests',
+    'dash.view_all': 'View All',
+    'dash.budget_by_category': 'Budget by Category',
+    'dash.no_requests': 'No requests yet.',
+    'dash.no_approved': 'No approved requests yet.',
+    'dash.avg_processing': 'Avg. Processing Time',
+    'dash.avg_score': 'Avg. Evaluation Score',
+    'dash.requests_month': 'Requests This Month',
+
+    // Table headers
+    'th.organisation': 'Organisation',
+    'th.category': 'Category',
+    'th.amount': 'Amount',
+    'th.status': 'Status',
+    'th.decision': 'Decision',
+    'th.date': 'Date',
+    'th.id': 'ID',
+    'th.score': 'Score',
+
+    // Requests page
+    'req.page_title': 'Sponsorship Requests',
+    'req.all': 'All',
+    'req.in_progress': 'In Progress',
+    'req.needs_review': 'Needs Review',
+    'req.completed': 'Completed',
+    'req.rejected': 'Rejected',
+    'req.search': 'Search...',
+    'req.upload': 'Upload',
+    'req.upload_success': 'Document uploaded! Processing...',
+    'req.upload_duplicate': 'Duplicate detected -- already processed.',
+    'req.no_in_progress': 'No requests currently in progress',
+    'req.no_in_progress_desc': 'New requests will appear here when emails arrive or documents are uploaded.',
+    'req.no_review': 'No requests pending review',
+    'req.no_review_desc': 'All clear! New requests will appear here when the pipeline requires human input.',
+    'req.no_found': 'No requests found.',
+    'req.showing': 'Showing',
+    'req.of': 'of',
+    'req.prev': 'Prev',
+    'req.next': 'Next',
+
+    // Review
+    'review.ai_recommendation': 'AI Recommendation:',
+    'review.details': 'Details',
+    'review.decision': 'Decision',
+    'review.select': 'Select...',
+    'review.approve': 'Approve',
+    'review.reject': 'Reject',
+    'review.hold': 'Put on Hold',
+    'review.amount_eur': 'Amount (EUR)',
+    'review.notes': 'Notes',
+    'review.optional': 'Optional...',
+    'review.submit': 'Submit',
+    'review.submitting': 'Submitting...',
+
+    // Live page
+    'live.title': 'Live Pipeline Monitor',
+    'live.tracking': 'Tracking:',
+    'live.waiting': 'Waiting for new email...',
+    'live.polling': 'Polling every 2s',
+    'live.reset': 'Reset',
+    'live.human_review': 'Human Review Required',
+    'live.ai_recommends': 'AI recommends:',
+    'live.confidence': 'Confidence:',
+    'live.amount': 'Amount:',
+    'live.open_review': 'Open Review Page',
+    'live.category': 'Category:',
+    'live.pipeline_complete': 'Pipeline Complete',
+    'live.letter_generated': 'letter generated',
+    'live.email_sent': 'Decision email sent to applicant',
+    'live.pipeline_progress': 'Pipeline Progress',
+
+    // Pipeline stages
+    'stage.email_detected': 'Email\nDetected',
+    'stage.intake_agent': 'Intake\nAgent',
+    'stage.completeness': 'Completeness',
+    'stage.eligibility': 'Eligibility\nCheck',
+    'stage.research_eval': 'Research +\nEvaluation',
+    'stage.recommendation': 'Recommendation',
+    'stage.decision': 'Decision',
+    'stage.letter_sent': 'Letter\nSent',
+
+    // Section headers
+    'sec.extracted_data': 'Extracted Data',
+    'sec.completeness': 'Completeness',
+    'sec.eligibility': 'Eligibility Check',
+    'sec.research': 'Research Agent',
+    'sec.evaluation': 'Evaluation',
+    'sec.recommendation': 'AI Recommendation',
+    'sec.source_doc': 'Source Document',
+    'sec.followup': 'Follow-Up Communication',
+    'sec.decision_letter': 'Decision Letter',
+    'sec.activity': 'Activity Feed',
+
+    // Eligibility
+    'elig.eligible': 'ELIGIBLE',
+    'elig.rejected': 'REJECTED',
+    'elig.confidence': 'Confidence:',
+
+    // Research
+    'research.credibility': 'Organisation Credibility',
+    'research.org_email': 'Organisation Email',
+    'research.registered': 'Registered Organisation (e.V./gGmbH)',
+    'research.website': 'Website Active',
+    'research.red_flags': 'No Red Flags',
+    'research.verified': 'Verified',
+    'research.freemail': 'Freemail detected',
+    'research.confirmed': 'Confirmed',
+    'research.unknown': 'Unknown',
+    'research.online': 'Online',
+    'research.not_found': 'Not found',
+    'research.clear': 'Clear',
+    'research.flags': 'flag(s)',
+
+    // Evaluation
+    'eval.strategic_fit': 'Strategic Fit (28%)',
+    'eval.community': 'Community Impact (22%)',
+    'eval.visibility': 'Visibility Value (19%)',
+    'eval.cost': 'Cost Effectiveness (16%)',
+    'eval.overall': 'Overall Score',
+    'eval.strengths': 'Strengths:',
+    'eval.weaknesses': 'Weaknesses:',
+    'eval.benchmarks': 'Comparable Sponsorships:',
+
+    // Recommendation
+    'rec.confidence_low': 'Confidence below 80% -- routed to human review for final decision.',
+    'rec.conditions': 'Conditions:',
+
+    // Completeness
+    'comp.missing': 'Missing fields:',
+    'comp.awaiting': 'Awaiting reply...',
+    'comp.blocker': 'MISSING - BLOCKER',
+    'comp.not_provided': 'not provided',
+
+    // Source document
+    'src.view_email': 'View Email Content',
+    'src.hide_email': 'Hide Email Content',
+    'src.download': 'Download',
+
+    // Follow-up
+    'followup.sent': 'Follow-Up Sent',
+    'followup.missing_requested': 'Missing fields requested:',
+    'followup.view_email': 'View Sent Email',
+    'followup.hide_email': 'Hide Email',
+    'followup.open_form': 'Open Form Link',
+    'followup.reply_received': 'Applicant Reply Received',
+    'followup.merged': 'Merged',
+
+    // Letter
+    'letter.view': 'View Letter',
+    'letter.hide': 'Hide',
+    'letter.edit': 'Edit',
+    'letter.cancel': 'Cancel',
+    'letter.save_draft': 'Save Draft',
+    'letter.send': 'Send to Applicant',
+    'letter.draft_saved': 'Draft saved',
+    'letter.sent': 'Sent',
+    'letter.draft': 'Draft',
+    'letter.rejected_elig': 'Request rejected at eligibility stage',
+
+    // Status labels
+    'status.received': 'Received',
+    'status.extracted': 'Extracted',
+    'status.eligible': 'Eligible',
+    'status.evaluated': 'Evaluated',
+    'status.recommended': 'Recommended',
+    'status.review': 'Review',
+    'status.decided': 'Decided',
+    'status.completed': 'Completed',
+    'status.rejected': 'Rejected',
+    'status.failed': 'Failed',
+    'status.approved': 'Approved',
+    'status.put_on_hold': 'Put on Hold',
+    'status.pending': 'Pending',
+
+    // Categories
+    'cat.sports': 'Sports',
+    'cat.culture': 'Culture',
+    'cat.education': 'Education',
+    'cat.social': 'Social',
+    'cat.community': 'Community',
+    'cat.other': 'Other',
+
+    // Activity feed
+    'activity.events': 'events',
+    'activity.waiting': 'Waiting for pipeline activity...',
+
+    // Config tabs
+    'config.budget_strategy': 'Budget & Strategy',
+    'config.pipeline': 'Pipeline & Automation',
+    'config.completeness': 'Completeness',
+    'config.eligibility': 'Eligibility Rules',
+    'config.evaluation': 'Evaluation Criteria',
+    'config.agents': 'Agent Controls',
+    'config.system': 'System & Audit',
+
+    // Config page - Strategy tab
+    'cfg.budget_limits': 'Budget & Limits',
+    'cfg.client_name': 'Client Name',
+    'cfg.year': 'Year',
+    'cfg.set_budget': 'Set Budget (EUR)',
+    'cfg.budget_hint': 'Spent and remaining budget are shown on the Dashboard.',
+    'cfg.focus_areas': 'Focus Areas',
+    'cfg.add_focus': 'Add focus area...',
+    'cfg.add': 'Add',
+    'cfg.historical_data': 'Historical Sponsorship Data',
+    'cfg.historical_desc': 'Past sponsorships used for benchmarking. The AI compares new requests against this data.',
+    'cfg.records': 'records',
+    'cfg.csv_coming': 'CSV upload will be available in the next release',
+    'cfg.upload_csv': 'Upload CSV',
+    'cfg.th_organization': 'Organization',
+    'cfg.th_purpose': 'Purpose',
+    'cfg.th_year': 'Year',
+    'cfg.th_approved': 'Approved',
+    'cfg.th_rating': 'Rating',
+    'cfg.showing_of': 'Showing 5 of',
+    'cfg.no_historical': 'No historical data loaded. Upload a CSV to get started.',
+    'cfg.save_strategy': 'Save Strategy',
+
+    // Config page - Pipeline tab
+    'cfg.pipeline_mode': 'Pipeline Mode',
+    'cfg.human_intervention': 'Human Intervention',
+    'cfg.you_control': 'You stay in control',
+    'cfg.human_desc': 'Every decision goes through human review. AI provides recommendations, you make the final call.',
+    'cfg.autopilot': 'Autopilot',
+    'cfg.ai_decides': 'AI decides within safety limits',
+    'cfg.autopilot_desc': 'AI auto-decides when confident. Only routes to human when uncertain or amount is high.',
+    'cfg.ai_confidence': 'AI Confidence Required',
+    'cfg.below_human': 'Below this -> human reviews even in Autopilot',
+    'cfg.max_auto_amount': 'Maximum Auto-Approve Amount (EUR)',
+    'cfg.above_human': 'Above this -> human reviews even in Autopilot',
+    'cfg.human_review_points': 'Human Review Points',
+    'cfg.hitl_desc': 'Where the pipeline pauses for human input. In Human Intervention mode, all are ON by default.',
+    'cfg.email_automation': 'Email Automation',
+    'cfg.email_auto_desc': 'Configure automated emails sent during the pipeline.',
+    'cfg.ack_email': 'Acknowledgment Email',
+    'cfg.ack_desc': 'Send receipt confirmation when a new request arrives.',
+    'cfg.send_within': 'Send within (seconds)',
+    'cfg.ack_speed': 'How quickly the applicant receives confirmation',
+    'cfg.followup_email': 'Follow-Up Email',
+    'cfg.followup_desc': 'Ask applicant for missing information when request is incomplete.',
+    'cfg.send_after': 'Send after (minutes)',
+    'cfg.immediate': '0 = send immediately after detection',
+    'cfg.max_attempts': 'Max attempts per request',
+    'cfg.after_max': 'After max attempts, routes to human review',
+    'cfg.auto_close': 'Auto-Close Unanswered Requests',
+    'cfg.auto_close_desc': 'Automatically close requests if applicant never replies to follow-up.',
+    'cfg.close_after': 'Close after (hours)',
+    'cfg.marked_abandoned': 'Request will be marked as abandoned',
+    'cfg.save_pipeline': 'Save Pipeline Settings',
+
+    // Config page - Completeness tab
+    'cfg.email_fields': 'Email Channel Fields',
+    'cfg.llm_validated': 'LLM-validated (Haiku)',
+    'cfg.web_form_fields': 'Web Form Fields',
+    'cfg.pydantic_validated': 'Pydantic-validated',
+    'cfg.form_enforces': 'Form enforces required fields at submission. No follow-up needed.',
+    'cfg.blocker': 'BLOCKER',
+    'cfg.required_label': 'REQUIRED',
+    'cfg.optional_label': 'OPTIONAL',
+    'cfg.optional_lower': 'optional',
+    'cfg.save_completeness': 'Save Completeness Settings',
+
+    // Config page - Eligibility tab
+    'cfg.hard_rules': 'Hard Rules (Eligibility Constraints)',
+    'cfg.amount_range': 'Amount Range',
+    'cfg.min_eur': 'Min (EUR)',
+    'cfg.max_eur': 'Max (EUR)',
+    'cfg.keyword_blacklist': 'Keyword Blacklist',
+    'cfg.add_keyword': 'Add keyword...',
+    'cfg.blocked_org_types': 'Blocked Organization Types',
+    'cfg.select_type': 'Select type to block...',
+    'cfg.political_org': 'Political Organization',
+    'cfg.religious_org': 'Religious Organization',
+    'cfg.individual': 'Individual / Person',
+    'cfg.commercial': 'Commercial Company',
+    'cfg.gambling': 'Gambling Organization',
+    'cfg.tobacco_alcohol': 'Tobacco / Alcohol Industry',
+    'cfg.custom': 'Custom...',
+    'cfg.block_btn': 'Block',
+    'cfg.type_custom': 'Type custom org type...',
+    'cfg.soft_rules': 'Soft Rules (Warnings)',
+    'cfg.region_match': 'Region Match Warning',
+    'cfg.region_outside': 'Warn if org is outside operating region',
+    'cfg.event_date_check': 'Event Date Check',
+    'cfg.min_label': 'Min',
+    'cfg.days_before': 'days before event',
+    'cfg.freemail_warning': 'Freemail Domain Warning',
+    'cfg.freemail_desc': 'Warn on Gmail, GMX, Yahoo, etc.',
+    'cfg.save_eligibility': 'Save Eligibility Rules',
+
+    // Config page - Evaluation tab
+    'cfg.scoring_dims': 'Scoring Dimensions',
+    'cfg.scoring_desc': 'How each request is scored. Weights must sum to 100%. Click a dimension to see what it evaluates.',
+    'cfg.total_weight': 'Total Weight:',
+    'cfg.valid': 'Valid',
+    'cfg.must_100': 'Must equal 100%',
+    'cfg.ai_evaluates': 'What the AI evaluates for this dimension:',
+    'cfg.company_values': 'Company Values',
+    'cfg.values_desc_1': 'These values drive the',
+    'cfg.values_desc_2': 'Strategic Fit',
+    'cfg.values_desc_3': 'score. The AI checks how well each request aligns with these values.',
+    'cfg.decision_thresholds': 'Decision Thresholds',
+    'cfg.threshold_desc': 'How the overall score maps to a recommendation.',
+    'cfg.reject_label': 'REJECT',
+    'cfg.on_hold_label': 'ON HOLD',
+    'cfg.approve_label': 'APPROVE',
+    'cfg.reject_below': 'Reject below (%)',
+    'cfg.approve_above': 'Approve above (%)',
+    'cfg.scores_between': 'Scores between these two values get a "Put on Hold" recommendation.',
+    'cfg.portfolio_limits': 'Portfolio Limits',
+    'cfg.portfolio_desc': 'Prevent over-investment in a single category. If a category exceeds its limit, new requests in that category receive a score penalty.',
+    'cfg.save_evaluation': 'Save Evaluation Criteria',
+
+    // Config page - Agent Controls tab
+    'cfg.agent_controls': 'Agent Controls',
+    'cfg.agent_desc': 'Configure each agent in the pipeline. Select the AI model and toggle optional agents.',
+    'cfg.intake_agent': 'Intake Agent',
+    'cfg.intake_desc': 'Document parsing, text extraction, structured data extraction',
+    'cfg.completeness_agent': 'Completeness Agent',
+    'cfg.completeness_agent_desc': 'Validates field quality, catches vague or incomplete values',
+    'cfg.eligibility_agent': 'Eligibility Agent',
+    'cfg.eligibility_agent_desc': 'Rule-based checks + AI safety check for edge cases',
+    'cfg.research_agent': 'Research Agent',
+    'cfg.research_desc': 'Web verification, org credibility check, freemail detection',
+    'cfg.research_depth': 'Research Depth',
+    'cfg.depth_auto': 'Auto',
+    'cfg.depth_quick': 'Quick',
+    'cfg.depth_standard': 'Standard',
+    'cfg.depth_deep': 'Deep',
+    'cfg.depth_desc': 'Auto: Quick (<1000 EUR), Standard (1000-5000), Deep (>5000)',
+    'cfg.evaluation_agent': 'Evaluation Agent',
+    'cfg.evaluation_agent_desc': 'Scores requests on strategic fit, community impact, visibility, cost effectiveness',
+    'cfg.recommendation_agent': 'Recommendation Agent',
+    'cfg.recommendation_desc': 'Generates approve/reject/hold recommendation with reasoning',
+    'cfg.completion_agent': 'Completion Agent',
+    'cfg.completion_desc': 'Generates decision letters, updates org profile, tracks budget',
+    'cfg.copilot_agent': 'Ask Me (Copilot Assistant)',
+    'cfg.copilot_desc': 'AI chat assistant available on every page via the Ask Me button',
+
+    // Config page - System & Audit tab
+    'cfg.incoming_email': 'Incoming Email',
+    'cfg.outgoing_email': 'Outgoing Email',
+    'cfg.llm_models': 'LLM Models',
+    'cfg.db_storage': 'Database & Storage',
+    'cfg.config_history': 'Configuration Change History',
+    'cfg.th_time': 'Time',
+    'cfg.th_action': 'Action',
+    'cfg.th_actor': 'Actor',
+    'cfg.th_details': 'Details',
+    'cfg.no_changes': 'No configuration changes recorded yet.',
+    'cfg.done': 'Done',
+    'cfg.edit_btn': 'Edit',
+
+    // Config page - HITL stages
+    'cfg.hitl_followup': 'Before Sending Follow-Up Email',
+    'cfg.hitl_followup_desc': 'Review completeness email before sending to applicant',
+    'cfg.hitl_recommendation': 'After AI Recommendation',
+    'cfg.hitl_recommendation_desc': 'Review AI recommendation before final decision',
+    'cfg.hitl_send': 'Before Sending Decision Letter',
+    'cfg.hitl_send_desc': 'Review and optionally edit letter before sending',
+
+    // Config page - Completeness tiers
+    'cfg.tier1': 'TIER 1 -- Must Have',
+    'cfg.tier1_rule': 'Without these, request cannot be processed',
+    'cfg.tier2': 'TIER 2 -- Should Have',
+    'cfg.tier2_rule': 'Applicant will be asked if missing',
+    'cfg.tier3': 'TIER 3 -- Nice to Have',
+    'cfg.tier3_rule': 'Not required',
+    'cfg.tier4': 'TIER 4 -- Optional',
+    'cfg.tier4_rule': 'Not required',
+
+    // Config page - Field labels
+    'cfg.field_org_name': 'Organization Name',
+    'cfg.field_amount': 'Requested Amount',
+    'cfg.field_purpose': 'Event / Purpose',
+    'cfg.field_visibility': 'Sponsorship Package',
+    'cfg.field_event_date': 'Event Date',
+    'cfg.field_region': 'Location / Region',
+    'cfg.field_contact': 'Contact Person',
+    'cfg.field_attendance': 'Expected Attendance',
+    'cfg.field_audience': 'Target Audience',
+    'cfg.field_description': 'Project Description',
+    'cfg.field_org_type': 'Organization Type',
+    'cfg.field_category': 'Topic Category',
+    'cfg.field_members': 'Member Count',
+    'cfg.field_usage': 'Fund Usage Breakdown',
+    'cfg.field_reach': 'Media Reach',
+    'cfg.field_org_desc': 'Organization Description',
+    'cfg.field_deadline': 'Response Deadline',
+    'cfg.field_amount_eur': 'Requested Amount (EUR)',
+    'cfg.field_email': 'Email',
+    'cfg.field_phone': 'Phone',
+
+    // Config page - Eval dimensions
+    'cfg.dim_strategic': 'Strategic Fit',
+    'cfg.dim_strategic_desc': 'Alignment with company values and focus areas',
+    'cfg.dim_community': 'Community Impact',
+    'cfg.dim_community_desc': 'Benefit to the local community',
+    'cfg.dim_visibility': 'Visibility Value',
+    'cfg.dim_visibility_desc': 'Brand visibility and partnership return',
+    'cfg.dim_cost': 'Cost Effectiveness',
+    'cfg.dim_cost_desc': 'Value delivered per EUR invested',
+    'cfg.dim_partnership': 'Partnership Depth',
+    'cfg.dim_partnership_desc': 'Depth of collaboration beyond logo placement',
+    'cfg.dim_portfolio': 'Portfolio Balance',
+    'cfg.dim_portfolio_desc': 'Penalty if category is over-represented',
+
+    // Config page - Eval sub-dimensions
+    'cfg.sub_focus_match': 'Focus area match (topic vs company priorities)',
+    'cfg.sub_regional': 'Regional anchoring (local/regional preference)',
+    'cfg.sub_audience_overlap': 'Target audience overlap with company customers',
+    'cfg.sub_logo_brand': 'Logo and brand visibility opportunity',
+    'cfg.sub_beneficiaries': 'Number of beneficiaries / attendees',
+    'cfg.sub_social_value': 'Social value of the project',
+    'cfg.sub_geographic': 'Geographic reach (local vs regional)',
+    'cfg.sub_logo_exposure': 'Logo exposure (banners, jerseys, print)',
+    'cfg.sub_media_reach': 'Media reach (press, flyers, program booklet)',
+    'cfg.sub_digital': 'Digital presence (social media, website)',
+    'cfg.sub_audience_size': 'Audience size (live attendees)',
+    'cfg.sub_cost_per': 'Cost per beneficiary (amount / attendance)',
+    'cfg.sub_proportional': 'Amount proportional to stated impact',
+    'cfg.sub_logo_only': 'Logo only (0.2)',
+    'cfg.sub_event_mention': 'Event mention / shoutout (0.4)',
+    'cfg.sub_media_partner': 'Media partnership / press coverage (0.6)',
+    'cfg.sub_content': 'Content creation / storytelling (0.8)',
+    'cfg.sub_deep_collab': 'Deep collaboration / naming rights (1.0)',
+    'cfg.sub_cat_share': 'Category share of total spend',
+    'cfg.sub_penalty': 'Progressive penalty when exceeding max share',
+    'cfg.sub_diversity': 'Ensures diversity across sports, culture, social, etc.',
+
+    // Config page - Portfolio labels
+    'cfg.port_youth': 'Youth Sports',
+    'cfg.port_culture': 'Culture & Society',
+    'cfg.port_environment': 'Environment & Sustainability',
+    'cfg.port_education': 'Education',
+    'cfg.port_social': 'Social Welfare',
+    'cfg.port_community': 'Community Events',
+
+    // Config page - Toast messages
+    'cfg.toast_strategy_saved': 'Strategy saved successfully!',
+    'cfg.toast_pipeline_saved': 'Pipeline config saved!',
+    'cfg.toast_eligibility_saved': 'Eligibility rules saved!',
+    'cfg.toast_evaluation_saved': 'Evaluation criteria saved!',
+    'cfg.toast_completeness_saved': 'Completeness settings saved!',
+    'cfg.toast_weights_error': 'Weights must sum to 100%',
+    'cfg.toast_no_strategy': 'No strategy loaded',
+    'cfg.toast_save_failed': 'Save failed',
+    'cfg.toast_network_error': 'Network error',
+
+    // Pagination
+    'req.page': 'Page',
+
+    // Email metadata
+    'email.from': 'From:',
+    'email.subject': 'Subject:',
+    'email.received': 'Received:',
+
+    // Extracted field labels
+    'field.organization': 'Organization',
+    'field.amount': 'Amount (EUR)',
+    'field.purpose': 'Purpose',
+    'field.event_date': 'Event Date',
+    'field.region': 'Region',
+    'field.contact': 'Contact',
+    'field.visibility': 'Visibility',
+    'field.attendance': 'Attendance',
+    'field.audience': 'Audience',
+    'field.category': 'Category',
+    'field.extra': 'Extra Context',
+
+    // Completeness missing label
+    'comp.missing_label': 'MISSING',
+
+    // Language toggle
+    'lang.switch': 'DE',
+    'lang.tooltip': 'Switch to German',
+
+    // Time
+    'time.sec': 'sec',
+    'time.min': 'min',
+    'time.hrs': 'hrs',
+  },
+
+  de: {
+    // Navigation
+    'nav.app_name': 'Sponsoring KI',
+    'nav.dashboard': 'Uebersicht',
+    'nav.requests': 'Anfragen',
+    'nav.live': 'Live-Ueberwachung',
+    'nav.config': 'Konfiguration',
+
+    // Page titles
+    'page.dashboard': 'Uebersicht',
+    'page.requests': 'Sponsoring-Anfragen',
+    'page.live': 'Live Pipeline-Ueberwachung',
+    'page.config': 'Systemkonfiguration',
+    'page.detail': 'Anfragedetails',
+    'page.reports': 'Berichte & Analysen',
+
+    // Copilot
+    'copilot.title': 'Frag mich',
+    'copilot.greeting': 'Hallo! Fragen Sie mich alles ueber Anfragen, Budgets, Bewertungen oder beliebige Daten im System.',
+    'copilot.placeholder': 'Fragen zu Sponsoring-Daten...',
+    'copilot.send': 'Senden',
+    'copilot.clear': 'Chat leeren',
+    'live.reply_received': 'Antwort empfangen — in Antrag zusammengefuehrt',
+    'live.awaiting_followup': 'Nachfrage gesendet — warte auf Antwort',
+    'live.needs_review': 'Menschliche Pruefung erforderlich',
+
+    // Dashboard KPI
+    'kpi.total_requests': 'Gesamtanfragen',
+    'kpi.approved': 'Genehmigt',
+    'kpi.rejected': 'Abgelehnt',
+    'kpi.on_hold': 'Zurueckgestellt',
+    'kpi.needs_review': 'Pruefung noetig',
+    'kpi.budget_remaining': 'Restbudget',
+    'kpi.budget_usage': 'Budgetauslastung',
+    'kpi.spent_of': 'ausgegeben von',
+    'kpi.used': 'verbraucht',
+    'kpi.remaining': 'verbleibend',
+
+    // Dashboard sections
+    'dash.recent_requests': 'Letzte Anfragen',
+    'dash.view_all': 'Alle anzeigen',
+    'dash.budget_by_category': 'Budget nach Kategorie',
+    'dash.no_requests': 'Noch keine Anfragen.',
+    'dash.no_approved': 'Noch keine genehmigten Anfragen.',
+    'dash.avg_processing': 'Durchschn. Bearbeitungszeit',
+    'dash.avg_score': 'Durchschn. Bewertung',
+    'dash.requests_month': 'Anfragen diesen Monat',
+
+    // Table headers
+    'th.organisation': 'Organisation',
+    'th.category': 'Kategorie',
+    'th.amount': 'Betrag',
+    'th.status': 'Status',
+    'th.decision': 'Entscheidung',
+    'th.date': 'Datum',
+    'th.id': 'ID',
+    'th.score': 'Bewertung',
+
+    // Requests page
+    'req.page_title': 'Sponsoring-Anfragen',
+    'req.all': 'Alle',
+    'req.in_progress': 'In Bearbeitung',
+    'req.needs_review': 'Pruefung noetig',
+    'req.completed': 'Abgeschlossen',
+    'req.rejected': 'Abgelehnt',
+    'req.search': 'Suchen...',
+    'req.upload': 'Hochladen',
+    'req.upload_success': 'Dokument hochgeladen! Wird verarbeitet...',
+    'req.upload_duplicate': 'Duplikat erkannt -- bereits verarbeitet.',
+    'req.no_in_progress': 'Keine Anfragen in Bearbeitung',
+    'req.no_in_progress_desc': 'Neue Anfragen erscheinen hier, wenn E-Mails eingehen oder Dokumente hochgeladen werden.',
+    'req.no_review': 'Keine Anfragen zur Pruefung',
+    'req.no_review_desc': 'Alles erledigt! Neue Anfragen erscheinen hier, wenn die Pipeline menschliche Entscheidungen benoetigt.',
+    'req.no_found': 'Keine Anfragen gefunden.',
+    'req.showing': 'Zeige',
+    'req.of': 'von',
+    'req.prev': 'Zurueck',
+    'req.next': 'Weiter',
+
+    // Review
+    'review.ai_recommendation': 'KI-Empfehlung:',
+    'review.details': 'Details',
+    'review.decision': 'Entscheidung',
+    'review.select': 'Auswaehlen...',
+    'review.approve': 'Genehmigen',
+    'review.reject': 'Ablehnen',
+    'review.hold': 'Zurueckstellen',
+    'review.amount_eur': 'Betrag (EUR)',
+    'review.notes': 'Notizen',
+    'review.optional': 'Optional...',
+    'review.submit': 'Absenden',
+    'review.submitting': 'Wird gesendet...',
+
+    // Live page
+    'live.title': 'Live Pipeline-Ueberwachung',
+    'live.tracking': 'Verfolgung:',
+    'live.waiting': 'Warte auf neue E-Mail...',
+    'live.polling': 'Abfrage alle 2s',
+    'live.reset': 'Zuruecksetzen',
+    'live.human_review': 'Menschliche Pruefung erforderlich',
+    'live.ai_recommends': 'KI empfiehlt:',
+    'live.confidence': 'Konfidenz:',
+    'live.amount': 'Betrag:',
+    'live.open_review': 'Pruefseite oeffnen',
+    'live.category': 'Kategorie:',
+    'live.pipeline_complete': 'Pipeline abgeschlossen',
+    'live.letter_generated': 'Schreiben erstellt',
+    'live.email_sent': 'Entscheidungs-E-Mail an Antragsteller gesendet',
+    'live.pipeline_progress': 'Pipeline-Fortschritt',
+
+    // Pipeline stages
+    'stage.email_detected': 'E-Mail\nerkannt',
+    'stage.intake_agent': 'Eingangsagent',
+    'stage.completeness': 'Vollstaendigkeit',
+    'stage.eligibility': 'Pruefung\nZulaessigkeit',
+    'stage.research_eval': 'Recherche +\nBewertung',
+    'stage.recommendation': 'Empfehlung',
+    'stage.decision': 'Entscheidung',
+    'stage.letter_sent': 'Schreiben\nversendet',
+
+    // Section headers
+    'sec.extracted_data': 'Extrahierte Daten',
+    'sec.completeness': 'Vollstaendigkeit',
+    'sec.eligibility': 'Zulaessigkeitspruefung',
+    'sec.research': 'Recherche-Agent',
+    'sec.evaluation': 'Bewertung',
+    'sec.recommendation': 'KI-Empfehlung',
+    'sec.source_doc': 'Quelldokument',
+    'sec.followup': 'Nachfolgekommunikation',
+    'sec.decision_letter': 'Entscheidungsschreiben',
+    'sec.activity': 'Aktivitaetsprotokoll',
+
+    // Eligibility
+    'elig.eligible': 'ZULAESSIG',
+    'elig.rejected': 'ABGELEHNT',
+    'elig.confidence': 'Konfidenz:',
+
+    // Research
+    'research.credibility': 'Glaubwuerdigkeit der Organisation',
+    'research.org_email': 'Organisations-E-Mail',
+    'research.registered': 'Eingetragene Organisation (e.V./gGmbH)',
+    'research.website': 'Webseite aktiv',
+    'research.red_flags': 'Keine Warnhinweise',
+    'research.verified': 'Verifiziert',
+    'research.freemail': 'Freemail erkannt',
+    'research.confirmed': 'Bestaetigt',
+    'research.unknown': 'Unbekannt',
+    'research.online': 'Online',
+    'research.not_found': 'Nicht gefunden',
+    'research.clear': 'Keine',
+    'research.flags': 'Hinweis(e)',
+
+    // Evaluation
+    'eval.strategic_fit': 'Strategische Passung (28%)',
+    'eval.community': 'Gesellschaftl. Wirkung (22%)',
+    'eval.visibility': 'Sichtbarkeitswert (19%)',
+    'eval.cost': 'Kosteneffizienz (16%)',
+    'eval.overall': 'Gesamtbewertung',
+    'eval.strengths': 'Staerken:',
+    'eval.weaknesses': 'Schwaechen:',
+    'eval.benchmarks': 'Vergleichbare Sponsorings:',
+
+    // Recommendation
+    'rec.confidence_low': 'Konfidenz unter 80% -- zur menschlichen Pruefung weitergeleitet.',
+    'rec.conditions': 'Bedingungen:',
+
+    // Completeness
+    'comp.missing': 'Fehlende Felder:',
+    'comp.awaiting': 'Warte auf Antwort...',
+    'comp.blocker': 'FEHLT - BLOCKER',
+    'comp.not_provided': 'nicht angegeben',
+
+    // Source document
+    'src.view_email': 'E-Mail-Inhalt anzeigen',
+    'src.hide_email': 'E-Mail-Inhalt ausblenden',
+    'src.download': 'Herunterladen',
+
+    // Follow-up
+    'followup.sent': 'Nachfrage gesendet',
+    'followup.missing_requested': 'Fehlende Angaben angefordert:',
+    'followup.view_email': 'Gesendete E-Mail anzeigen',
+    'followup.hide_email': 'E-Mail ausblenden',
+    'followup.open_form': 'Formular oeffnen',
+    'followup.reply_received': 'Antwort des Antragstellers erhalten',
+    'followup.merged': 'Zusammengefuehrt',
+
+    // Letter
+    'letter.view': 'Schreiben anzeigen',
+    'letter.hide': 'Ausblenden',
+    'letter.edit': 'Bearbeiten',
+    'letter.cancel': 'Abbrechen',
+    'letter.save_draft': 'Entwurf speichern',
+    'letter.send': 'An Antragsteller senden',
+    'letter.draft_saved': 'Entwurf gespeichert',
+    'letter.sent': 'Gesendet',
+    'letter.draft': 'Entwurf',
+    'letter.rejected_elig': 'Anfrage in der Zulaessigkeitspruefung abgelehnt',
+
+    // Status labels
+    'status.received': 'Eingegangen',
+    'status.extracted': 'Extrahiert',
+    'status.eligible': 'Zulaessig',
+    'status.evaluated': 'Bewertet',
+    'status.recommended': 'Empfohlen',
+    'status.review': 'Pruefung',
+    'status.decided': 'Entschieden',
+    'status.completed': 'Abgeschlossen',
+    'status.rejected': 'Abgelehnt',
+    'status.failed': 'Fehlgeschlagen',
+    'status.approved': 'Genehmigt',
+    'status.put_on_hold': 'Zurueckgestellt',
+    'status.pending': 'Ausstehend',
+
+    // Categories
+    'cat.sports': 'Sport',
+    'cat.culture': 'Kultur',
+    'cat.education': 'Bildung',
+    'cat.social': 'Soziales',
+    'cat.community': 'Gemeinschaft',
+    'cat.other': 'Sonstiges',
+
+    // Activity feed
+    'activity.events': 'Ereignisse',
+    'activity.waiting': 'Warte auf Pipeline-Aktivitaet...',
+
+    // Config tabs
+    'config.budget_strategy': 'Budget & Strategie',
+    'config.pipeline': 'Pipeline & Automatisierung',
+    'config.completeness': 'Vollstaendigkeit',
+    'config.eligibility': 'Zulaessigkeitsregeln',
+    'config.evaluation': 'Bewertungskriterien',
+    'config.agents': 'Agentensteuerung',
+    'config.system': 'System & Protokoll',
+
+    // Config page - Strategy tab
+    'cfg.budget_limits': 'Budget & Grenzen',
+    'cfg.client_name': 'Kundenname',
+    'cfg.year': 'Jahr',
+    'cfg.set_budget': 'Budget festlegen (EUR)',
+    'cfg.budget_hint': 'Ausgaben und Restbudget werden im Dashboard angezeigt.',
+    'cfg.focus_areas': 'Schwerpunktbereiche',
+    'cfg.add_focus': 'Schwerpunkt hinzufuegen...',
+    'cfg.add': 'Hinzufuegen',
+    'cfg.historical_data': 'Historische Sponsoring-Daten',
+    'cfg.historical_desc': 'Vergangene Sponsorings als Vergleichsdaten. Die KI vergleicht neue Anfragen mit diesen Daten.',
+    'cfg.records': 'Datensaetze',
+    'cfg.csv_coming': 'CSV-Upload ist in der naechsten Version verfuegbar',
+    'cfg.upload_csv': 'CSV hochladen',
+    'cfg.th_organization': 'Organisation',
+    'cfg.th_purpose': 'Zweck',
+    'cfg.th_year': 'Jahr',
+    'cfg.th_approved': 'Genehmigt',
+    'cfg.th_rating': 'Bewertung',
+    'cfg.showing_of': 'Zeige 5 von',
+    'cfg.no_historical': 'Keine historischen Daten geladen. Laden Sie eine CSV hoch, um zu beginnen.',
+    'cfg.save_strategy': 'Strategie speichern',
+
+    // Config page - Pipeline tab
+    'cfg.pipeline_mode': 'Pipeline-Modus',
+    'cfg.human_intervention': 'Menschliche Steuerung',
+    'cfg.you_control': 'Sie behalten die Kontrolle',
+    'cfg.human_desc': 'Jede Entscheidung wird menschlich geprueft. Die KI gibt Empfehlungen, Sie treffen die endgueltige Entscheidung.',
+    'cfg.autopilot': 'Autopilot',
+    'cfg.ai_decides': 'KI entscheidet innerhalb sicherer Grenzen',
+    'cfg.autopilot_desc': 'KI entscheidet automatisch bei hoher Konfidenz. Weiterleitung an Menschen nur bei Unsicherheit oder hohem Betrag.',
+    'cfg.ai_confidence': 'Erforderliche KI-Konfidenz',
+    'cfg.below_human': 'Darunter -> menschliche Pruefung auch im Autopilot',
+    'cfg.max_auto_amount': 'Maximaler Auto-Genehmigungsbetrag (EUR)',
+    'cfg.above_human': 'Darueber -> menschliche Pruefung auch im Autopilot',
+    'cfg.human_review_points': 'Menschliche Pruefpunkte',
+    'cfg.hitl_desc': 'Wo die Pipeline fuer menschliche Eingabe pausiert. Im Modus "Menschliche Steuerung" sind alle standardmaessig aktiviert.',
+    'cfg.email_automation': 'E-Mail-Automatisierung',
+    'cfg.email_auto_desc': 'Konfigurieren Sie automatische E-Mails waehrend der Pipeline.',
+    'cfg.ack_email': 'Eingangsbestaetigung',
+    'cfg.ack_desc': 'Empfangsbestaetigung senden, wenn eine neue Anfrage eingeht.',
+    'cfg.send_within': 'Senden innerhalb (Sekunden)',
+    'cfg.ack_speed': 'Wie schnell der Antragsteller eine Bestaetigung erhaelt',
+    'cfg.followup_email': 'Nachfass-E-Mail',
+    'cfg.followup_desc': 'Antragsteller nach fehlenden Angaben fragen, wenn die Anfrage unvollstaendig ist.',
+    'cfg.send_after': 'Senden nach (Minuten)',
+    'cfg.immediate': '0 = sofort nach Erkennung senden',
+    'cfg.max_attempts': 'Max. Versuche pro Anfrage',
+    'cfg.after_max': 'Nach max. Versuchen weiter an menschliche Pruefung',
+    'cfg.auto_close': 'Unbeantwortete Anfragen auto-schliessen',
+    'cfg.auto_close_desc': 'Anfragen automatisch schliessen, wenn der Antragsteller nicht auf die Nachfrage antwortet.',
+    'cfg.close_after': 'Schliessen nach (Stunden)',
+    'cfg.marked_abandoned': 'Anfrage wird als aufgegeben markiert',
+    'cfg.save_pipeline': 'Pipeline-Einstellungen speichern',
+
+    // Config page - Completeness tab
+    'cfg.email_fields': 'E-Mail-Kanal Felder',
+    'cfg.llm_validated': 'LLM-validiert (Haiku)',
+    'cfg.web_form_fields': 'Webformular-Felder',
+    'cfg.pydantic_validated': 'Pydantic-validiert',
+    'cfg.form_enforces': 'Formular erzwingt Pflichtfelder bei Einreichung. Keine Nachfrage noetig.',
+    'cfg.blocker': 'BLOCKER',
+    'cfg.required_label': 'PFLICHT',
+    'cfg.optional_label': 'OPTIONAL',
+    'cfg.optional_lower': 'optional',
+    'cfg.save_completeness': 'Vollstaendigkeits-Einstellungen speichern',
+
+    // Config page - Eligibility tab
+    'cfg.hard_rules': 'Harte Regeln (Zulaessigkeitsbedingungen)',
+    'cfg.amount_range': 'Betragsbereich',
+    'cfg.min_eur': 'Min (EUR)',
+    'cfg.max_eur': 'Max (EUR)',
+    'cfg.keyword_blacklist': 'Stichwort-Sperrliste',
+    'cfg.add_keyword': 'Stichwort hinzufuegen...',
+    'cfg.blocked_org_types': 'Gesperrte Organisationstypen',
+    'cfg.select_type': 'Typ zum Sperren waehlen...',
+    'cfg.political_org': 'Politische Organisation',
+    'cfg.religious_org': 'Religioese Organisation',
+    'cfg.individual': 'Einzelperson / Person',
+    'cfg.commercial': 'Kommerzielles Unternehmen',
+    'cfg.gambling': 'Gluecksspiel-Organisation',
+    'cfg.tobacco_alcohol': 'Tabak- / Alkoholindustrie',
+    'cfg.custom': 'Benutzerdefiniert...',
+    'cfg.block_btn': 'Sperren',
+    'cfg.type_custom': 'Organisationstyp eingeben...',
+    'cfg.soft_rules': 'Weiche Regeln (Warnungen)',
+    'cfg.region_match': 'Regionsabgleich-Warnung',
+    'cfg.region_outside': 'Warnung wenn Organisation ausserhalb der Betriebsregion',
+    'cfg.event_date_check': 'Veranstaltungsdatum-Pruefung',
+    'cfg.min_label': 'Min',
+    'cfg.days_before': 'Tage vor Veranstaltung',
+    'cfg.freemail_warning': 'Freemail-Domain-Warnung',
+    'cfg.freemail_desc': 'Warnung bei Gmail, GMX, Yahoo, etc.',
+    'cfg.save_eligibility': 'Zulaessigkeitsregeln speichern',
+
+    // Config page - Evaluation tab
+    'cfg.scoring_dims': 'Bewertungsdimensionen',
+    'cfg.scoring_desc': 'Wie jede Anfrage bewertet wird. Gewichtungen muessen 100% ergeben. Klicken Sie auf eine Dimension fuer Details.',
+    'cfg.total_weight': 'Gesamtgewichtung:',
+    'cfg.valid': 'Gueltig',
+    'cfg.must_100': 'Muss 100% ergeben',
+    'cfg.ai_evaluates': 'Was die KI fuer diese Dimension bewertet:',
+    'cfg.company_values': 'Unternehmenswerte',
+    'cfg.values_desc_1': 'Diese Werte bestimmen die',
+    'cfg.values_desc_2': 'Strategische Passung',
+    'cfg.values_desc_3': 'Bewertung. Die KI prueft, wie gut jede Anfrage mit diesen Werten uebereinstimmt.',
+    'cfg.decision_thresholds': 'Entscheidungsschwellen',
+    'cfg.threshold_desc': 'Wie die Gesamtbewertung einer Empfehlung zugeordnet wird.',
+    'cfg.reject_label': 'ABLEHNEN',
+    'cfg.on_hold_label': 'ZURUECKSTELLEN',
+    'cfg.approve_label': 'GENEHMIGEN',
+    'cfg.reject_below': 'Ablehnen unter (%)',
+    'cfg.approve_above': 'Genehmigen ueber (%)',
+    'cfg.scores_between': 'Bewertungen zwischen diesen Werten erhalten eine "Zurueckstellen"-Empfehlung.',
+    'cfg.portfolio_limits': 'Portfolio-Grenzen',
+    'cfg.portfolio_desc': 'Ueberinvestition in einer Kategorie verhindern. Bei Ueberschreitung erhalten neue Anfragen einen Bewertungsabzug.',
+    'cfg.save_evaluation': 'Bewertungskriterien speichern',
+
+    // Config page - Agent Controls tab
+    'cfg.agent_controls': 'Agentensteuerung',
+    'cfg.agent_desc': 'Konfigurieren Sie jeden Agenten in der Pipeline. Waehlen Sie das KI-Modell und schalten Sie optionale Agenten ein/aus.',
+    'cfg.intake_agent': 'Eingangs-Agent',
+    'cfg.intake_desc': 'Dokumentverarbeitung, Textextraktion, strukturierte Datenextraktion',
+    'cfg.completeness_agent': 'Vollstaendigkeits-Agent',
+    'cfg.completeness_agent_desc': 'Validiert Feldqualitaet, erkennt vage oder unvollstaendige Werte',
+    'cfg.eligibility_agent': 'Zulaessigkeits-Agent',
+    'cfg.eligibility_agent_desc': 'Regelbasierte Pruefungen + KI-Sicherheitscheck fuer Grenzfaelle',
+    'cfg.research_agent': 'Recherche-Agent',
+    'cfg.research_desc': 'Web-Verifizierung, Organisationsglaubwuerdigkeit, Freemail-Erkennung',
+    'cfg.research_depth': 'Recherchetiefe',
+    'cfg.depth_auto': 'Auto',
+    'cfg.depth_quick': 'Schnell',
+    'cfg.depth_standard': 'Standard',
+    'cfg.depth_deep': 'Tiefgehend',
+    'cfg.depth_desc': 'Auto: Schnell (<1000 EUR), Standard (1000-5000), Tiefgehend (>5000)',
+    'cfg.evaluation_agent': 'Bewertungs-Agent',
+    'cfg.evaluation_agent_desc': 'Bewertet Anfragen nach strategischer Passung, gesellschaftlicher Wirkung, Sichtbarkeit, Kosteneffizienz',
+    'cfg.recommendation_agent': 'Empfehlungs-Agent',
+    'cfg.recommendation_desc': 'Erstellt Genehmigungs-/Ablehnungs-/Zurueckstellungsempfehlung mit Begruendung',
+    'cfg.completion_agent': 'Abschluss-Agent',
+    'cfg.completion_desc': 'Erstellt Entscheidungsschreiben, aktualisiert Organisationsprofil, verfolgt Budget',
+    'cfg.copilot_agent': 'Frag mich (Copilot-Assistent)',
+    'cfg.copilot_desc': 'KI-Chat-Assistent auf jeder Seite ueber die "Frag mich"-Schaltflaeche verfuegbar',
+
+    // Config page - System & Audit tab
+    'cfg.incoming_email': 'Eingehende E-Mail',
+    'cfg.outgoing_email': 'Ausgehende E-Mail',
+    'cfg.llm_models': 'LLM-Modelle',
+    'cfg.db_storage': 'Datenbank & Speicher',
+    'cfg.config_history': 'Konfigurationsaenderungsverlauf',
+    'cfg.th_time': 'Zeitpunkt',
+    'cfg.th_action': 'Aktion',
+    'cfg.th_actor': 'Akteur',
+    'cfg.th_details': 'Details',
+    'cfg.no_changes': 'Noch keine Konfigurationsaenderungen erfasst.',
+    'cfg.done': 'Fertig',
+    'cfg.edit_btn': 'Bearbeiten',
+
+    // Config page - HITL stages
+    'cfg.hitl_followup': 'Vor dem Senden der Nachfass-E-Mail',
+    'cfg.hitl_followup_desc': 'Vollstaendigkeits-E-Mail vor dem Versand an den Antragsteller pruefen',
+    'cfg.hitl_recommendation': 'Nach KI-Empfehlung',
+    'cfg.hitl_recommendation_desc': 'KI-Empfehlung vor endgueltiger Entscheidung pruefen',
+    'cfg.hitl_send': 'Vor dem Senden des Entscheidungsschreibens',
+    'cfg.hitl_send_desc': 'Schreiben vor dem Versand pruefen und ggf. bearbeiten',
+
+    // Config page - Completeness tiers
+    'cfg.tier1': 'STUFE 1 -- Pflicht',
+    'cfg.tier1_rule': 'Ohne diese kann die Anfrage nicht verarbeitet werden',
+    'cfg.tier2': 'STUFE 2 -- Sollte vorhanden sein',
+    'cfg.tier2_rule': 'Antragsteller wird bei Fehlen gefragt',
+    'cfg.tier3': 'STUFE 3 -- Wuenschenswert',
+    'cfg.tier3_rule': 'Nicht erforderlich',
+    'cfg.tier4': 'STUFE 4 -- Optional',
+    'cfg.tier4_rule': 'Nicht erforderlich',
+
+    // Config page - Field labels
+    'cfg.field_org_name': 'Organisationsname',
+    'cfg.field_amount': 'Gewuenschter Betrag',
+    'cfg.field_purpose': 'Veranstaltung / Zweck',
+    'cfg.field_visibility': 'Sponsoring-Paket',
+    'cfg.field_event_date': 'Veranstaltungsdatum',
+    'cfg.field_region': 'Ort / Region',
+    'cfg.field_contact': 'Kontaktperson',
+    'cfg.field_attendance': 'Erwartete Teilnehmerzahl',
+    'cfg.field_audience': 'Zielgruppe',
+    'cfg.field_description': 'Projektbeschreibung',
+    'cfg.field_org_type': 'Organisationstyp',
+    'cfg.field_category': 'Themenkategorie',
+    'cfg.field_members': 'Mitgliederzahl',
+    'cfg.field_usage': 'Mittelverwendung',
+    'cfg.field_reach': 'Medienreichweite',
+    'cfg.field_org_desc': 'Organisationsbeschreibung',
+    'cfg.field_deadline': 'Antwortfrist',
+    'cfg.field_amount_eur': 'Gewuenschter Betrag (EUR)',
+    'cfg.field_email': 'E-Mail',
+    'cfg.field_phone': 'Telefon',
+
+    // Config page - Eval dimensions
+    'cfg.dim_strategic': 'Strategische Passung',
+    'cfg.dim_strategic_desc': 'Uebereinstimmung mit Unternehmenswerten und Schwerpunkten',
+    'cfg.dim_community': 'Gesellschaftliche Wirkung',
+    'cfg.dim_community_desc': 'Nutzen fuer die lokale Gemeinschaft',
+    'cfg.dim_visibility': 'Sichtbarkeitswert',
+    'cfg.dim_visibility_desc': 'Markensichtbarkeit und Partnerschaftsertrag',
+    'cfg.dim_cost': 'Kosteneffizienz',
+    'cfg.dim_cost_desc': 'Wert pro investiertem EUR',
+    'cfg.dim_partnership': 'Partnerschaftstiefe',
+    'cfg.dim_partnership_desc': 'Tiefe der Zusammenarbeit ueber Logo-Platzierung hinaus',
+    'cfg.dim_portfolio': 'Portfolio-Balance',
+    'cfg.dim_portfolio_desc': 'Abzug bei ueberrepraesentierter Kategorie',
+
+    // Config page - Eval sub-dimensions
+    'cfg.sub_focus_match': 'Schwerpunktabgleich (Thema vs. Unternehmensprioritaeten)',
+    'cfg.sub_regional': 'Regionale Verankerung (lokal/regional bevorzugt)',
+    'cfg.sub_audience_overlap': 'Zielgruppenueberschneidung mit Unternehmenskunden',
+    'cfg.sub_logo_brand': 'Logo- und Markensichtbarkeit',
+    'cfg.sub_beneficiaries': 'Anzahl der Beguenstigten / Teilnehmer',
+    'cfg.sub_social_value': 'Sozialer Wert des Projekts',
+    'cfg.sub_geographic': 'Geografische Reichweite (lokal vs. regional)',
+    'cfg.sub_logo_exposure': 'Logo-Praesenz (Banner, Trikots, Druck)',
+    'cfg.sub_media_reach': 'Medienreichweite (Presse, Flyer, Programmheft)',
+    'cfg.sub_digital': 'Digitale Praesenz (Social Media, Webseite)',
+    'cfg.sub_audience_size': 'Publikumsgroesse (Live-Teilnehmer)',
+    'cfg.sub_cost_per': 'Kosten pro Beguenstigtem (Betrag / Teilnehmerzahl)',
+    'cfg.sub_proportional': 'Betrag proportional zur angegebenen Wirkung',
+    'cfg.sub_logo_only': 'Nur Logo (0,2)',
+    'cfg.sub_event_mention': 'Veranstaltungserwaehnung / Shoutout (0,4)',
+    'cfg.sub_media_partner': 'Medienpartnerschaft / Presseberichterstattung (0,6)',
+    'cfg.sub_content': 'Content-Erstellung / Storytelling (0,8)',
+    'cfg.sub_deep_collab': 'Tiefe Zusammenarbeit / Namensrechte (1,0)',
+    'cfg.sub_cat_share': 'Kategorieanteil an Gesamtausgaben',
+    'cfg.sub_penalty': 'Progressive Strafe bei Ueberschreitung des Maximalanteils',
+    'cfg.sub_diversity': 'Sichert Vielfalt ueber Sport, Kultur, Soziales, etc.',
+
+    // Config page - Portfolio labels
+    'cfg.port_youth': 'Jugendsport',
+    'cfg.port_culture': 'Kultur & Gesellschaft',
+    'cfg.port_environment': 'Umwelt & Nachhaltigkeit',
+    'cfg.port_education': 'Bildung',
+    'cfg.port_social': 'Soziale Wohlfahrt',
+    'cfg.port_community': 'Gemeinschaftsveranstaltungen',
+
+    // Config page - Toast messages
+    'cfg.toast_strategy_saved': 'Strategie erfolgreich gespeichert!',
+    'cfg.toast_pipeline_saved': 'Pipeline-Konfiguration gespeichert!',
+    'cfg.toast_eligibility_saved': 'Zulaessigkeitsregeln gespeichert!',
+    'cfg.toast_evaluation_saved': 'Bewertungskriterien gespeichert!',
+    'cfg.toast_completeness_saved': 'Vollstaendigkeits-Einstellungen gespeichert!',
+    'cfg.toast_weights_error': 'Gewichtungen muessen 100% ergeben',
+    'cfg.toast_no_strategy': 'Keine Strategie geladen',
+    'cfg.toast_save_failed': 'Speichern fehlgeschlagen',
+    'cfg.toast_network_error': 'Netzwerkfehler',
+
+    // Pagination
+    'req.page': 'Seite',
+
+    // Email metadata
+    'email.from': 'Von:',
+    'email.subject': 'Betreff:',
+    'email.received': 'Empfangen:',
+
+    // Extracted field labels
+    'field.organization': 'Organisation',
+    'field.amount': 'Betrag (EUR)',
+    'field.purpose': 'Zweck',
+    'field.event_date': 'Veranstaltungsdatum',
+    'field.region': 'Region',
+    'field.contact': 'Kontakt',
+    'field.visibility': 'Sichtbarkeit',
+    'field.attendance': 'Teilnehmerzahl',
+    'field.audience': 'Zielgruppe',
+    'field.category': 'Kategorie',
+    'field.extra': 'Zusatzinfos',
+
+    // Completeness missing label
+    'comp.missing_label': 'FEHLT',
+
+    // Language toggle
+    'lang.switch': 'EN',
+    'lang.tooltip': 'Zu Englisch wechseln',
+
+    // Time
+    'time.sec': 'Sek',
+    'time.min': 'Min',
+    'time.hrs': 'Std',
+  }
+};
+
+// ─── Language engine ───────────────────────────────────
+let _currentLang = localStorage.getItem('sponsorship_lang') || 'en';
+
+function t(key) {
+  return I18N[_currentLang]?.[key] || I18N['en']?.[key] || key;
+}
+
+function setLang(lang) {
+  _currentLang = lang;
+  localStorage.setItem('sponsorship_lang', lang);
+  // Update Alpine store if available
+  if (window.Alpine && Alpine.store('lang')) {
+    Alpine.store('lang').current = lang;
+  }
+  // Update html lang attribute
+  document.documentElement.lang = lang;
+}
+
+function getLang() {
+  return _currentLang;
+}
+
+function toggleLang() {
+  setLang(_currentLang === 'en' ? 'de' : 'en');
+  // Reload page to re-render all templates
+  window.location.reload();
+}
+
+// Update status/decision labels based on current language
+function updateDELabels() {
+  if (_currentLang === 'de') {
+    DE.state = {
+      received: t('status.received'), ingested: t('status.received'), extracted: t('status.extracted'),
+      eligible: t('status.eligible'), evaluated: t('status.evaluated'), recommended: t('status.recommended'),
+      human_review: t('status.review'), decided: t('status.decided'), completed: t('status.completed'),
+      rejected: t('status.rejected'), approved: t('status.approved'), deferred: 'Aufgeschoben',
+      failed: t('status.failed'), draft_ready: 'Entwurf bereit', sent: t('letter.sent'),
+    };
+    DE.decision = {
+      APPROVED: t('status.approved'), REJECTED: t('status.rejected'), PARTIAL: t('status.put_on_hold'),
+      approved: t('status.approved'), rejected: t('status.rejected'), conditionally_approved: t('status.put_on_hold'),
+      pending: t('status.pending'),
+    };
+  }
+  // English labels are already the defaults in base.html
+}
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+  updateDELabels();
+  document.documentElement.lang = _currentLang;
+});

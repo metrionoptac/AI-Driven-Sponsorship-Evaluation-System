@@ -140,6 +140,28 @@ class FollowupHandler:
                 """, request_id, current_state,
                     json.dumps({"new_fields": list(new_fields.keys()), "sender": sender}))
 
+                # Mark the most recent follow_ups row as response received.
+                # Wrapped defensively so a persistence hiccup cannot abort the
+                # follow-up flow (a raise here used to cascade to the watcher
+                # try/except and create a phantom new-request).
+                try:
+                    await conn.execute("""
+                        UPDATE follow_ups
+                        SET response_received = TRUE,
+                            response_at = NOW(),
+                            new_fields_received = $2
+                        WHERE id = (
+                            SELECT id FROM follow_ups
+                            WHERE request_id = $1 AND response_received = FALSE
+                            ORDER BY sent_at DESC LIMIT 1
+                        )
+                    """, request_id, list(new_fields.keys()))
+                except Exception as e:
+                    logger.warning(
+                        "Failed to update follow_ups row for %s: %s",
+                        request_id, e,
+                    )
+
         # 7. Re-run quality gate
         from app.document.quality_gate import assess_quality, QualityLevel
         from app.models.request import SponsorshipRequest, ExtractionResult

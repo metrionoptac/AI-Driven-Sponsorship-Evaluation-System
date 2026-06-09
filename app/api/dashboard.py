@@ -45,6 +45,10 @@ def _serialize(obj):
         return obj.isoformat()
     if hasattr(obj, "isoformat"):
         return obj.isoformat()
+    # Handle Decimal from PostgreSQL numeric columns
+    from decimal import Decimal
+    if isinstance(obj, Decimal):
+        return float(obj)
     return obj
 
 
@@ -64,11 +68,16 @@ async def get_stats():
 
         decisions = await conn.fetch(
             "SELECT decision, COUNT(*) as count, COALESCE(SUM(decided_amount), 0) as total_amount "
-            "FROM decisions GROUP BY decision"
+            "FROM decisions WHERE decision NOT IN ('PENDING_REVIEW', 'DEFERRED') GROUP BY decision"
         )
 
         strategy = await conn.fetchrow(
             "SELECT total_budget, remaining_budget FROM sponsorship_strategy WHERE active = TRUE LIMIT 1"
+        )
+
+        # Actual spend: sum of approved decided_amounts
+        total_spent = await conn.fetchval(
+            "SELECT COALESCE(SUM(decided_amount), 0) FROM decisions WHERE decision IN ('APPROVED', 'PARTIAL')"
         )
 
         avg_score = await conn.fetchval(
@@ -97,11 +106,43 @@ async def get_stats():
             "SELECT COUNT(*) FROM requests WHERE created_at > NOW() - INTERVAL '30 days'"
         )
 
+        # Budget spent per category
+        budget_by_category = await conn.fetch(
+            """SELECT e.extracted_data->>'purpose_category' as category,
+                      COALESCE(SUM(d.decided_amount), 0) as total_amount,
+                      COUNT(*) as count
+               FROM decisions d
+               JOIN extraction_results e ON e.request_id = d.request_id
+               WHERE d.decision IN ('APPROVED', 'PARTIAL')
+               GROUP BY category ORDER BY total_amount DESC"""
+        )
+
+        # Average processing time (created_at to decided_at)
+        avg_processing = await conn.fetchval(
+            """SELECT AVG(EXTRACT(EPOCH FROM (d.decided_at - r.created_at)))
+               FROM decisions d JOIN requests r ON r.id = d.request_id
+               WHERE d.decided_at IS NOT NULL AND r.created_at IS NOT NULL"""
+        )
+
+        # Recent requests for table
+        recent_requests = await conn.fetch(
+            """SELECT r.id, r.display_id, r.state, r.source_email, r.created_at,
+                      e.extracted_data->>'organization_name' as org_name,
+                      e.extracted_data->>'requested_amount' as amount,
+                      e.extracted_data->>'purpose_category' as category,
+                      d.decision, d.decided_amount
+               FROM requests r
+               LEFT JOIN LATERAL (SELECT * FROM extraction_results WHERE request_id = r.id ORDER BY created_at DESC LIMIT 1) e ON true
+               LEFT JOIN LATERAL (SELECT * FROM decisions WHERE request_id = r.id ORDER BY decided_at DESC LIMIT 1) d ON true
+               ORDER BY r.created_at DESC LIMIT 10"""
+        )
+
     return {
         "total_requests": total or 0,
         "pending_review": pending_review or 0,
         "recent_30d": recent_count or 0,
         "avg_score": round(float(avg_score), 2) if avg_score else 0,
+        "avg_processing_seconds": round(float(avg_processing), 1) if avg_processing else None,
         "by_state": {r["state"]: r["count"] for r in by_state},
         "decisions": {
             r["decision"]: {"count": r["count"], "total_amount": float(r["total_amount"])}
@@ -109,11 +150,26 @@ async def get_stats():
         },
         "budget": {
             "total": float(strategy["total_budget"]) if strategy else 0,
-            "remaining": float(strategy["remaining_budget"]) if strategy else 0,
-            "spent": float(strategy["total_budget"] - strategy["remaining_budget"]) if strategy else 0,
+            "spent": float(total_spent) if total_spent else 0,
+            "remaining": float(strategy["total_budget"]) - float(total_spent) if strategy else 0,
         },
         "by_category": {r["category"] or "unknown": r["count"] for r in by_category},
         "by_org_type": {r["org_type"] or "unknown": r["count"] for r in by_org_type},
+        "budget_by_category": [
+            {"category": r["category"] or "unknown", "total_amount": float(r["total_amount"]), "count": r["count"]}
+            for r in budget_by_category
+        ],
+        "recent_requests": [
+            {
+                "id": str(r["id"]), "display_id": r["display_id"], "state": r["state"],
+                "org_name": r["org_name"] or r["source_email"] or "Unknown",
+                "amount": float(r["amount"]) if r["amount"] else (float(r["decided_amount"]) if r["decided_amount"] else 0),
+                "category": r["category"] or "-",
+                "decision": r["decision"], "decided_amount": float(r["decided_amount"]) if r["decided_amount"] else None,
+                "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+            }
+            for r in recent_requests
+        ],
     }
 
 
@@ -144,18 +200,28 @@ async def list_requests(
                ev.overall_score,
                d.decision, d.decided_amount
         FROM requests r
-        LEFT JOIN extraction_results e ON e.request_id = r.id
-        LEFT JOIN evaluation_results ev ON ev.request_id = r.id
-        LEFT JOIN decisions d ON d.request_id = r.id
+        LEFT JOIN LATERAL (SELECT * FROM extraction_results WHERE request_id = r.id ORDER BY created_at DESC LIMIT 1) e ON true
+        LEFT JOIN LATERAL (SELECT * FROM evaluation_results WHERE request_id = r.id ORDER BY evaluated_at DESC LIMIT 1) ev ON true
+        LEFT JOIN LATERAL (SELECT * FROM decisions WHERE request_id = r.id ORDER BY decided_at DESC LIMIT 1) d ON true
     """
     conditions = []
     params = []
     idx = 1
 
     if state:
-        conditions.append(f"r.state = ${idx}")
-        params.append(state)
-        idx += 1
+        if state == "active":
+            # Special filter: all in-progress pipeline states
+            active_states = ("received", "extracted", "awaiting_info", "eligibility_check",
+                             "eligible", "evaluating", "evaluated", "recommending",
+                             "recommended", "human_review")
+            placeholders = ", ".join(f"${idx + i}" for i in range(len(active_states)))
+            conditions.append(f"r.state IN ({placeholders})")
+            params.extend(active_states)
+            idx += len(active_states)
+        else:
+            conditions.append(f"r.state = ${idx}")
+            params.append(state)
+            idx += 1
 
     if decision:
         conditions.append(f"d.decision = ${idx}")
@@ -335,9 +401,9 @@ async def submit_review(request_id: str, action: ReviewAction):
         else:
             extracted_data = dict(ed) if ed else {}
 
-    # If no amount provided by human, use requested amount from extraction
+    # If no amount provided by human, prefer AI recommended amount, then fall back to requested
     if amount is None or amount == 0:
-        amount = extracted_data.get("requested_amount") or (rec["recommended_amount"] if rec else 0) or 0
+        amount = (rec["recommended_amount"] if rec else 0) or extracted_data.get("requested_amount") or 0
 
     conditions = []
     if rec and rec["conditions"]:
@@ -395,6 +461,39 @@ async def submit_review(request_id: str, action: ReviewAction):
 
 
 # ----------------------------------------------------------------
+# POST /api/dashboard/request/{id}/save-letter -- save letter draft without sending
+# ----------------------------------------------------------------
+
+class SaveLetterRequest(BaseModel):
+    letter_content: str
+
+
+@router.post("/request/{request_id}/save-letter")
+async def save_letter_draft(request_id: str, body: SaveLetterRequest):
+    """Save edited letter content as draft without sending."""
+    db = _get_db()
+    try:
+        rid = uuid.UUID(request_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid request ID")
+
+    async with db.acquire() as conn:
+        comp = await conn.fetchrow(
+            "SELECT id, sent_at FROM completions WHERE request_id = $1 ORDER BY created_at DESC LIMIT 1", rid
+        )
+        if not comp:
+            raise HTTPException(404, "No letter found for this request")
+        if comp["sent_at"]:
+            raise HTTPException(400, "Letter already sent, cannot save draft")
+
+        await conn.execute(
+            "UPDATE completions SET letter_content = $1 WHERE request_id = $2",
+            body.letter_content, rid,
+        )
+
+    return {"status": "ok", "saved": True}
+
+
 # POST /api/dashboard/request/{id}/send-letter -- I2: send (optionally edited) letter
 # ----------------------------------------------------------------
 
@@ -453,7 +552,7 @@ async def send_letter(request_id: str, body: SendLetterRequest):
         from app.config import get_config
         config = get_config()
         if config.smtp.enabled:
-            sender = EmailSender.from_config(config)
+            sender = EmailSender.from_config(config, db=_get_db())
             sent = await sender.send_letter(
                 to_email=to_email,
                 request_id=str(rid),
@@ -832,10 +931,11 @@ async def get_live_activity(request_id: str, since: str = Query(None)):
         if not request:
             raise HTTPException(404, "Request not found")
 
-        # Extraction (structured data + quality)
+        # Extraction (structured data + quality + raw text for email preview)
         extraction = await conn.fetchrow(
             "SELECT extracted_data, extraction_confidence, completeness_score, "
-            "quality_level, missing_fields, extraction_method, source_format "
+            "quality_level, missing_fields, extraction_method, source_format, "
+            "raw_text_used "
             "FROM extraction_results WHERE request_id = $1 "
             "ORDER BY created_at DESC LIMIT 1", rid
         )
@@ -857,11 +957,11 @@ async def get_live_activity(request_id: str, since: str = Query(None)):
             "ORDER BY created_at DESC LIMIT 1", rid
         )
 
-        # Evaluation (scores only)
+        # Evaluation (scores + benchmarks for live panel)
         evaluation = await conn.fetchrow(
             "SELECT strategic_fit_score, community_impact_score, "
             "visibility_value_score, cost_effectiveness_score, overall_score, "
-            "strengths, weaknesses "
+            "strengths, weaknesses, benchmark_comparisons, scoring_breakdown "
             "FROM evaluation_results WHERE request_id = $1 "
             "ORDER BY evaluated_at DESC LIMIT 1", rid
         )
@@ -914,7 +1014,8 @@ async def get_live_activity(request_id: str, since: str = Query(None)):
         result = _serialize(dict(d))
         for key in ("extracted_data", "rules_checked", "details",
                      "missing_fields", "rejection_reasons", "warnings",
-                     "strengths", "weaknesses"):
+                     "strengths", "weaknesses",
+                     "benchmark_comparisons", "scoring_breakdown"):
             if key in result and isinstance(result[key], str):
                 try:
                     result[key] = json.loads(result[key])

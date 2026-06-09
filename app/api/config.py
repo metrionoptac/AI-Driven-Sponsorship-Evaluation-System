@@ -95,15 +95,22 @@ class PipelineModeUpdate(BaseModel):
 
 @router.get("/strategy")
 async def get_active_strategy():
-    """Get the currently active strategy."""
+    """Get the currently active strategy with real spent from decisions."""
     db = _get_db()
     async with db.acquire() as conn:
         row = await conn.fetchrow(
             "SELECT * FROM sponsorship_strategy WHERE active = TRUE ORDER BY created_at DESC LIMIT 1"
         )
-    if not row:
-        raise HTTPException(404, "No active strategy found")
-    return _serialize(dict(row))
+        if not row:
+            raise HTTPException(404, "No active strategy found")
+        # Compute actual spent from approved decisions
+        total_spent = await conn.fetchval(
+            "SELECT COALESCE(SUM(decided_amount), 0) FROM decisions WHERE decision IN ('APPROVED', 'PARTIAL')"
+        )
+    result = _serialize(dict(row))
+    result["actual_spent"] = float(total_spent) if total_spent else 0
+    result["actual_remaining"] = float(row["total_budget"]) - float(total_spent or 0)
+    return result
 
 
 @router.get("/strategies")
@@ -528,3 +535,23 @@ async def update_completeness_criteria(body: dict):
         )
 
     return {"status": "ok"}
+
+
+# ----------------------------------------------------------------
+# GET /api/config/historical -- Historical sponsorship data preview
+# ----------------------------------------------------------------
+
+@router.get("/historical")
+async def get_historical_preview():
+    """Get historical sponsorship count and top 5 records for preview."""
+    db = _get_db()
+    async with db.acquire() as conn:
+        count = await conn.fetchval("SELECT COUNT(*) FROM historical_sponsorships")
+        rows = await conn.fetch(
+            "SELECT id, organization_name, purpose, year, amount_approved, outcome_rating "
+            "FROM historical_sponsorships ORDER BY year DESC, amount_approved DESC LIMIT 5"
+        )
+    return {
+        "count": count or 0,
+        "preview": [_serialize(dict(r)) for r in rows],
+    }
