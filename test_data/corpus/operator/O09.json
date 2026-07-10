@@ -1,0 +1,18 @@
+{
+  "id": "O09",
+  "description": "autopilot mode, complete",
+  "pipeline_mode": "autopilot",
+  "fields": {
+    "contact_name": "Anna Vogel",
+    "contact_email": "anna.vogel@musikverein-sipplingen.de",
+    "contact_phone": "+49 7514 576919",
+    "organization_name": "Musikverein Sipplingen e.V.",
+    "requested_amount": "600",
+    "purpose": "Sommerkonzert im Stadtpark",
+    "event_date": "2026-11-09",
+    "region": "Sipplingen"
+  },
+  "files": [
+    "O09_anfrage.pdf"
+  ]
+}

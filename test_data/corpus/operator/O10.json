@@ -1,0 +1,16 @@
+{
+  "id": "O10",
+  "description": "incomplete fields + email (follow-up test)",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Max Koch",
+    "contact_email": "max.koch@kulturverein-bodman-ludwigshafen.de",
+    "contact_phone": "+49 7575 964998",
+    "organization_name": "Kulturverein Bodman-Ludwigshafen e.V.",
+    "requested_amount": "",
+    "purpose": "Kulturwochenende mit lokalen Kuenstlern",
+    "event_date": "",
+    "region": "Bodman-Ludwigshafen"
+  },
+  "files": []
+}

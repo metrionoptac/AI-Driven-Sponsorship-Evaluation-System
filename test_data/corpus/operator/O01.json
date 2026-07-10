@@ -1,0 +1,18 @@
+{
+  "id": "O01",
+  "description": "fields + matching PDF",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Sofia Richter",
+    "contact_email": "sofia.richter@foerderverein-grundschule-radolfzell.de",
+    "contact_phone": "+49 7538 779094",
+    "organization_name": "Foerderverein Grundschule Radolfzell e.V.",
+    "requested_amount": "900",
+    "purpose": "Neue Buecher fuer die Schulbibliothek",
+    "event_date": "2026-11-27",
+    "region": "Radolfzell"
+  },
+  "files": [
+    "O01_anfrage.pdf"
+  ]
+}

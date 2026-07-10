@@ -25,6 +25,50 @@ _ELIGIBILITY_YAML = _BASE_DIR / "agents" / "eligibility_rules.yaml"
 _EVALUATION_YAML = _BASE_DIR / "agents" / "evaluation_criteria.yaml"
 _COMPLETENESS_YAML = _BASE_DIR / "agents" / "completeness_criteria.yaml"
 
+# Backup dir + required top-level sections per file (B15 guard: a save that
+# would drop one of these sections is refused instead of corrupting the file)
+_YAML_BACKUP_DIR = _BASE_DIR / "agents" / "_yaml_backups"
+_YAML_BACKUPS_KEEP = 20
+_REQUIRED_SECTIONS = {
+    _ELIGIBILITY_YAML.name: {"company", "hard_rules", "soft_rules"},
+    _EVALUATION_YAML.name: {"company", "scoring_dimensions", "decision_thresholds"},
+    _COMPLETENESS_YAML.name: {"company", "email", "quality_levels"},
+}
+
+
+def _guard_yaml_write(path: Path, new_content: dict):
+    """
+    B15 guard, called before every YAML config save:
+    1. Refuse payloads that aren't a non-empty dict or drop required sections.
+    2. Back up the current file (timestamped) so any bad save is recoverable.
+    """
+    if not isinstance(new_content, dict) or not new_content:
+        raise HTTPException(422, "Config payload must be a non-empty object")
+    required = _REQUIRED_SECTIONS.get(path.name, set())
+    missing = required - set(new_content.keys())
+    if missing:
+        raise HTTPException(
+            422,
+            f"Refusing to save {path.name}: payload is missing required "
+            f"section(s) {sorted(missing)} -- this would corrupt the file. "
+            f"Send the complete document, not a fragment.",
+        )
+    if path.exists():
+        from datetime import datetime
+        import shutil
+        _YAML_BACKUP_DIR.mkdir(exist_ok=True)
+        stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        shutil.copy2(path, _YAML_BACKUP_DIR / f"{path.stem}_{stamp}.yaml")
+        # prune old backups, keep newest N (baselines start with the stem too,
+        # so sort by mtime and never delete files containing 'baseline')
+        backups = sorted(
+            (p for p in _YAML_BACKUP_DIR.glob(f"{path.stem}_*.yaml")
+             if "baseline" not in p.name),
+            key=lambda p: p.stat().st_mtime, reverse=True,
+        )
+        for old in backups[_YAML_BACKUPS_KEEP:]:
+            old.unlink(missing_ok=True)
+
 
 def init_config_api(db, config=None):
     global _db, _config
@@ -303,9 +347,7 @@ async def get_eligibility_rules():
 @router.put("/eligibility-rules")
 async def update_eligibility_rules(rules: dict):
     """Write updated eligibility rules to YAML."""
-    # Validate minimum structure
-    if "hard_rules" not in rules and "soft_rules" not in rules:
-        raise HTTPException(400, "Rules must contain 'hard_rules' or 'soft_rules'")
+    _guard_yaml_write(_ELIGIBILITY_YAML, rules)
 
     with open(_ELIGIBILITY_YAML, "w", encoding="utf-8") as f:
         yaml.dump(rules, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
@@ -336,6 +378,8 @@ async def get_evaluation_criteria():
 @router.put("/evaluation-criteria")
 async def update_evaluation_criteria(criteria: dict):
     """Write updated evaluation criteria to YAML."""
+    _guard_yaml_write(_EVALUATION_YAML, criteria)
+
     with open(_EVALUATION_YAML, "w", encoding="utf-8") as f:
         yaml.dump(criteria, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 
@@ -512,6 +556,8 @@ async def get_completeness_criteria():
 @router.put("/completeness")
 async def update_completeness_criteria(body: dict):
     """Write completeness criteria back to YAML."""
+    _guard_yaml_write(_COMPLETENESS_YAML, body)
+
     with open(_COMPLETENESS_YAML, "w", encoding="utf-8") as f:
         yaml.dump(body, f, default_flow_style=False, allow_unicode=True, sort_keys=False)
 

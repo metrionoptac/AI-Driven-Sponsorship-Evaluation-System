@@ -1,0 +1,16 @@
+{
+  "id": "O03",
+  "description": "fields only, no attachment",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Emma Maier",
+    "contact_email": "emma.maier@jugendzentrum-meersburg.de",
+    "contact_phone": "+49 7579 617781",
+    "organization_name": "Jugendzentrum Meersburg e.V.",
+    "requested_amount": "1800",
+    "purpose": "Ferienprogramm fuer Jugendliche",
+    "event_date": "2026-09-20",
+    "region": "Meersburg"
+  },
+  "files": []
+}

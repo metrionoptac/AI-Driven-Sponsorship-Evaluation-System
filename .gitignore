@@ -11,3 +11,5 @@ logs/*.log
 node_modules/
 .DS_Store
 Thumbs.db
+app/agents/_yaml_backups/
+test_data/phase_01/watch_inbox/

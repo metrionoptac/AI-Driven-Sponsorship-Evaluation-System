@@ -37,15 +37,20 @@
     <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm mb-6">
         <h3 class="text-sm font-semibold text-gray-700 mb-3">Upload Document</h3>
         <div class="flex items-center gap-4">
-            <label class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition"
-                   :class="uploading ? 'opacity-50 pointer-events-none' : ''">
+            <label class="flex-1 border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition"
+                   :class="[uploading ? 'opacity-50 pointer-events-none' : '', dragOver ? 'border-primary-500 bg-primary-50' : 'border-gray-300 hover:border-primary-400 hover:bg-primary-50']"
+                   @dragover.prevent="dragOver = true"
+                   @dragleave.prevent="dragOver = false"
+                   @drop.prevent="handleDrop($event)">
                 <input type="file" class="hidden" @change="uploadFile($event)" accept=".pdf,.docx,.doc,.eml,.msg,.jpg,.jpeg,.png,.tiff,.tif,.bmp">
                 <svg class="w-6 h-6 mx-auto text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                <p class="text-sm text-gray-500">Drop PDF, DOCX, image, or email file</p>
+                <p class="text-sm text-gray-500" x-text="t('req.drop_title')">Drag &amp; drop your document here</p>
+                <p class="text-xs text-gray-400 mt-1" x-text="t('req.drop_or_click')">or click to browse</p>
             </label>
-            <div x-show="uploadResult" class="text-sm">
-                <p x-show="uploadResult && !uploadResult.is_duplicate" class="text-green-600 font-medium">Uploaded! Processing...</p>
+            <div x-show="uploadResult || uploadTypeError" class="text-sm">
+                <p x-show="uploadResult && !uploadResult.is_duplicate && !uploadResult.error" class="text-green-600 font-medium">Uploaded! Processing...</p>
                 <p x-show="uploadResult && uploadResult.is_duplicate" class="text-yellow-600 font-medium">Duplicate detected</p>
+                <p x-show="uploadTypeError" class="text-red-600 font-medium" x-text="t('req.invalid_type')">File type not supported.</p>
             </div>
         </div>
     </div>
@@ -148,6 +153,8 @@ function pipelinePage() {
         filterStage: '',
         uploading: false,
         uploadResult: null,
+        dragOver: false,
+        uploadTypeError: false,
         pipelineSteps: [
             { key: 'received', label: 'Email Detected' },
             { key: 'extracted', label: 'Data Extracted' },
@@ -211,9 +218,25 @@ function pipelinePage() {
                 this.requests = data.requests || [];
             } catch(e) { console.error('Pipeline load failed', e); }
         },
-        async uploadFile(event) {
-            const file = event.target.files[0];
+        uploadFile(event) {
+            this.sendFile(event.target.files[0]);
+            event.target.value = '';  // allow re-selecting the same file
+        },
+        handleDrop(event) {
+            this.dragOver = false;
+            this.sendFile(event.dataTransfer.files[0]);
+        },
+        async sendFile(file) {
             if (!file) return;
+            // Dropped files bypass the input's accept filter -- validate here
+            const accepted = ['.pdf','.docx','.doc','.eml','.msg','.jpg','.jpeg','.png','.tiff','.tif','.bmp'];
+            const ext = '.' + (file.name.split('.').pop() || '').toLowerCase();
+            if (!accepted.includes(ext)) {
+                this.uploadTypeError = true;
+                setTimeout(() => this.uploadTypeError = false, 4000);
+                return;
+            }
+            this.uploadTypeError = false;
             this.uploading = true;
             this.uploadResult = null;
             try {

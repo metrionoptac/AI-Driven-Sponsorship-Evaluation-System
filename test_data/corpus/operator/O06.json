@@ -1,0 +1,18 @@
+{
+  "id": "O06",
+  "description": "fields + xlsx attachment (B04 test)",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Simon Wolf",
+    "contact_email": "simon.wolf@tsv-salem-1990.de",
+    "contact_phone": "+49 7593 563711",
+    "organization_name": "TSV Salem 1990 e.V.",
+    "requested_amount": "1400",
+    "purpose": "Anschaffung von Jugend-Trikots",
+    "event_date": "2026-10-19",
+    "region": "Salem"
+  },
+  "files": [
+    "O06_daten.xlsx"
+  ]
+}

@@ -110,7 +110,7 @@
 function completionForm() {
   return {
     loading: true, submitted: false, submitting: false, error: '',
-    refId: '', requestId: '', extractedData: {}, missingFields: [],
+    refId: '', requestId: '', token: '', extractedData: {}, missingFields: [],
     formData: {},
 
     get prefilledFields() {
@@ -157,13 +157,14 @@ function completionForm() {
     async init() {
       const params = new URLSearchParams(window.location.search);
       this.requestId = window.location.pathname.split('/').pop();
-      const token = params.get('token') || '';
-      this.refId = this.requestId ? 'SP-2026-' + this.requestId.substring(this.requestId.length - 8).toUpperCase() : '';
+      this.token = params.get('token') || '';
 
       try {
-        const res = await fetch(`/api/intake/complete/${this.requestId}?token=${token}`);
+        const res = await fetch(`/api/intake/complete/${this.requestId}?token=${this.token}`);
         if (!res.ok) { this.error = 'Anfrage nicht gefunden oder abgelaufen.'; this.loading = false; return; }
         const data = await res.json();
+        // B35: show the REAL reference (same as the emails + dashboard)
+        this.refId = data.display_id || '';
         this.extractedData = data.extracted_data || {};
         this.missingFields = data.missing_fields || [];
         if (this.missingFields.length === 0) { this.error = 'Ihre Anfrage ist bereits vollstaendig. Keine weiteren Angaben erforderlich.'; }
@@ -174,7 +175,7 @@ function completionForm() {
     async submitForm() {
       this.submitting = true;
       try {
-        const res = await fetch(`/api/intake/complete/${this.requestId}`, {
+        const res = await fetch(`/api/intake/complete/${this.requestId}?token=${this.token}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.formData),

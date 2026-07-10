@@ -95,6 +95,22 @@ class FolderWatcher:
 
         self._observer.start()
 
+        # Recover claims orphaned by a crash mid-processing (B20): a
+        # '<name>.processing' file with no live processing task gets renamed
+        # back so the startup sweep below picks it up again.
+        for folder in self.config.watch_folders:
+            folder_path = Path(folder)
+            if not folder_path.exists():
+                continue
+            for orphan in folder_path.glob("*.processing"):
+                original = orphan.with_name(orphan.name[: -len(".processing")])
+                if not original.exists():
+                    try:
+                        orphan.rename(original)
+                        logger.info("Recovered orphaned claim: %s", original.name)
+                    except OSError:
+                        pass
+
         # Process any existing files on startup
         await self._process_existing_files()
 
@@ -135,26 +151,58 @@ class FolderWatcher:
                 ):
                     await self._process_file(str(file_path))
 
+    async def _wait_for_stable_size(self, file_path: Path, timeout_sec: int = 120) -> bool:
+        """
+        Wait until the file size stops changing (B20 fix). A fixed delay is not
+        enough for slow writes (e.g. a scanner writing to a network share).
+        Returns False if the file disappeared or never stabilized.
+        """
+        last_size = -1
+        waited = 0
+        while waited < timeout_sec:
+            await asyncio.sleep(SETTLE_DELAY_SEC)
+            waited += SETTLE_DELAY_SEC
+            try:
+                size = file_path.stat().st_size
+            except OSError:
+                return False  # moved or deleted meanwhile
+            if size == last_size:
+                return True
+            last_size = size
+        logger.warning("File never stabilized within %ds: %s", timeout_sec, file_path)
+        return False
+
     async def _process_file(self, file_path_str: str):
-        """Process a single file: read, ingest, move to processed."""
+        """
+        Process a single file: wait until stable, claim, ingest, move to processed.
+
+        B20 fix — claim-by-rename: the file is renamed to '<name>.processing'
+        BEFORE reading. On Windows the rename fails while a writer still holds
+        the file open, which is exactly the back-off signal we need; the
+        periodic sweep retries later. Only a successfully claimed file is read,
+        so half-written ingests and duplicate processing cannot happen.
+        """
         file_path = Path(file_path_str)
 
         if not file_path.exists():
             return
 
-        # Wait for file write to complete
-        await asyncio.sleep(SETTLE_DELAY_SEC)
+        if not await self._wait_for_stable_size(file_path):
+            return  # gone or still growing; periodic sweep retries
 
-        # Double-check file still exists (might have been moved)
-        if not file_path.exists():
-            return
+        claimed_path = file_path.with_name(file_path.name + ".processing")
+        try:
+            file_path.rename(claimed_path)
+        except OSError:
+            logger.debug("File still in use, deferring: %s", file_path)
+            return  # writer still holds it; periodic sweep retries
 
         try:
-            # Read file bytes
-            raw_bytes = file_path.read_bytes()
+            raw_bytes = claimed_path.read_bytes()
 
             if not raw_bytes:
-                logger.warning("Empty file, skipping: %s", file_path)
+                logger.warning("Empty file, moving to processed unprocessed: %s", file_path)
+                self._move_to_processed(claimed_path, original_name=file_path.name)
                 return
 
             # Ingest
@@ -174,25 +222,31 @@ class FolderWatcher:
                 )
 
             # Move to processed folder
-            self._move_to_processed(file_path)
+            self._move_to_processed(claimed_path, original_name=file_path.name)
 
         except Exception:
             logger.exception("Failed to process file: %s", file_path)
+            # Release the claim so the periodic sweep can retry
+            try:
+                claimed_path.rename(file_path)
+            except OSError:
+                logger.warning("Could not release claim on %s", claimed_path)
 
-    def _move_to_processed(self, file_path: Path):
-        """Move processed file to avoid re-processing."""
+    def _move_to_processed(self, file_path: Path, original_name: str | None = None):
+        """Move processed file to avoid re-processing (stored under its original name)."""
+        name = original_name or file_path.name
         if self.config.processed_folder:
             dest_dir = Path(self.config.processed_folder)
         else:
             dest_dir = file_path.parent / "processed"
 
         dest_dir.mkdir(parents=True, exist_ok=True)
-        dest = dest_dir / file_path.name
+        dest = dest_dir / name
 
         # Handle name collision
         if dest.exists():
-            stem = file_path.stem
-            suffix = file_path.suffix
+            stem = Path(name).stem
+            suffix = Path(name).suffix
             counter = 1
             while dest.exists():
                 dest = dest_dir / f"{stem}_{counter}{suffix}"

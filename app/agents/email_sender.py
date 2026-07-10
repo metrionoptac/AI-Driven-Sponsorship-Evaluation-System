@@ -117,6 +117,7 @@ class EmailSender:
         to_email: str,
         request_id: str,
         company_name: str = "Sponsoring-Team",
+        display_id: str | None = None,
     ) -> bool:
         """
         Send immediate receipt confirmation when a sponsorship request arrives.
@@ -126,7 +127,8 @@ class EmailSender:
             logger.info("Email sender disabled or no recipient — skipping acknowledgment for %s", request_id)
             return False
 
-        ref = self._format_ref(request_id)
+        # B35: use the REAL display_id so the applicant's reference matches the dashboard
+        ref = display_id or self._format_ref(request_id)
         subject = ACKNOWLEDGMENT_SUBJECT.format(ref=ref)
         body = ACKNOWLEDGMENT_BODY_DE.format(ref=ref, company_name=company_name)
 
@@ -139,6 +141,8 @@ class EmailSender:
         missing_fields: list[str],
         company_name: str = "Sponsoring-Team",
         base_url: str = "http://localhost:8000",
+        display_id: str | None = None,
+        completion_token: str | None = None,
     ) -> bool:
         """
         Send a follow-up email asking for missing information.
@@ -148,20 +152,13 @@ class EmailSender:
             logger.info("Email sender disabled or no recipient — skipping completeness request for %s", request_id)
             return False
 
-        ref = self._format_ref(request_id)
+        # B35: use the REAL display_id so the applicant's reference matches the dashboard
+        ref = display_id or self._format_ref(request_id)
         subject = COMPLETENESS_SUBJECT.format(ref=ref)
 
-        # Format missing fields as a readable list
-        field_labels = {
-            "organization_name": "Name der Organisation / des Vereins",
-            "requested_amount": "Beantragter Foerderbetrag (in EUR)",
-            "purpose": "Zweck / Ziel des Projekts",
-            "contact": "Kontaktperson (Name und E-Mail-Adresse)",
-            "organization_type": "Art der Organisation (e.V., gGmbH, etc.)",
-            "description": "Beschreibung des Projekts",
-            "region": "Region / Ort der Veranstaltung oder des Projekts",
-            "event_date": "Datum der Veranstaltung",
-        }
+        # Format missing fields as a readable list — single label source
+        # (was a local, incomplete dict: 'visibility' etc. leaked untranslated)
+        from app.document.quality_gate import FIELD_LABELS_DE as field_labels
 
         missing_list_lines = []
         for i, field in enumerate(missing_fields, 1):
@@ -169,7 +166,11 @@ class EmailSender:
             missing_list_lines.append(f"  {i}. {label}")
 
         missing_list = "\n".join(missing_list_lines)
+        # B37: the completion endpoint validates this token -- a link without
+        # it is a dead 403 link
         form_url = f"{base_url}/complete/{request_id}"
+        if completion_token:
+            form_url += f"?token={completion_token}"
         body = COMPLETENESS_BODY_DE.format(
             ref=ref,
             missing_list=missing_list,

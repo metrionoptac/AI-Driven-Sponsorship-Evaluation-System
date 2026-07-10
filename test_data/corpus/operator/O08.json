@@ -1,0 +1,18 @@
+{
+  "id": "O08",
+  "description": "scan image only + minimal fields (OCR/vision)",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Tim Wagner",
+    "contact_email": "tim.wagner@fc-kressbronn-1905.de",
+    "contact_phone": "",
+    "organization_name": "",
+    "requested_amount": "",
+    "purpose": "",
+    "event_date": "",
+    "region": ""
+  },
+  "files": [
+    "O08_scan.jpg"
+  ]
+}

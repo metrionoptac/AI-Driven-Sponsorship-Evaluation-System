@@ -1,0 +1,16 @@
+{
+  "organization_type": "sports_club",
+  "requested_amount": 1800,
+  "purpose": "Anschaffung von Jugend-Trainingsmaterial",
+  "purpose_category": "youth_sports",
+  "description": "Der Turnverein Beispielstadt 1912 e.V. bittet um Unterstuetzung fuer neues Trainingsmaterial der Jugendabteilung.",
+  "event_date": "2026-11-01",
+  "region": "Beispielstadt",
+  "target_audience": "Kinder und Jugendliche",
+  "expected_attendance": 300,
+  "member_count": 420,
+  "contact_name": "Julia Beispiel",
+  "contact_email": "julia.beispiel@tv-beispielstadt.de",
+  "contact_phone": "+49 211 5550404",
+  "proposed_visibility": "Logo auf Vereinswebsite und Hallenbanner"
+}

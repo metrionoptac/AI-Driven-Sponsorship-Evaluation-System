@@ -1,0 +1,9 @@
+{
+  "id": "O04",
+  "description": "file only, no fields",
+  "pipeline_mode": "copilot",
+  "fields": {},
+  "files": [
+    "O04_anfrage.pdf"
+  ]
+}

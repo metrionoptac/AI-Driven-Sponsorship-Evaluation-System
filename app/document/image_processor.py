@@ -7,6 +7,8 @@ Pipeline: Image → OpenCV preprocessing → Tesseract OCR → confidence check 
 
 import io
 import logging
+import os
+import shutil
 from dataclasses import dataclass
 
 import cv2
@@ -15,6 +17,37 @@ from PIL import Image
 import pytesseract
 
 logger = logging.getLogger(__name__)
+
+
+def _resolve_tesseract_cmd() -> str | None:
+    """
+    Locate the Tesseract binary. pytesseract only checks PATH by default,
+    which silently breaks on standard Windows installs (binary lives in
+    'C:\\Program Files\\Tesseract-OCR' but is not added to PATH).
+    Resolution order: TESSERACT_CMD env var -> PATH -> known install dirs.
+    """
+    candidates = [
+        os.environ.get("TESSERACT_CMD"),
+        shutil.which("tesseract"),
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe"),
+    ]
+    for cand in candidates:
+        if cand and os.path.isfile(cand):
+            return cand
+    return None
+
+
+_tesseract_cmd = _resolve_tesseract_cmd()
+if _tesseract_cmd:
+    pytesseract.pytesseract.tesseract_cmd = _tesseract_cmd
+    logger.info("Tesseract binary: %s", _tesseract_cmd)
+else:
+    logger.warning(
+        "Tesseract binary not found (checked TESSERACT_CMD, PATH, default install dirs) "
+        "-- OCR will fail until installed or TESSERACT_CMD is set"
+    )
 
 
 @dataclass

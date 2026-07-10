@@ -24,6 +24,7 @@ class IngestionResult:
     is_duplicate: bool
     source_channel: str
     storage_path: str | None = None
+    display_id: str | None = None  # human-readable SP-2026-NNNN (B35)
 
 
 class UnifiedIngestionService:
@@ -69,6 +70,13 @@ class UnifiedIngestionService:
         """
         metadata = metadata or {}
 
+        # 0. Reject empty input (B19). Every channel converges here, so this one
+        # guard protects DB + storage from zero-byte junk requests.
+        if not raw_bytes:
+            raise ValueError(
+                f"Empty document rejected (channel={source_channel}, file={filename})"
+            )
+
         # 1. Deduplication check (can be disabled via INTAKE_DEDUP_ENABLED=false)
         dedup_on = self.config.intake.dedup_enabled if self.config else True
         if dedup_on:
@@ -104,6 +112,7 @@ class UnifiedIngestionService:
         source_format = self._detect_format(filename)
 
         # 4. Create request record in DB
+        display_id = None
         if self.db:
             request_id = await self.db.create_request(
                 source_format=source_format,
@@ -114,6 +123,10 @@ class UnifiedIngestionService:
                 received_via=source_channel,
                 pipeline_mode=metadata.get("pipeline_mode", "copilot"),
             )
+            # B35: fetch the DB-generated display_id so every surface (ack
+            # email, API response, success page) shows the SAME reference
+            row = await self.db.get_request(request_id)
+            display_id = row.get("display_id") if row else None
         else:
             import uuid
             request_id = str(uuid.uuid4())
@@ -125,28 +138,18 @@ class UnifiedIngestionService:
         )
 
         # 5. Send acknowledgment email (fire-and-forget, non-blocking)
-        # Only for email channel (we have a sender address)
+        # Email channel AND web form (B34): both carry an applicant address.
+        # (Operator channel: staff entered it -- no auto-ack to the applicant.)
         sender_email = metadata.get("source_email", "")
-        if self.email_sender and sender_email and source_channel == "email":
-            company_name = "Sponsoring-Team"
-            if self.config:
-                try:
-                    import yaml, os as _os
-                    criteria_path = _os.path.join(
-                        _os.path.dirname(__file__), "..", "agents", "evaluation_criteria.yaml"
-                    )
-                    if _os.path.exists(criteria_path):
-                        with open(criteria_path, "r", encoding="utf-8") as f:
-                            criteria = yaml.safe_load(f)
-                        company_name = criteria.get("company", {}).get("name", "Sponsoring-Team")
-                except Exception:
-                    pass
+        if self.email_sender and sender_email and source_channel in ("email", "web_form"):
+            company_name = self._company_name()
 
             asyncio.create_task(
                 self.email_sender.send_acknowledgment(
                     to_email=sender_email,
                     request_id=request_id,
                     company_name=company_name,
+                    display_id=display_id,
                 )
             )
             logger.info("Acknowledgment email queued for %s (request %s)", sender_email, request_id)
@@ -162,6 +165,7 @@ class UnifiedIngestionService:
             is_duplicate=False,
             source_channel=source_channel,
             storage_path=storage_path,
+            display_id=display_id,
         )
 
     async def ingest_email_with_attachments(
@@ -176,6 +180,10 @@ class UnifiedIngestionService:
         """
         Ingest an email and its attachments as a single request.
         """
+        # B19: drop zero-byte attachments so an empty file can't become the
+        # "primary" document; fall back to the body if nothing usable remains.
+        attachments = [a for a in attachments if a.get("data")]
+
         metadata = {
             "source_email": sender,
             "source_subject": subject,
@@ -221,6 +229,10 @@ class UnifiedIngestionService:
         else:
             # No attachments — the email body IS the request.
             # FIX B1: Mark as body-only so _execute_pipeline doesn't duplicate.
+            if not email_body or not email_body.strip():
+                raise ValueError(
+                    f"Email from {sender} has no attachments and an empty body -- nothing to ingest"
+                )
             metadata["is_body_only"] = True
             body_bytes = email_body.encode("utf-8")
             return await self.ingest(
@@ -229,6 +241,132 @@ class UnifiedIngestionService:
                 source_channel="email",
                 metadata=metadata,
             )
+
+    async def ingest_operator_request(
+        self,
+        operator_data: dict,
+        attachments: list[dict],
+        pipeline_mode: str = "copilot",
+    ) -> IngestionResult:
+        """
+        Ingest an operator-created request ("Create New Request" in the GUI).
+
+        The operator stands in for the applicant (postal letter, phone call,
+        handed-over document). Typed fields are ground truth; attachments are
+        extracted like email attachments. The typed contact email becomes
+        source_email so follow-ups and decision letters work like on the
+        email channel.
+        """
+        operator_data = {k: v for k, v in (operator_data or {}).items() if v}
+        metadata = {
+            "source_email": operator_data.get("contact_email"),
+            "source_subject": f"Operator-created: {operator_data.get('organization_name') or 'sponsorship request'}",
+            "pipeline_mode": pipeline_mode,
+            "has_attachments": len(attachments) > 0,
+            "attachment_count": len(attachments),
+        }
+
+        if attachments:
+            primary = attachments[0]
+            result = await self.ingest(
+                raw_bytes=primary["data"],
+                filename=primary["filename"] or "attachment.pdf",
+                source_channel="operator",
+                metadata=metadata,
+            )
+        else:
+            # No attachments -- the typed fields ARE the request document.
+            body = self._operator_context_text(operator_data)
+            result = await self.ingest(
+                raw_bytes=body.encode("utf-8"),
+                filename="operator_entry.txt",
+                source_channel="operator",
+                metadata=metadata,
+            )
+
+        if not result.is_duplicate and result.storage_path:
+            # Sidecar with the typed fields so _execute_pipeline can recover
+            # them (same pattern as the email-body sidecar).
+            if operator_data:
+                sidecar_path = result.storage_path.rsplit(".", 1)[0] + "_operator_data.json"
+                import json as _json
+                await self.storage.save_raw(
+                    _json.dumps(operator_data, ensure_ascii=False).encode("utf-8"),
+                    sidecar_path,
+                )
+                logger.info("Saved operator-data sidecar for %s: %s", result.request_id, sidecar_path)
+
+            # Additional attachments linked to the same request
+            for att in attachments[1:]:
+                att_path = await self.storage.save(
+                    att["data"], att["filename"] or "attachment", "operator_attachment",
+                )
+                logger.info("Saved additional attachment for request %s: %s",
+                            result.request_id, att_path)
+
+        return result
+
+    def _company_name(self) -> str:
+        """Company name from evaluation_criteria.yaml (single source for email signatures)."""
+        try:
+            import yaml, os as _os
+            criteria_path = _os.path.join(
+                _os.path.dirname(__file__), "..", "agents", "evaluation_criteria.yaml"
+            )
+            if _os.path.exists(criteria_path):
+                with open(criteria_path, "r", encoding="utf-8") as f:
+                    criteria = yaml.safe_load(f)
+                return criteria.get("company", {}).get("name", "Sponsoring-Team")
+        except Exception:
+            pass
+        return "Sponsoring-Team"
+
+    @staticmethod
+    def _operator_context_text(operator_data: dict) -> str:
+        """Render typed operator fields as authoritative context for extraction."""
+        lines = ["OPERATOR-PROVIDED DATA (authoritative, entered by sponsorship staff):"]
+        labels = {
+            "organization_name": "Organization",
+            "requested_amount": "Requested amount (EUR)",
+            "purpose": "Purpose",
+            "event_date": "Event date",
+            "region": "Region",
+            "contact_name": "Contact name",
+            "contact_email": "Contact email",
+            "contact_phone": "Contact phone",
+        }
+        for key, label in labels.items():
+            if operator_data.get(key):
+                lines.append(f"- {label}: {operator_data[key]}")
+        return "\n".join(lines)
+
+    @staticmethod
+    def _apply_operator_ground_truth(extracted_data: dict, operator_data: dict) -> dict:
+        """
+        Operator-typed fields are GROUND TRUTH -- a human entered them, so they
+        always win over anything the LLM extracted from documents.
+        """
+        if not operator_data:
+            return extracted_data
+        for key in ("organization_name", "purpose", "event_date", "region"):
+            if operator_data.get(key):
+                extracted_data[key] = operator_data[key]
+        if operator_data.get("requested_amount"):
+            try:
+                extracted_data["requested_amount"] = float(
+                    str(operator_data["requested_amount"]).replace(".", "").replace(",", ".")
+                    if "," in str(operator_data["requested_amount"])
+                    else str(operator_data["requested_amount"])
+                )
+            except ValueError:
+                pass  # keep extracted value if operator input isn't numeric
+        contact = extracted_data.get("contact") or {}
+        for op_key, ckey in (("contact_name", "name"), ("contact_email", "email"), ("contact_phone", "phone")):
+            if operator_data.get(op_key):
+                contact[ckey] = operator_data[op_key]
+        if contact:
+            extracted_data["contact"] = contact
+        return extracted_data
 
     async def _execute_pipeline(self, request_id: str):
         """
@@ -293,7 +431,51 @@ class UnifiedIngestionService:
                     "extraction_language": "de",
                 }
 
-                # Save extraction to DB
+                # B32: keep the applicant's legal attestations (were silently dropped)
+                attestations = {
+                    k: form_data.get(k)
+                    for k in ("request_type", "is_legal_org", "no_political")
+                    if form_data.get(k) is not None
+                }
+                if attestations:
+                    extracted_data["attestations"] = attestations
+
+                # B01: attachments stored by the endpoint ride along via sidecar
+                att_sidecar = raw_doc_path.rsplit(".", 1)[0] + "_attachments.json"
+                try:
+                    att_bytes = await self.storage.read(att_sidecar)
+                    if att_bytes:
+                        extracted_data["attachment_paths"] = _json.loads(att_bytes.decode("utf-8"))
+                except Exception:
+                    pass
+
+                # B33: REAL deterministic completeness check (same tiers as the
+                # quality gate) instead of the old blind 0.90/high/[] stamp.
+                from app.document.quality_gate import TIER_1_BLOCKERS, TIER_2_EVALUATION
+
+                def _present(data: dict, name: str) -> bool:
+                    if name == "contact":
+                        c = data.get("contact") or {}
+                        return bool(c.get("email") or c.get("phone"))
+                    if name == "visibility":
+                        v = data.get("visibility")
+                        if isinstance(v, dict):
+                            return any(bool(x) for x in v.values())
+                        return bool(v)
+                    return data.get(name) not in (None, "", [], {})
+
+                missing_critical = [f for f in TIER_1_BLOCKERS if not _present(extracted_data, f)]
+                missing_important = [f for f in TIER_2_EVALUATION if not _present(extracted_data, f)]
+                n_total = len(TIER_1_BLOCKERS) + len(TIER_2_EVALUATION)
+                n_present = n_total - len(missing_critical) - len(missing_important)
+                completeness = round(n_present / n_total, 2) if n_total else 1.0
+                quality_level = (
+                    "high" if not missing_critical and not missing_important
+                    else "medium" if not missing_critical
+                    else "low"
+                )
+
+                # Save extraction with HONEST scores
                 if self.db:
                     await self.db.save_extraction(
                         request_id=request_id,
@@ -303,26 +485,57 @@ class UnifiedIngestionService:
                         extraction_confidence=0.95,
                         source_format="web_form",
                         source_channel="web_form",
-                        completeness_score=0.90,
-                        quality_level="high",
-                        missing_fields=[],
+                        completeness_score=completeness,
+                        quality_level=quality_level,
+                        missing_fields=missing_critical + missing_important,
                         needs_human_review=False,
                     )
                     await self.db.update_state(request_id, "extracted")
 
                 logger.info(
-                    "[%s] Web form bypass: extracted %s, amount=%s, quality=high",
-                    request_id, extracted_data.get("organization_name"), extracted_data.get("requested_amount"),
+                    "[%s] Web form bypass: extracted %s, amount=%s, completeness=%.2f, quality=%s, missing=%s",
+                    request_id, extracted_data.get("organization_name"),
+                    extracted_data.get("requested_amount"), completeness,
+                    quality_level, missing_critical + missing_important,
                 )
 
-                # Go directly to pipeline executor
+                # B33: incomplete form -> follow-up loop (NOT eligibility rejection).
+                # Same flow as the email channel's low-quality path.
+                if missing_critical:
+                    if self.db:
+                        import uuid as _uuid
+                        completion_token = _uuid.uuid4().hex[:16]
+                        await self.db.update_state(request_id, "awaiting_info", actor="web_form_bypass")
+                        async with self.db.acquire() as conn:
+                            await conn.execute(
+                                "UPDATE requests SET completion_token = $1 WHERE id = $2",
+                                completion_token, request_id,
+                            )
+                        logger.info("[%s] Web form incomplete -> awaiting_info (token=%s)",
+                                    request_id, completion_token[:8])
+                    if self.email_sender and source_email:
+                        asyncio.create_task(
+                            self.email_sender.send_completeness_request(
+                                to_email=source_email,
+                                request_id=request_id,
+                                missing_fields=missing_critical + missing_important,
+                                display_id=req.get("display_id"),
+                                company_name=self._company_name(),
+                                completion_token=completion_token,
+                            )
+                        )
+                        logger.info("[%s] Completeness request queued for %s (missing: %s)",
+                                    request_id, source_email, missing_critical)
+                    return
+
+                # Complete -> go directly to pipeline executor with honest scores
                 if self.pipeline_executor:
                     await self.pipeline_executor.run(
                         request_id=request_id,
                         extracted_data=extracted_data,
-                        completeness_score=0.90,
-                        quality_level="high",
-                        missing_fields=[],
+                        completeness_score=completeness,
+                        quality_level=quality_level,
+                        missing_fields=missing_important,
                         raw_text_used=None,
                     )
                 return
@@ -331,6 +544,28 @@ class UnifiedIngestionService:
             email_metadata = None
             email_body = None
             is_body_only = False
+            operator_data = {}
+
+            if source_channel == "operator":
+                # Recover the typed-fields sidecar (ground truth + extraction context)
+                sidecar_path = raw_doc_path.rsplit(".", 1)[0] + "_operator_data.json"
+                try:
+                    sidecar_bytes = await self.storage.read(sidecar_path)
+                    if sidecar_bytes:
+                        import json as _json
+                        operator_data = _json.loads(sidecar_bytes.decode("utf-8"))
+                        logger.info("Recovered operator data for %s (%d fields)",
+                                    request_id, len(operator_data))
+                except Exception:
+                    pass
+                email_metadata = {
+                    "sender": source_email or "",
+                    "subject": source_subject or "",
+                }
+                if operator_data and not filename.endswith(".txt"):
+                    # Attachment is the document; typed fields ride along as
+                    # authoritative context for the LLM extraction.
+                    email_body = self._operator_context_text(operator_data)
 
             if source_channel == "email":
                 email_metadata = {
@@ -373,6 +608,29 @@ class UnifiedIngestionService:
                 email_body=email_body if not is_body_only else None,
             )
 
+            # Operator-typed fields are ground truth: the quality gate may
+            # distrust document values that conflict with them, but a human's
+            # entry settles the question -- clear those fields from the
+            # missing lists and proceed if nothing critical remains.
+            if operator_data and intake_result.quality:
+                q = intake_result.quality
+                provided = {f for f in ("organization_name", "requested_amount",
+                                        "purpose", "event_date", "region")
+                            if operator_data.get(f)}
+                if operator_data.get("contact_name") or operator_data.get("contact_email"):
+                    provided.add("contact")
+                before = set(q.missing_critical) | set(q.missing_important)
+                q.missing_critical = [f for f in q.missing_critical if f not in provided]
+                q.missing_important = [f for f in q.missing_important if f not in provided]
+                cleared = before - set(q.missing_critical) - set(q.missing_important)
+                if cleared:
+                    logger.info("[%s] Operator ground truth cleared missing fields: %s",
+                                request_id, sorted(cleared))
+                if not q.missing_critical and not intake_result.success and intake_result.extraction:
+                    intake_result.success = True
+                    logger.info("[%s] Quality gate overridden by operator ground truth -> proceeding",
+                                request_id)
+
             if not intake_result.success:
                 logger.warning(
                     "Pipeline: intake quality insufficient for %s (quality=%s, missing=%s)",
@@ -388,6 +646,7 @@ class UnifiedIngestionService:
                     extracted = intake_result.extraction
                     quality = intake_result.quality
                     extracted_data = extracted.request.model_dump() if hasattr(extracted.request, 'model_dump') else extracted.request
+                    extracted_data = self._apply_operator_ground_truth(extracted_data, operator_data)
 
                     await self.db.save_extraction(
                         request_id=request_id,
@@ -437,6 +696,9 @@ class UnifiedIngestionService:
                             to_email=source_email,
                             request_id=request_id,
                             missing_fields=missing_for_followup,
+                            display_id=req.get("display_id"),
+                            company_name=self._company_name(),
+                            completion_token=completion_token,
                         )
                     )
                     logger.info(
@@ -449,6 +711,7 @@ class UnifiedIngestionService:
             extracted = intake_result.extraction
             quality = intake_result.quality
             extracted_data = extracted.request.model_dump() if hasattr(extracted.request, 'model_dump') else extracted.request
+            extracted_data = self._apply_operator_ground_truth(extracted_data, operator_data)
 
             if self.db:
                 await self.db.save_extraction(
@@ -478,6 +741,8 @@ class UnifiedIngestionService:
                         to_email=contact_email,
                         request_id=request_id,
                         missing_fields=quality.missing_critical,
+                        display_id=req.get("display_id"),
+                        company_name=self._company_name(),
                     )
                 )
                 logger.info(
@@ -535,6 +800,8 @@ class UnifiedIngestionService:
             ".msg": "email",
             ".docx": "docx",
             ".doc": "docx",
+            ".xlsx": "xlsx",
+            ".xls": "xlsx",
             ".jpg": "image",
             ".jpeg": "image",
             ".png": "image",

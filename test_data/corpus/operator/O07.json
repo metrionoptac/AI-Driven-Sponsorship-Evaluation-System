@@ -1,0 +1,20 @@
+{
+  "id": "O07",
+  "description": "multi-file: PDF + scan JPG + xlsx",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Clara Keller",
+    "contact_email": "clara.keller@tv-tettnang-1954.de",
+    "contact_phone": "+49 7591 953797",
+    "organization_name": "TV Tettnang 1954 e.V.",
+    "requested_amount": "1800",
+    "purpose": "Turnfest der Jugendabteilung",
+    "event_date": "2026-09-16",
+    "region": "Tettnang"
+  },
+  "files": [
+    "O07_anfrage.pdf",
+    "O07_scan.jpg",
+    "O07_daten.xlsx"
+  ]
+}

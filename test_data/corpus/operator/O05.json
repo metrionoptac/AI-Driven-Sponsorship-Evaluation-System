@@ -1,0 +1,18 @@
+{
+  "id": "O05",
+  "description": "NO contact email (dead-end/B24 test)",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Julia Berger",
+    "contact_email": "",
+    "contact_phone": "+49 7596 961322",
+    "organization_name": "SV Stockach 1898 e.V.",
+    "requested_amount": "1400",
+    "purpose": "Jugendfussballturnier",
+    "event_date": "2026-09-25",
+    "region": "Stockach"
+  },
+  "files": [
+    "O05_anfrage.pdf"
+  ]
+}

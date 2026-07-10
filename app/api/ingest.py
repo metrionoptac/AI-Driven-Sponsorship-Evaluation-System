@@ -9,7 +9,7 @@ POST /api/intake/webhook  — Generic webhook for external systems (CRM, etc.)
 
 import logging
 
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, Form, UploadFile, HTTPException
 from pydantic import BaseModel, EmailStr
 
 from app.intake.service import UnifiedIngestionService, IngestionResult
@@ -43,6 +43,7 @@ class IngestionResponse(BaseModel):
     is_duplicate: bool
     source_channel: str
     message: str
+    display_id: str | None = None  # human-readable SP-2026-NNNN (B35)
 
 
 def _to_response(result: IngestionResult) -> IngestionResponse:
@@ -55,6 +56,7 @@ def _to_response(result: IngestionResult) -> IngestionResponse:
         is_duplicate=result.is_duplicate,
         source_channel=result.source_channel,
         message=msg,
+        display_id=getattr(result, "display_id", None),
     )
 
 
@@ -103,14 +105,18 @@ class WebFormSubmission(BaseModel):
     target_audience: str | None = None
     proposed_visibility: str | None = None
     region: str | None = None
+    # B32: legal attestations from the form (were collected in the UI but
+    # silently dropped because the model didn't declare them)
+    request_type: str | None = None
+    is_legal_org: bool | None = None
+    no_political: bool | None = None
 
 
-@router.post("/form", response_model=IngestionResponse)
-async def submit_web_form(form: WebFormSubmission):
-    """
-    Accept a structured web form submission.
-    The form data is already structured — converted to bytes for unified flow.
-    """
+async def _process_form_submission(
+    form: WebFormSubmission,
+    attachments: list[dict] | None = None,
+) -> IngestionResponse:
+    """Shared flow for JSON and multipart form submissions."""
     service = _get_service()
 
     # Serialize form as JSON bytes (will be parsed directly in extraction stage)
@@ -127,7 +133,62 @@ async def submit_web_form(form: WebFormSubmission):
             "form_data": form.model_dump(),
         },
     )
+
+    # B01: store attachments + sidecar with their paths so the bypass can
+    # link them to the request (content extraction/merge lands in Phase 02).
+    if attachments and not result.is_duplicate and result.storage_path:
+        import json as _json
+        paths = []
+        for att in attachments:
+            path = await service.storage.save(
+                att["data"], att["filename"] or "attachment", "web_form_attachment",
+            )
+            paths.append(path)
+            logger.info("Saved web form attachment for %s: %s", result.request_id, path)
+        sidecar = result.storage_path.rsplit(".", 1)[0] + "_attachments.json"
+        await service.storage.save_raw(
+            _json.dumps(paths, ensure_ascii=False).encode("utf-8"), sidecar,
+        )
+
     return _to_response(result)
+
+
+@router.post("/form", response_model=IngestionResponse)
+async def submit_web_form(form: WebFormSubmission):
+    """
+    Accept a structured web form submission (JSON, no attachments).
+    The form data is already structured — converted to bytes for unified flow.
+    """
+    return await _process_form_submission(form)
+
+
+@router.post("/form-with-files", response_model=IngestionResponse)
+async def submit_web_form_with_files(
+    payload: str = Form(...),
+    files: list[UploadFile] = File(default=[]),
+):
+    """
+    B01: web form submission WITH attachments (multipart).
+    `payload` = the WebFormSubmission JSON as a string; `files` = documents.
+    """
+    import json as _json
+    from pydantic import ValidationError
+
+    try:
+        form = WebFormSubmission(**_json.loads(payload))
+    except _json.JSONDecodeError:
+        raise HTTPException(422, "payload must be valid JSON")
+    except ValidationError as e:
+        # Same 422 shape as the JSON endpoint
+        raise HTTPException(422, _json.loads(e.json()))
+
+    attachments = []
+    for f in files:
+        data = await f.read()
+        if data:
+            attachments.append({"filename": f.filename or "attachment", "data": data})
+
+    return await _process_form_submission(form, attachments)
 
 
 # ----------------------------------------------------------------
@@ -139,6 +200,7 @@ class WebhookPayload(BaseModel):
     source_system: str
     document_base64: str | None = None
     document_url: str | None = None
+    filename: str | None = None
     sender_email: str | None = None
     subject: str | None = None
     metadata: dict | None = None
@@ -151,12 +213,19 @@ async def receive_webhook(payload: WebhookPayload):
     Supports base64-encoded documents or document URLs.
     """
     import base64
+    import binascii
 
     service = _get_service()
 
     if payload.document_base64:
-        raw_bytes = base64.b64decode(payload.document_base64)
-        filename = "webhook_document"
+        try:
+            raw_bytes = base64.b64decode(payload.document_base64, validate=True)
+        except (binascii.Error, ValueError):
+            raise HTTPException(400, "Invalid base64 document")
+        if not raw_bytes:
+            raise HTTPException(400, "Empty document")
+        # B02: honor the caller's filename so format detection isn't 'unknown'
+        filename = payload.filename or "webhook_document"
     elif payload.document_url:
         # TODO: Download document from URL
         raise HTTPException(501, "URL-based webhook not yet implemented")
@@ -178,6 +247,66 @@ async def receive_webhook(payload: WebhookPayload):
 
 
 # ----------------------------------------------------------------
+# POST /api/intake/create-request — Operator-created request
+# ----------------------------------------------------------------
+
+@router.post("/create-request", response_model=IngestionResponse)
+async def create_request(
+    contact_name: str = Form(""),
+    contact_email: str = Form(""),
+    contact_phone: str = Form(""),
+    organization_name: str = Form(""),
+    requested_amount: str = Form(""),
+    purpose: str = Form(""),
+    event_date: str = Form(""),
+    region: str = Form(""),
+    pipeline_mode: str = Form("copilot"),
+    files: list[UploadFile] = File(default=[]),
+):
+    """
+    Operator-created request ("Create New Request" in the dashboard).
+
+    The operator stands in for the applicant: a letter that arrived by post,
+    a phone call, a handed-over PDF. Typed fields are GROUND TRUTH and are
+    never overridden by document extraction; attachments fill the gaps.
+    contact_email doubles as source_email so follow-up emails and decision
+    letters work exactly like on the email channel.
+    """
+    service = _get_service()
+
+    operator_data = {
+        "contact_name": contact_name.strip(),
+        "contact_email": contact_email.strip(),
+        "contact_phone": contact_phone.strip(),
+        "organization_name": organization_name.strip(),
+        "requested_amount": requested_amount.strip(),
+        "purpose": purpose.strip(),
+        "event_date": event_date.strip(),
+        "region": region.strip(),
+    }
+    has_field_data = any(operator_data.values())
+
+    attachments = []
+    for f in files:
+        data = await f.read()
+        if data:
+            attachments.append({"filename": f.filename or "attachment", "data": data})
+
+    if not has_field_data and not attachments:
+        raise HTTPException(400, "Provide at least one field or one attachment")
+
+    try:
+        result = await service.ingest_operator_request(
+            operator_data=operator_data,
+            attachments=attachments,
+            pipeline_mode=pipeline_mode,
+        )
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return _to_response(result)
+
+
+# ----------------------------------------------------------------
 # GET /api/intake/complete/{request_id} -- Get data for completion form
 # ----------------------------------------------------------------
 
@@ -195,7 +324,9 @@ async def get_completion_form_data(request_id: str, token: str = ""):
         raise HTTPException(400, "Invalid request ID")
 
     async with svc.db.acquire() as conn:
-        req = await conn.fetchrow("SELECT state, completion_token FROM requests WHERE id = $1", rid)
+        req = await conn.fetchrow(
+            "SELECT state, completion_token, display_id FROM requests WHERE id = $1", rid,
+        )
         if not req:
             raise HTTPException(404, "Request not found")
 
@@ -224,6 +355,7 @@ async def get_completion_form_data(request_id: str, token: str = ""):
 
     return {
         "request_id": str(rid),
+        "display_id": req.get("display_id"),
         "state": req["state"],
         "extracted_data": extracted_data,
         "missing_fields": missing or [],
@@ -235,7 +367,7 @@ async def get_completion_form_data(request_id: str, token: str = ""):
 # ----------------------------------------------------------------
 
 @router.post("/complete/{request_id}")
-async def submit_completion_form(request_id: str, body: dict):
+async def submit_completion_form(request_id: str, body: dict, token: str = ""):
     """Submit missing fields from the follow-up completion form."""
     svc = _get_service()
     if not svc.db:
@@ -248,9 +380,16 @@ async def submit_completion_form(request_id: str, body: dict):
         raise HTTPException(400, "Invalid request ID")
 
     async with svc.db.acquire() as conn:
-        req = await conn.fetchrow("SELECT state, source_email FROM requests WHERE id = $1", rid)
+        req = await conn.fetchrow(
+            "SELECT state, source_email, completion_token FROM requests WHERE id = $1", rid,
+        )
         if not req:
             raise HTTPException(404, "Request not found")
+
+        # B37: the WRITE must be token-protected too, not just the read
+        stored_token = req.get("completion_token")
+        if stored_token and token != stored_token:
+            raise HTTPException(403, "Invalid or expired token")
 
         extraction = await conn.fetchrow(
             "SELECT extracted_data FROM extraction_results WHERE request_id = $1", rid,

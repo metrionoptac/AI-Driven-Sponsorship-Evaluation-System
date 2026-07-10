@@ -1,0 +1,18 @@
+{
+  "id": "O02",
+  "description": "fields CONFLICT with attached PDF (ground-truth test)",
+  "pipeline_mode": "copilot",
+  "fields": {
+    "contact_name": "Lukas Schmid",
+    "contact_email": "lukas.schmid@tierschutzverein-ueberlingen.de",
+    "contact_phone": "+49 7531 931131",
+    "organization_name": "Tierschutzverein Ueberlingen e.V.",
+    "requested_amount": "1400",
+    "purpose": "Sanierung des Tierheims",
+    "event_date": "2026-11-15",
+    "region": "Ueberlingen"
+  },
+  "files": [
+    "O02_anfrage_konflikt.pdf"
+  ]
+}

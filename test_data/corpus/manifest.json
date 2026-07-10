@@ -1,0 +1,3417 @@
+{
+  "generated": "2026-07-08",
+  "seed": 42,
+  "total": 110,
+  "region_config": "Stadtwerke Bodensee (in-region = Bodensee towns)",
+  "samples": [
+    {
+      "id": "E01",
+      "channel": "email",
+      "files": [
+        "E01.eml",
+        "E01_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TSV Friedrichshafen 1926 e.V.",
+        "amount": 800,
+        "event_date": "2026-09-24",
+        "region": "Friedrichshafen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "max.huber@tsv-friedrichshafen-1926.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E02",
+      "channel": "email",
+      "files": [
+        "E02.eml",
+        "E02_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TV Lindau 1898 e.V.",
+        "amount": 800,
+        "event_date": "2026-12-02",
+        "region": "Lindau",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "lena.becker@tv-lindau-1898.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E03",
+      "channel": "email",
+      "files": [
+        "E03.eml",
+        "E03_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "FC Singen 1972 e.V.",
+        "amount": 1500,
+        "event_date": "2026-12-08",
+        "region": "Singen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "jonas.frank@fc-singen-1972.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E04",
+      "channel": "email",
+      "files": [
+        "E04.eml",
+        "E04_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Radolfzell e.V.",
+        "amount": 2500,
+        "event_date": "2026-11-05",
+        "region": "Radolfzell",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "marie.richter@musikverein-radolfzell.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E05",
+      "channel": "email",
+      "files": [
+        "E05.eml",
+        "E05_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Ueberlingen e.V.",
+        "amount": 2500,
+        "event_date": "2026-11-26",
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "paul.schmid69@t-online.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E06",
+      "channel": "email",
+      "files": [
+        "E06.eml",
+        "E06_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Meersburg e.V.",
+        "amount": 2500,
+        "event_date": "2026-10-23",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "laura.maier@schachclub-meersburg.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E07",
+      "channel": "email",
+      "files": [
+        "E07.eml",
+        "E07_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "DLRG Ortsgruppe Markdorf e.V.",
+        "amount": 1500,
+        "event_date": "2026-09-13",
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "felix.braun@dlrg-ortsgruppe-markdorf.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E08",
+      "channel": "email",
+      "files": [
+        "E08.eml",
+        "E08_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Stockach e.V.",
+        "amount": 1500,
+        "event_date": "2026-11-23",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "sofia.berger@foerderverein-grundschule-stockach.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E09",
+      "channel": "email",
+      "files": [
+        "E09.eml",
+        "E09_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Salem e.V.",
+        "amount": 1200,
+        "event_date": "2026-12-13",
+        "region": "Salem",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "lukas.wolf@tierschutzverein-salem.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E10",
+      "channel": "email",
+      "files": [
+        "E10.eml",
+        "E10_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Tettnang e.V.",
+        "amount": 500,
+        "event_date": "2026-10-27",
+        "region": "Tettnang",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "emma.keller52@web.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E11",
+      "channel": "email",
+      "files": [
+        "E11.eml",
+        "E11_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Kressbronn e.V.",
+        "amount": 2500,
+        "event_date": "2026-10-21",
+        "region": "Kressbronn",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "david.wagner@naturfreunde-kressbronn.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E12",
+      "channel": "email",
+      "files": [
+        "E12.eml",
+        "E12_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "SV Sipplingen 1954 e.V.",
+        "amount": 1500,
+        "event_date": "2026-11-24",
+        "region": "Sipplingen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "julia.vogel@sv-sipplingen-1954.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E13",
+      "channel": "email",
+      "files": [
+        "E13.eml",
+        "E13_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TSV Bodman-Ludwigshafen 1898 e.V.",
+        "amount": 1200,
+        "event_date": "2026-12-03",
+        "region": "Bodman-Ludwigshafen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "simon.koch@tsv-bodman-ludwigshafen-1898.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E14",
+      "channel": "email",
+      "files": [
+        "E14.eml",
+        "E14_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TV Konstanz 1954 e.V.",
+        "amount": 3000,
+        "event_date": "2026-09-13",
+        "region": "Konstanz",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "clara.weber@tv-konstanz-1954.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E15",
+      "channel": "email",
+      "files": [
+        "E15.eml",
+        "E15_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "FC Friedrichshafen 1990 e.V.",
+        "amount": 500,
+        "event_date": "2026-09-22",
+        "region": "Friedrichshafen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "tim.huber99@web.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "clean digital PDF"
+        }
+      }
+    },
+    {
+      "id": "E16",
+      "channel": "email",
+      "files": [
+        "E16.eml",
+        "E16_anfrage.docx"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Lindau e.V.",
+        "amount": 5000,
+        "event_date": "2026-09-24",
+        "region": "Lindau",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "anna.becker@musikverein-lindau.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "DOCX attachment"
+        }
+      }
+    },
+    {
+      "id": "E17",
+      "channel": "email",
+      "files": [
+        "E17.eml",
+        "E17_anfrage.docx"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Singen e.V.",
+        "amount": 2000,
+        "event_date": "2026-10-05",
+        "region": "Singen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "max.frank@kulturverein-singen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "DOCX attachment"
+        }
+      }
+    },
+    {
+      "id": "E18",
+      "channel": "email",
+      "files": [
+        "E18.eml",
+        "E18_anfrage.docx"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Radolfzell e.V.",
+        "amount": 5000,
+        "event_date": "2026-09-04",
+        "region": "Radolfzell",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "lena.richter@schachclub-radolfzell.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "DOCX attachment"
+        }
+      }
+    },
+    {
+      "id": "E19",
+      "channel": "email",
+      "files": [
+        "E19.eml",
+        "E19_anfrage.docx"
+      ],
+      "ground_truth": {
+        "organization": "DLRG Ortsgruppe Ueberlingen e.V.",
+        "amount": 800,
+        "event_date": "2026-09-24",
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "jonas.schmid@dlrg-ortsgruppe-ueberlingen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "DOCX attachment"
+        }
+      }
+    },
+    {
+      "id": "E20",
+      "channel": "email",
+      "files": [
+        "E20.eml",
+        "E20_anfrage.docx"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Meersburg e.V.",
+        "amount": 5000,
+        "event_date": "2026-10-09",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "marie.maier@foerderverein-grundschule-meersburg.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "DOCX attachment"
+        }
+      }
+    },
+    {
+      "id": "E21",
+      "channel": "email",
+      "files": [
+        "E21.eml",
+        "E21_scan.jpg"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Markdorf e.V.",
+        "amount": 1500,
+        "event_date": "2026-11-13",
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "paul.braun67@t-online.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "scanned image -> OCR/vision path"
+        }
+      }
+    },
+    {
+      "id": "E22",
+      "channel": "email",
+      "files": [
+        "E22.eml",
+        "E22_scan.jpg"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Stockach e.V.",
+        "amount": 500,
+        "event_date": "2026-10-19",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "laura.berger10@gmail.com",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "scanned image -> OCR/vision path"
+        }
+      }
+    },
+    {
+      "id": "E23",
+      "channel": "email",
+      "files": [
+        "E23.eml",
+        "E23_scan.jpg"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Salem e.V.",
+        "amount": 2500,
+        "event_date": "2026-09-17",
+        "region": "Salem",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "felix.wolf86@web.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "scanned image -> OCR/vision path"
+        }
+      }
+    },
+    {
+      "id": "E24",
+      "channel": "email",
+      "files": [
+        "E24.eml",
+        "E24_scan.jpg"
+      ],
+      "ground_truth": {
+        "organization": "SV Tettnang 1972 e.V.",
+        "amount": 5000,
+        "event_date": "2026-10-26",
+        "region": "Tettnang",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "sofia.keller25@t-online.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "scanned image -> OCR/vision path"
+        }
+      }
+    },
+    {
+      "id": "E25",
+      "channel": "email",
+      "files": [
+        "E25.eml",
+        "E25_scan.jpg"
+      ],
+      "ground_truth": {
+        "organization": "TSV Kressbronn 1898 e.V.",
+        "amount": 3000,
+        "event_date": "2026-12-28",
+        "region": "Kressbronn",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "lukas.wagner8@gmail.com",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "scanned image -> OCR/vision path"
+        }
+      }
+    },
+    {
+      "id": "E26",
+      "channel": "email",
+      "files": [
+        "E26.eml"
+      ],
+      "ground_truth": {
+        "organization": "TV Sipplingen 1954 e.V.",
+        "amount": 1500,
+        "event_date": "2026-12-05",
+        "region": "Sipplingen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "emma.vogel@tv-sipplingen-1954.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "body-only email"
+        }
+      }
+    },
+    {
+      "id": "E27",
+      "channel": "email",
+      "files": [
+        "E27.eml"
+      ],
+      "ground_truth": {
+        "organization": "FC Bodman-Ludwigshafen 1990 e.V.",
+        "amount": 800,
+        "event_date": "2026-12-26",
+        "region": "Bodman-Ludwigshafen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "david.koch@fc-bodman-ludwigshafen-1990.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "body-only email"
+        }
+      }
+    },
+    {
+      "id": "E28",
+      "channel": "email",
+      "files": [
+        "E28.eml"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Konstanz e.V.",
+        "amount": 500,
+        "event_date": "2026-09-25",
+        "region": "Konstanz",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "julia.weber@musikverein-konstanz.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "body-only email"
+        }
+      }
+    },
+    {
+      "id": "E29",
+      "channel": "email",
+      "files": [
+        "E29.eml"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Friedrichshafen e.V.",
+        "amount": 1500,
+        "event_date": "2026-12-02",
+        "region": "Friedrichshafen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "simon.huber@kulturverein-friedrichshafen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "body-only email"
+        }
+      }
+    },
+    {
+      "id": "E30",
+      "channel": "email",
+      "files": [
+        "E30.eml"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Lindau e.V.",
+        "amount": 5000,
+        "event_date": "2026-11-14",
+        "region": "Lindau",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "clara.becker@schachclub-lindau.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "body-only email"
+        }
+      }
+    },
+    {
+      "id": "E31",
+      "channel": "email",
+      "files": [
+        "E31.eml",
+        "E31_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "DLRG Ortsgruppe Singen e.V.",
+        "amount": null,
+        "event_date": "2026-11-07",
+        "region": "Singen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "tim.frank@dlrg-ortsgruppe-singen.de",
+        "complete": false,
+        "missing_fields": [
+          "amount"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "incomplete: missing ['amount']"
+        }
+      }
+    },
+    {
+      "id": "E32",
+      "channel": "email",
+      "files": [
+        "E32.eml",
+        "E32_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Radolfzell e.V.",
+        "amount": 500,
+        "event_date": null,
+        "region": "Radolfzell",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "anna.richter@foerderverein-grundschule-radolfzell.de",
+        "complete": false,
+        "missing_fields": [
+          "date"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "incomplete: missing ['date']"
+        }
+      }
+    },
+    {
+      "id": "E33",
+      "channel": "email",
+      "files": [
+        "E33.eml",
+        "E33_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Ueberlingen e.V.",
+        "amount": null,
+        "event_date": null,
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "max.schmid@tierschutzverein-ueberlingen.de",
+        "complete": false,
+        "missing_fields": [
+          "amount",
+          "date"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "incomplete: missing ['amount', 'date']"
+        }
+      }
+    },
+    {
+      "id": "E34",
+      "channel": "email",
+      "files": [
+        "E34.eml",
+        "E34_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Meersburg e.V.",
+        "amount": null,
+        "event_date": "2026-09-20",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "lena.maier@jugendzentrum-meersburg.de",
+        "complete": false,
+        "missing_fields": [
+          "amount"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "incomplete: missing ['amount']"
+        }
+      }
+    },
+    {
+      "id": "E35",
+      "channel": "email",
+      "files": [
+        "E35.eml",
+        "E35_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Markdorf e.V.",
+        "amount": 2000,
+        "event_date": null,
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "jonas.braun@naturfreunde-markdorf.de",
+        "complete": false,
+        "missing_fields": [
+          "date"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "incomplete: missing ['date']"
+        }
+      }
+    },
+    {
+      "id": "E36",
+      "channel": "email",
+      "files": [
+        "E36.eml",
+        "E36_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "SV Stockach 1905 e.V.",
+        "amount": null,
+        "event_date": null,
+        "region": "Stockach",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "marie.berger@sv-stockach-1905.de",
+        "complete": false,
+        "missing_fields": [
+          "amount",
+          "date"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "incomplete: missing ['amount', 'date']"
+        }
+      }
+    },
+    {
+      "id": "E37",
+      "channel": "email",
+      "files": [
+        "E37.eml",
+        "E37_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TSV Duesseldorf 1926 e.V.",
+        "amount": 800,
+        "event_date": "2026-10-17",
+        "region": "Duesseldorf",
+        "in_region": false,
+        "category": "sports",
+        "contact_email": "paul.wolf@tsv-duesseldorf-1926.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Duesseldorf) - B29 region-handling test"
+        }
+      }
+    },
+    {
+      "id": "E38",
+      "channel": "email",
+      "files": [
+        "E38.eml",
+        "E38_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TV Berlin 1990 e.V.",
+        "amount": 1200,
+        "event_date": "2026-12-27",
+        "region": "Berlin",
+        "in_region": false,
+        "category": "sports",
+        "contact_email": "laura.keller@tv-berlin-1990.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Berlin) - B29 region-handling test"
+        }
+      }
+    },
+    {
+      "id": "E39",
+      "channel": "email",
+      "files": [
+        "E39.eml",
+        "E39_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "FC Muenchen 1926 e.V.",
+        "amount": 2000,
+        "event_date": "2026-09-05",
+        "region": "Muenchen",
+        "in_region": false,
+        "category": "sports",
+        "contact_email": "felix.wagner@fc-muenchen-1926.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Muenchen) - B29 region-handling test"
+        }
+      }
+    },
+    {
+      "id": "E40",
+      "channel": "email",
+      "files": [
+        "E40.eml",
+        "E40_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Hamburg e.V.",
+        "amount": 2000,
+        "event_date": "2026-10-23",
+        "region": "Hamburg",
+        "in_region": false,
+        "category": "culture",
+        "contact_email": "sofia.vogel@musikverein-hamburg.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Hamburg) - B29 region-handling test"
+        }
+      }
+    },
+    {
+      "id": "E41",
+      "channel": "email",
+      "files": [
+        "E41.eml",
+        "E41_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Leipzig e.V.",
+        "amount": 2000,
+        "event_date": "2026-09-03",
+        "region": "Leipzig",
+        "in_region": false,
+        "category": "culture",
+        "contact_email": "lukas.koch@kulturverein-leipzig.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Leipzig) - B29 region-handling test"
+        }
+      }
+    },
+    {
+      "id": "E42",
+      "channel": "email",
+      "files": [
+        "E42.eml"
+      ],
+      "ground_truth": {
+        "organization": null,
+        "amount": null,
+        "event_date": null,
+        "region": null,
+        "in_region": false,
+        "category": null,
+        "contact_email": null,
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": false,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "junk: newsletter -> classifier/relevance-gate must stop this"
+        }
+      }
+    },
+    {
+      "id": "E43",
+      "channel": "email",
+      "files": [
+        "E43.eml"
+      ],
+      "ground_truth": {
+        "organization": null,
+        "amount": null,
+        "event_date": null,
+        "region": null,
+        "in_region": false,
+        "category": null,
+        "contact_email": null,
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": false,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "junk: invoice -> classifier/relevance-gate must stop this"
+        }
+      }
+    },
+    {
+      "id": "E44",
+      "channel": "email",
+      "files": [
+        "E44.eml"
+      ],
+      "ground_truth": {
+        "organization": null,
+        "amount": null,
+        "event_date": null,
+        "region": null,
+        "in_region": false,
+        "category": null,
+        "contact_email": null,
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": false,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "junk: job_application -> classifier/relevance-gate must stop this"
+        }
+      }
+    },
+    {
+      "id": "E45",
+      "channel": "email",
+      "files": [
+        "E45.eml"
+      ],
+      "ground_truth": {
+        "organization": "TSV Friedrichshafen 1926 e.V.",
+        "amount": null,
+        "event_date": null,
+        "region": "Friedrichshafen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "max.huber@tsv-friedrichshafen-1926.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "DUPLICATE of E01 (same attachment bytes, different sender) -> dedup test"
+        }
+      }
+    },
+    {
+      "id": "E46",
+      "channel": "email",
+      "files": [
+        "E46.eml"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Lindau e.V.",
+        "amount": null,
+        "event_date": null,
+        "region": "Lindau",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "anna.becker@musikverein-lindau.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "DUPLICATE of E16 (same attachment bytes, different sender) -> dedup test"
+        }
+      }
+    },
+    {
+      "id": "E47",
+      "channel": "email",
+      "files": [
+        "E47.eml",
+        "E47_anfrage.pdf",
+        "E47_logo.jpg"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Ueberlingen e.V.",
+        "amount": 3000,
+        "event_date": "2026-10-08",
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "tim.schmid@naturfreunde-ueberlingen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "multi-attachment (PDF + logo)"
+        }
+      }
+    },
+    {
+      "id": "E48",
+      "channel": "email",
+      "files": [
+        "E48.eml",
+        "E48_anfrage.pdf",
+        "E48_logo.jpg"
+      ],
+      "ground_truth": {
+        "organization": "SV Meersburg 1905 e.V.",
+        "amount": 1500,
+        "event_date": "2026-11-06",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "anna.maier@sv-meersburg-1905.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "multi-attachment (PDF + logo)"
+        }
+      }
+    },
+    {
+      "id": "E49",
+      "channel": "email",
+      "files": [
+        "E49.eml",
+        "E49_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TSV Markdorf 1920 e.V.",
+        "amount": 60000,
+        "event_date": "2026-10-01",
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "max.braun@tsv-markdorf-1920.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "60000 EUR -> amount_range hard rule should fail"
+        }
+      }
+    },
+    {
+      "id": "E50",
+      "channel": "email",
+      "files": [
+        "E50.eml",
+        "E50_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TV Stockach 1990 e.V.",
+        "amount": 2000,
+        "event_date": "2026-01-15",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "lena.berger@tv-stockach-1990.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "past event date -> event_date_future soft rule warning"
+        }
+      }
+    },
+    {
+      "id": "W01",
+      "channel": "web_form",
+      "files": [
+        "W01.json",
+        "attachments/W01_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Singen e.V.",
+        "amount": 2200,
+        "event_date": "2026-11-02",
+        "region": "Singen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "paul.frank@kulturverein-singen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Kulturverein Singen e.V.",
+        "contact_name": "Paul Frank",
+        "contact_email": "paul.frank@kulturverein-singen.de",
+        "contact_phone": "+49 7543 287241",
+        "requested_amount": 2200,
+        "purpose": "Kulturwochenende mit lokalen Kuenstlern",
+        "description": "Kulturwochenende mit lokalen Kuenstlern in Singen - organisiert von Kulturverein Singen e.V..",
+        "event_date": "2026-11-02",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Singen"
+      }
+    },
+    {
+      "id": "W02",
+      "channel": "web_form",
+      "files": [
+        "W02.json",
+        "attachments/W02_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Radolfzell e.V.",
+        "amount": 2200,
+        "event_date": "2026-09-13",
+        "region": "Radolfzell",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "laura.richter@schachclub-radolfzell.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Schachclub Radolfzell e.V.",
+        "contact_name": "Laura Richter",
+        "contact_email": "laura.richter@schachclub-radolfzell.de",
+        "contact_phone": "+49 7550 557592",
+        "requested_amount": 2200,
+        "purpose": "Jugend-Schachturnier",
+        "description": "Jugend-Schachturnier in Radolfzell - organisiert von Schachclub Radolfzell e.V..",
+        "event_date": "2026-09-13",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Radolfzell"
+      }
+    },
+    {
+      "id": "W03",
+      "channel": "web_form",
+      "files": [
+        "W03.json",
+        "attachments/W03_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "DLRG Ortsgruppe Ueberlingen e.V.",
+        "amount": 4500,
+        "event_date": "2026-10-12",
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "felix.schmid@dlrg-ortsgruppe-ueberlingen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "DLRG Ortsgruppe Ueberlingen e.V.",
+        "contact_name": "Felix Schmid",
+        "contact_email": "felix.schmid@dlrg-ortsgruppe-ueberlingen.de",
+        "contact_phone": "+49 7510 645175",
+        "requested_amount": 4500,
+        "purpose": "Schwimmkurse fuer Grundschulkinder",
+        "description": "Schwimmkurse fuer Grundschulkinder in Ueberlingen - organisiert von DLRG Ortsgruppe Ueberlingen e.V..",
+        "event_date": "2026-10-12",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Ueberlingen"
+      }
+    },
+    {
+      "id": "W04",
+      "channel": "web_form",
+      "files": [
+        "W04.json",
+        "attachments/W04_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Meersburg e.V.",
+        "amount": 400,
+        "event_date": "2026-11-17",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "sofia.maier@foerderverein-grundschule-meersburg.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Foerderverein Grundschule Meersburg e.V.",
+        "contact_name": "Sofia Maier",
+        "contact_email": "sofia.maier@foerderverein-grundschule-meersburg.de",
+        "contact_phone": "+49 7594 989208",
+        "requested_amount": 400,
+        "purpose": "Neue Buecher fuer die Schulbibliothek",
+        "description": "Neue Buecher fuer die Schulbibliothek in Meersburg - organisiert von Foerderverein Grundschule Meersburg e.V..",
+        "event_date": "2026-11-17",
+        "target_audience": "Senioren",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Meersburg"
+      }
+    },
+    {
+      "id": "W05",
+      "channel": "web_form",
+      "files": [
+        "W05.json",
+        "attachments/W05_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Markdorf e.V.",
+        "amount": 1000,
+        "event_date": "2026-10-07",
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "lukas.braun@tierschutzverein-markdorf.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Tierschutzverein Markdorf e.V.",
+        "contact_name": "Lukas Braun",
+        "contact_email": "lukas.braun@tierschutzverein-markdorf.de",
+        "contact_phone": "+49 7561 831076",
+        "requested_amount": 1000,
+        "purpose": "Sanierung des Tierheims",
+        "description": "Sanierung des Tierheims in Markdorf - organisiert von Tierschutzverein Markdorf e.V..",
+        "event_date": "2026-10-07",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Markdorf"
+      }
+    },
+    {
+      "id": "W06",
+      "channel": "web_form",
+      "files": [
+        "W06.json",
+        "attachments/W06_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Stockach e.V.",
+        "amount": 400,
+        "event_date": "2026-11-10",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "emma.berger52@web.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Jugendzentrum Stockach e.V.",
+        "contact_name": "Emma Berger",
+        "contact_email": "emma.berger52@web.de",
+        "contact_phone": "+49 7580 974224",
+        "requested_amount": 400,
+        "purpose": "Ferienprogramm fuer Jugendliche",
+        "description": "Ferienprogramm fuer Jugendliche in Stockach - organisiert von Jugendzentrum Stockach e.V..",
+        "event_date": "2026-11-10",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Stockach"
+      }
+    },
+    {
+      "id": "W07",
+      "channel": "web_form",
+      "files": [
+        "W07.json",
+        "attachments/W07_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Salem e.V.",
+        "amount": 1500,
+        "event_date": "2026-10-17",
+        "region": "Salem",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "david.wolf@naturfreunde-salem.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Naturfreunde Salem e.V.",
+        "contact_name": "David Wolf",
+        "contact_email": "david.wolf@naturfreunde-salem.de",
+        "contact_phone": "+49 7569 563246",
+        "requested_amount": 1500,
+        "purpose": "Baumpflanzaktion am Seeufer",
+        "description": "Baumpflanzaktion am Seeufer in Salem - organisiert von Naturfreunde Salem e.V..",
+        "event_date": "2026-10-17",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Salem"
+      }
+    },
+    {
+      "id": "W08",
+      "channel": "web_form",
+      "files": [
+        "W08.json",
+        "attachments/W08_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "SV Tettnang 1905 e.V.",
+        "amount": 3000,
+        "event_date": "2026-11-03",
+        "region": "Tettnang",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "julia.keller@sv-tettnang-1905.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "SV Tettnang 1905 e.V.",
+        "contact_name": "Julia Keller",
+        "contact_email": "julia.keller@sv-tettnang-1905.de",
+        "contact_phone": "+49 7546 640490",
+        "requested_amount": 3000,
+        "purpose": "Jugendfussballturnier",
+        "description": "Jugendfussballturnier in Tettnang - organisiert von SV Tettnang 1905 e.V..",
+        "event_date": "2026-11-03",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Tettnang"
+      }
+    },
+    {
+      "id": "W09",
+      "channel": "web_form",
+      "files": [
+        "W09.json",
+        "attachments/W09_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TSV Kressbronn 1920 e.V.",
+        "amount": 400,
+        "event_date": "2026-09-08",
+        "region": "Kressbronn",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "simon.wagner@tsv-kressbronn-1920.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "TSV Kressbronn 1920 e.V.",
+        "contact_name": "Simon Wagner",
+        "contact_email": "simon.wagner@tsv-kressbronn-1920.de",
+        "contact_phone": "+49 7535 254511",
+        "requested_amount": 400,
+        "purpose": "Anschaffung von Jugend-Trikots",
+        "description": "Anschaffung von Jugend-Trikots in Kressbronn - organisiert von TSV Kressbronn 1920 e.V..",
+        "event_date": "2026-09-08",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Kressbronn"
+      }
+    },
+    {
+      "id": "W10",
+      "channel": "web_form",
+      "files": [
+        "W10.json",
+        "attachments/W10_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TV Sipplingen 1972 e.V.",
+        "amount": 2200,
+        "event_date": "2026-10-23",
+        "region": "Sipplingen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "clara.vogel@tv-sipplingen-1972.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "TV Sipplingen 1972 e.V.",
+        "contact_name": "Clara Vogel",
+        "contact_email": "clara.vogel@tv-sipplingen-1972.de",
+        "contact_phone": "+49 7563 760356",
+        "requested_amount": 2200,
+        "purpose": "Turnfest der Jugendabteilung",
+        "description": "Turnfest der Jugendabteilung in Sipplingen - organisiert von TV Sipplingen 1972 e.V..",
+        "event_date": "2026-10-23",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Sipplingen"
+      }
+    },
+    {
+      "id": "W11",
+      "channel": "web_form",
+      "files": [
+        "W11.json",
+        "attachments/W11_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "FC Bodman-Ludwigshafen 1920 e.V.",
+        "amount": 3000,
+        "event_date": "2026-09-25",
+        "region": "Bodman-Ludwigshafen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "tim.koch@fc-bodman-ludwigshafen-1920.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "FC Bodman-Ludwigshafen 1920 e.V.",
+        "contact_name": "Tim Koch",
+        "contact_email": "tim.koch@fc-bodman-ludwigshafen-1920.de",
+        "contact_phone": "+49 7528 787926",
+        "requested_amount": 3000,
+        "purpose": "Fussballcamp fuer Kinder",
+        "description": "Fussballcamp fuer Kinder in Bodman-Ludwigshafen - organisiert von FC Bodman-Ludwigshafen 1920 e.V..",
+        "event_date": "2026-09-25",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Bodman-Ludwigshafen"
+      }
+    },
+    {
+      "id": "W12",
+      "channel": "web_form",
+      "files": [
+        "W12.json",
+        "attachments/W12_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Konstanz e.V.",
+        "amount": 4500,
+        "event_date": "2026-09-15",
+        "region": "Konstanz",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "anna.weber7@t-online.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Musikverein Konstanz e.V.",
+        "contact_name": "Anna Weber",
+        "contact_email": "anna.weber7@t-online.de",
+        "contact_phone": "+49 7581 361303",
+        "requested_amount": 4500,
+        "purpose": "Sommerkonzert im Stadtpark",
+        "description": "Sommerkonzert im Stadtpark in Konstanz - organisiert von Musikverein Konstanz e.V..",
+        "event_date": "2026-09-15",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Konstanz"
+      }
+    },
+    {
+      "id": "W13",
+      "channel": "web_form",
+      "files": [
+        "W13.json",
+        "attachments/W13_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Friedrichshafen e.V.",
+        "amount": 4500,
+        "event_date": "2026-12-20",
+        "region": "Friedrichshafen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "max.huber@kulturverein-friedrichshafen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Kulturverein Friedrichshafen e.V.",
+        "contact_name": "Max Huber",
+        "contact_email": "max.huber@kulturverein-friedrichshafen.de",
+        "contact_phone": "+49 7586 432711",
+        "requested_amount": 4500,
+        "purpose": "Kulturwochenende mit lokalen Kuenstlern",
+        "description": "Kulturwochenende mit lokalen Kuenstlern in Friedrichshafen - organisiert von Kulturverein Friedrichshafen e.V..",
+        "event_date": "2026-12-20",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Friedrichshafen"
+      }
+    },
+    {
+      "id": "W14",
+      "channel": "web_form",
+      "files": [
+        "W14.json",
+        "attachments/W14_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Lindau e.V.",
+        "amount": 1000,
+        "event_date": "2026-10-27",
+        "region": "Lindau",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "lena.becker@schachclub-lindau.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Schachclub Lindau e.V.",
+        "contact_name": "Lena Becker",
+        "contact_email": "lena.becker@schachclub-lindau.de",
+        "contact_phone": "+49 7570 571932",
+        "requested_amount": 1000,
+        "purpose": "Jugend-Schachturnier",
+        "description": "Jugend-Schachturnier in Lindau - organisiert von Schachclub Lindau e.V..",
+        "event_date": "2026-10-27",
+        "target_audience": "Senioren",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Lindau"
+      }
+    },
+    {
+      "id": "W15",
+      "channel": "web_form",
+      "files": [
+        "W15.json",
+        "attachments/W15_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "DLRG Ortsgruppe Singen e.V.",
+        "amount": 400,
+        "event_date": "2026-11-08",
+        "region": "Singen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "jonas.frank@dlrg-ortsgruppe-singen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "DLRG Ortsgruppe Singen e.V.",
+        "contact_name": "Jonas Frank",
+        "contact_email": "jonas.frank@dlrg-ortsgruppe-singen.de",
+        "contact_phone": "+49 7545 561239",
+        "requested_amount": 400,
+        "purpose": "Schwimmkurse fuer Grundschulkinder",
+        "description": "Schwimmkurse fuer Grundschulkinder in Singen - organisiert von DLRG Ortsgruppe Singen e.V..",
+        "event_date": "2026-11-08",
+        "target_audience": "Senioren",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Singen"
+      }
+    },
+    {
+      "id": "W16",
+      "channel": "web_form",
+      "files": [
+        "W16.json",
+        "attachments/W16_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Radolfzell e.V.",
+        "amount": 750,
+        "event_date": "2026-10-13",
+        "region": "Radolfzell",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "marie.richter@foerderverein-grundschule-radolfzell.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Foerderverein Grundschule Radolfzell e.V.",
+        "contact_name": "Marie Richter",
+        "contact_email": "marie.richter@foerderverein-grundschule-radolfzell.de",
+        "contact_phone": "+49 7520 245095",
+        "requested_amount": 750,
+        "purpose": "Neue Buecher fuer die Schulbibliothek",
+        "description": "Neue Buecher fuer die Schulbibliothek in Radolfzell - organisiert von Foerderverein Grundschule Radolfzell e.V..",
+        "event_date": "2026-10-13",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Radolfzell"
+      }
+    },
+    {
+      "id": "W17",
+      "channel": "web_form",
+      "files": [
+        "W17.json",
+        "attachments/W17_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Ueberlingen e.V.",
+        "amount": 1000,
+        "event_date": "2026-12-14",
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "paul.schmid@tierschutzverein-ueberlingen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Tierschutzverein Ueberlingen e.V.",
+        "contact_name": "Paul Schmid",
+        "contact_email": "paul.schmid@tierschutzverein-ueberlingen.de",
+        "contact_phone": "+49 7563 527398",
+        "requested_amount": 1000,
+        "purpose": "Sanierung des Tierheims",
+        "description": "Sanierung des Tierheims in Ueberlingen - organisiert von Tierschutzverein Ueberlingen e.V..",
+        "event_date": "2026-12-14",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Ueberlingen"
+      }
+    },
+    {
+      "id": "W18",
+      "channel": "web_form",
+      "files": [
+        "W18.json",
+        "attachments/W18_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Meersburg e.V.",
+        "amount": 1500,
+        "event_date": "2026-09-12",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "laura.maier98@gmail.com",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Jugendzentrum Meersburg e.V.",
+        "contact_name": "Laura Maier",
+        "contact_email": "laura.maier98@gmail.com",
+        "contact_phone": "+49 7583 498858",
+        "requested_amount": 1500,
+        "purpose": "Ferienprogramm fuer Jugendliche",
+        "description": "Ferienprogramm fuer Jugendliche in Meersburg - organisiert von Jugendzentrum Meersburg e.V..",
+        "event_date": "2026-09-12",
+        "target_audience": "Senioren",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Meersburg"
+      }
+    },
+    {
+      "id": "W19",
+      "channel": "web_form",
+      "files": [
+        "W19.json",
+        "attachments/W19_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Markdorf e.V.",
+        "amount": 2200,
+        "event_date": "2026-10-16",
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "felix.braun@naturfreunde-markdorf.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Naturfreunde Markdorf e.V.",
+        "contact_name": "Felix Braun",
+        "contact_email": "felix.braun@naturfreunde-markdorf.de",
+        "contact_phone": "+49 7579 938722",
+        "requested_amount": 2200,
+        "purpose": "Baumpflanzaktion am Seeufer",
+        "description": "Baumpflanzaktion am Seeufer in Markdorf - organisiert von Naturfreunde Markdorf e.V..",
+        "event_date": "2026-10-16",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Markdorf"
+      }
+    },
+    {
+      "id": "W20",
+      "channel": "web_form",
+      "files": [
+        "W20.json",
+        "attachments/W20_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "SV Stockach 1972 e.V.",
+        "amount": 1000,
+        "event_date": "2026-12-24",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "sofia.berger@sv-stockach-1972.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "SV Stockach 1972 e.V.",
+        "contact_name": "Sofia Berger",
+        "contact_email": "sofia.berger@sv-stockach-1972.de",
+        "contact_phone": "+49 7513 507746",
+        "requested_amount": 1000,
+        "purpose": "Jugendfussballturnier",
+        "description": "Jugendfussballturnier in Stockach - organisiert von SV Stockach 1972 e.V..",
+        "event_date": "2026-12-24",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Stockach"
+      }
+    },
+    {
+      "id": "W21",
+      "channel": "web_form",
+      "files": [
+        "W21.json",
+        "attachments/W21_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TSV Salem 1990 e.V.",
+        "amount": 2200,
+        "event_date": "2026-09-03",
+        "region": "Salem",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "lukas.wolf@tsv-salem-1990.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "TSV Salem 1990 e.V.",
+        "contact_name": "Lukas Wolf",
+        "contact_email": "lukas.wolf@tsv-salem-1990.de",
+        "contact_phone": "+49 7513 513160",
+        "requested_amount": 2200,
+        "purpose": "Anschaffung von Jugend-Trikots",
+        "description": "Anschaffung von Jugend-Trikots in Salem - organisiert von TSV Salem 1990 e.V..",
+        "event_date": "2026-09-03",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Salem"
+      }
+    },
+    {
+      "id": "W22",
+      "channel": "web_form",
+      "files": [
+        "W22.json",
+        "attachments/W22_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TV Tettnang 1912 e.V.",
+        "amount": 1500,
+        "event_date": "2026-11-07",
+        "region": "Tettnang",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "emma.keller@tv-tettnang-1912.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "TV Tettnang 1912 e.V.",
+        "contact_name": "Emma Keller",
+        "contact_email": "emma.keller@tv-tettnang-1912.de",
+        "contact_phone": "+49 7516 372793",
+        "requested_amount": 1500,
+        "purpose": "Turnfest der Jugendabteilung",
+        "description": "Turnfest der Jugendabteilung in Tettnang - organisiert von TV Tettnang 1912 e.V..",
+        "event_date": "2026-11-07",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Tettnang"
+      }
+    },
+    {
+      "id": "W23",
+      "channel": "web_form",
+      "files": [
+        "W23.json",
+        "attachments/W23_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "FC Kressbronn 1954 e.V.",
+        "amount": 4500,
+        "event_date": "2026-12-09",
+        "region": "Kressbronn",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "david.wagner@fc-kressbronn-1954.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "FC Kressbronn 1954 e.V.",
+        "contact_name": "David Wagner",
+        "contact_email": "david.wagner@fc-kressbronn-1954.de",
+        "contact_phone": "+49 7545 888539",
+        "requested_amount": 4500,
+        "purpose": "Fussballcamp fuer Kinder",
+        "description": "Fussballcamp fuer Kinder in Kressbronn - organisiert von FC Kressbronn 1954 e.V..",
+        "event_date": "2026-12-09",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Kressbronn"
+      }
+    },
+    {
+      "id": "W24",
+      "channel": "web_form",
+      "files": [
+        "W24.json",
+        "attachments/W24_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Sipplingen e.V.",
+        "amount": 400,
+        "event_date": "2026-09-25",
+        "region": "Sipplingen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "julia.vogel45@gmail.com",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Musikverein Sipplingen e.V.",
+        "contact_name": "Julia Vogel",
+        "contact_email": "julia.vogel45@gmail.com",
+        "contact_phone": "+49 7538 781725",
+        "requested_amount": 400,
+        "purpose": "Sommerkonzert im Stadtpark",
+        "description": "Sommerkonzert im Stadtpark in Sipplingen - organisiert von Musikverein Sipplingen e.V..",
+        "event_date": "2026-09-25",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Sipplingen"
+      }
+    },
+    {
+      "id": "W25",
+      "channel": "web_form",
+      "files": [
+        "W25.json",
+        "attachments/W25_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Bodman-Ludwigshafen e.V.",
+        "amount": 750,
+        "event_date": "2026-10-16",
+        "region": "Bodman-Ludwigshafen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "simon.koch@kulturverein-bodman-ludwigshafen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Kulturverein Bodman-Ludwigshafen e.V.",
+        "contact_name": "Simon Koch",
+        "contact_email": "simon.koch@kulturverein-bodman-ludwigshafen.de",
+        "contact_phone": "+49 7589 259784",
+        "requested_amount": 750,
+        "purpose": "Kulturwochenende mit lokalen Kuenstlern",
+        "description": "Kulturwochenende mit lokalen Kuenstlern in Bodman-Ludwigshafen - organisiert von Kulturverein Bodman-Ludwigshafen e.V..",
+        "event_date": "2026-10-16",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Bodman-Ludwigshafen"
+      }
+    },
+    {
+      "id": "W26",
+      "channel": "web_form",
+      "files": [
+        "W26.json",
+        "attachments/W26_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Konstanz e.V.",
+        "amount": 4500,
+        "event_date": "2026-11-06",
+        "region": "Konstanz",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "clara.weber@schachclub-konstanz.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Schachclub Konstanz e.V.",
+        "contact_name": "Clara Weber",
+        "contact_email": "clara.weber@schachclub-konstanz.de",
+        "contact_phone": "+49 7599 368690",
+        "requested_amount": 4500,
+        "purpose": "Jugend-Schachturnier",
+        "description": "Jugend-Schachturnier in Konstanz - organisiert von Schachclub Konstanz e.V..",
+        "event_date": "2026-11-06",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Konstanz"
+      }
+    },
+    {
+      "id": "W27",
+      "channel": "web_form",
+      "files": [
+        "W27.json",
+        "attachments/W27_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "DLRG Ortsgruppe Friedrichshafen e.V.",
+        "amount": 1000,
+        "event_date": "2026-12-13",
+        "region": "Friedrichshafen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "tim.huber@dlrg-ortsgruppe-friedrichshafen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "DLRG Ortsgruppe Friedrichshafen e.V.",
+        "contact_name": "Tim Huber",
+        "contact_email": "tim.huber@dlrg-ortsgruppe-friedrichshafen.de",
+        "contact_phone": "+49 7584 126925",
+        "requested_amount": 1000,
+        "purpose": "Schwimmkurse fuer Grundschulkinder",
+        "description": "Schwimmkurse fuer Grundschulkinder in Friedrichshafen - organisiert von DLRG Ortsgruppe Friedrichshafen e.V..",
+        "event_date": "2026-12-13",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Friedrichshafen"
+      }
+    },
+    {
+      "id": "W28",
+      "channel": "web_form",
+      "files": [
+        "W28.json",
+        "attachments/W28_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Lindau e.V.",
+        "amount": 4500,
+        "event_date": "2026-11-28",
+        "region": "Lindau",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "anna.becker@foerderverein-grundschule-lindau.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Foerderverein Grundschule Lindau e.V.",
+        "contact_name": "Anna Becker",
+        "contact_email": "anna.becker@foerderverein-grundschule-lindau.de",
+        "contact_phone": "+49 7523 831059",
+        "requested_amount": 4500,
+        "purpose": "Neue Buecher fuer die Schulbibliothek",
+        "description": "Neue Buecher fuer die Schulbibliothek in Lindau - organisiert von Foerderverein Grundschule Lindau e.V..",
+        "event_date": "2026-11-28",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Lindau"
+      }
+    },
+    {
+      "id": "W29",
+      "channel": "web_form",
+      "files": [
+        "W29.json",
+        "attachments/W29_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Singen e.V.",
+        "amount": 3000,
+        "event_date": "2026-11-03",
+        "region": "Singen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "max.frank@tierschutzverein-singen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Tierschutzverein Singen e.V.",
+        "contact_name": "Max Frank",
+        "contact_email": "max.frank@tierschutzverein-singen.de",
+        "contact_phone": "+49 7578 549186",
+        "requested_amount": 3000,
+        "purpose": "Sanierung des Tierheims",
+        "description": "Sanierung des Tierheims in Singen - organisiert von Tierschutzverein Singen e.V..",
+        "event_date": "2026-11-03",
+        "target_audience": "Senioren",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Singen"
+      }
+    },
+    {
+      "id": "W30",
+      "channel": "web_form",
+      "files": [
+        "W30.json",
+        "attachments/W30_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Radolfzell e.V.",
+        "amount": 4500,
+        "event_date": "2026-12-23",
+        "region": "Radolfzell",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "lena.richter56@gmail.com",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Jugendzentrum Radolfzell e.V.",
+        "contact_name": "Lena Richter",
+        "contact_email": "lena.richter56@gmail.com",
+        "contact_phone": "+49 7556 766459",
+        "requested_amount": 4500,
+        "purpose": "Ferienprogramm fuer Jugendliche",
+        "description": "Ferienprogramm fuer Jugendliche in Radolfzell - organisiert von Jugendzentrum Radolfzell e.V..",
+        "event_date": "2026-12-23",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Radolfzell"
+      }
+    },
+    {
+      "id": "W31",
+      "channel": "web_form",
+      "files": [
+        "W31.json",
+        "attachments/W31_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Ueberlingen e.V.",
+        "amount": 2200,
+        "event_date": "2026-12-15",
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "jonas.schmid@naturfreunde-ueberlingen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "Naturfreunde Ueberlingen e.V.",
+        "contact_name": "Jonas Schmid",
+        "contact_email": "jonas.schmid@naturfreunde-ueberlingen.de",
+        "contact_phone": "+49 7593 383201",
+        "requested_amount": 2200,
+        "purpose": "Baumpflanzaktion am Seeufer",
+        "description": "Baumpflanzaktion am Seeufer in Ueberlingen - organisiert von Naturfreunde Ueberlingen e.V..",
+        "event_date": "2026-12-15",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Ueberlingen"
+      }
+    },
+    {
+      "id": "W32",
+      "channel": "web_form",
+      "files": [
+        "W32.json",
+        "attachments/W32_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "SV Meersburg 1926 e.V.",
+        "amount": 750,
+        "event_date": "2026-09-09",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "marie.maier@sv-meersburg-1926.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "SV Meersburg 1926 e.V.",
+        "contact_name": "Marie Maier",
+        "contact_email": "marie.maier@sv-meersburg-1926.de",
+        "contact_phone": "+49 7551 993085",
+        "requested_amount": 750,
+        "purpose": "Jugendfussballturnier",
+        "description": "Jugendfussballturnier in Meersburg - organisiert von SV Meersburg 1926 e.V..",
+        "event_date": "2026-09-09",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Meersburg"
+      }
+    },
+    {
+      "id": "W33",
+      "channel": "web_form",
+      "files": [
+        "W33.json",
+        "attachments/W33_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TSV Markdorf 1954 e.V.",
+        "amount": 1500,
+        "event_date": "2026-11-06",
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "paul.braun@tsv-markdorf-1954.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "TSV Markdorf 1954 e.V.",
+        "contact_name": "Paul Braun",
+        "contact_email": "paul.braun@tsv-markdorf-1954.de",
+        "contact_phone": "+49 7553 130094",
+        "requested_amount": 1500,
+        "purpose": "Anschaffung von Jugend-Trikots",
+        "description": "Anschaffung von Jugend-Trikots in Markdorf - organisiert von TSV Markdorf 1954 e.V..",
+        "event_date": "2026-11-06",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Markdorf"
+      }
+    },
+    {
+      "id": "W34",
+      "channel": "web_form",
+      "files": [
+        "W34.json",
+        "attachments/W34_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "TV Stockach 1926 e.V.",
+        "amount": 2200,
+        "event_date": "2026-11-18",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "laura.berger@tv-stockach-1926.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "TV Stockach 1926 e.V.",
+        "contact_name": "Laura Berger",
+        "contact_email": "laura.berger@tv-stockach-1926.de",
+        "contact_phone": "+49 7553 393243",
+        "requested_amount": 2200,
+        "purpose": "Turnfest der Jugendabteilung",
+        "description": "Turnfest der Jugendabteilung in Stockach - organisiert von TV Stockach 1926 e.V..",
+        "event_date": "2026-11-18",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Stockach"
+      }
+    },
+    {
+      "id": "W35",
+      "channel": "web_form",
+      "files": [
+        "W35.json",
+        "attachments/W35_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "FC Salem 1905 e.V.",
+        "amount": 1500,
+        "event_date": "2026-12-18",
+        "region": "Salem",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "felix.wolf@fc-salem-1905.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "valid complete in-region"
+        }
+      },
+      "payload": {
+        "organization_name": "FC Salem 1905 e.V.",
+        "contact_name": "Felix Wolf",
+        "contact_email": "felix.wolf@fc-salem-1905.de",
+        "contact_phone": "+49 7540 855053",
+        "requested_amount": 1500,
+        "purpose": "Fussballcamp fuer Kinder",
+        "description": "Fussballcamp fuer Kinder in Salem - organisiert von FC Salem 1905 e.V..",
+        "event_date": "2026-12-18",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Salem"
+      }
+    },
+    {
+      "id": "W36",
+      "channel": "web_form",
+      "files": [
+        "W36.json",
+        "attachments/W36_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Tettnang e.V.",
+        "amount": null,
+        "event_date": "2026-12-23",
+        "region": "Tettnang",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "sofia.keller3@t-online.de",
+        "complete": false,
+        "missing_fields": [
+          "requested_amount"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "valid but incomplete: ['requested_amount']"
+        }
+      },
+      "payload": {
+        "organization_name": "Musikverein Tettnang e.V.",
+        "contact_name": "Sofia Keller",
+        "contact_email": "sofia.keller3@t-online.de",
+        "contact_phone": "+49 7521 408528",
+        "requested_amount": null,
+        "purpose": "Sommerkonzert im Stadtpark",
+        "description": "Sommerkonzert im Stadtpark in Tettnang - organisiert von Musikverein Tettnang e.V..",
+        "event_date": "2026-12-23",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Tettnang"
+      }
+    },
+    {
+      "id": "W37",
+      "channel": "web_form",
+      "files": [
+        "W37.json",
+        "attachments/W37_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Kressbronn e.V.",
+        "amount": 2200,
+        "event_date": null,
+        "region": "Kressbronn",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "lukas.wagner@kulturverein-kressbronn.de",
+        "complete": false,
+        "missing_fields": [
+          "event_date"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "valid but incomplete: ['event_date']"
+        }
+      },
+      "payload": {
+        "organization_name": "Kulturverein Kressbronn e.V.",
+        "contact_name": "Lukas Wagner",
+        "contact_email": "lukas.wagner@kulturverein-kressbronn.de",
+        "contact_phone": "+49 7570 680358",
+        "requested_amount": 2200,
+        "purpose": "Kulturwochenende mit lokalen Kuenstlern",
+        "description": "Kulturwochenende mit lokalen Kuenstlern in Kressbronn - organisiert von Kulturverein Kressbronn e.V..",
+        "event_date": null,
+        "target_audience": "Senioren",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Kressbronn"
+      }
+    },
+    {
+      "id": "W38",
+      "channel": "web_form",
+      "files": [
+        "W38.json",
+        "attachments/W38_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Sipplingen e.V.",
+        "amount": null,
+        "event_date": null,
+        "region": "Sipplingen",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "emma.vogel@schachclub-sipplingen.de",
+        "complete": false,
+        "missing_fields": [
+          "requested_amount",
+          "event_date"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "valid but incomplete: ['requested_amount', 'event_date']"
+        }
+      },
+      "payload": {
+        "organization_name": "Schachclub Sipplingen e.V.",
+        "contact_name": "Emma Vogel",
+        "contact_email": "emma.vogel@schachclub-sipplingen.de",
+        "contact_phone": "+49 7549 363615",
+        "requested_amount": null,
+        "purpose": "Jugend-Schachturnier",
+        "description": "Jugend-Schachturnier in Sipplingen - organisiert von Schachclub Sipplingen e.V..",
+        "event_date": null,
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Sipplingen"
+      }
+    },
+    {
+      "id": "W39",
+      "channel": "web_form",
+      "files": [
+        "W39.json",
+        "attachments/W39_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "DLRG Ortsgruppe Bodman-Ludwigshafen e.V.",
+        "amount": null,
+        "event_date": "2026-10-24",
+        "region": "Bodman-Ludwigshafen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "david.koch@dlrg-ortsgruppe-bodman-ludwigshafen.de",
+        "complete": false,
+        "missing_fields": [
+          "requested_amount"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "valid but incomplete: ['requested_amount']"
+        }
+      },
+      "payload": {
+        "organization_name": "DLRG Ortsgruppe Bodman-Ludwigshafen e.V.",
+        "contact_name": "David Koch",
+        "contact_email": "david.koch@dlrg-ortsgruppe-bodman-ludwigshafen.de",
+        "contact_phone": "+49 7598 294143",
+        "requested_amount": null,
+        "purpose": "Schwimmkurse fuer Grundschulkinder",
+        "description": "Schwimmkurse fuer Grundschulkinder in Bodman-Ludwigshafen - organisiert von DLRG Ortsgruppe Bodman-Ludwigshafen e.V..",
+        "event_date": "2026-10-24",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Bodman-Ludwigshafen"
+      }
+    },
+    {
+      "id": "W40",
+      "channel": "web_form",
+      "files": [
+        "W40.json",
+        "attachments/W40_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Konstanz e.V.",
+        "amount": 400,
+        "event_date": null,
+        "region": "Konstanz",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "julia.weber@foerderverein-grundschule-konstanz.de",
+        "complete": false,
+        "missing_fields": [
+          "event_date"
+        ],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "valid but incomplete: ['event_date']"
+        }
+      },
+      "payload": {
+        "organization_name": "Foerderverein Grundschule Konstanz e.V.",
+        "contact_name": "Julia Weber",
+        "contact_email": "julia.weber@foerderverein-grundschule-konstanz.de",
+        "contact_phone": "+49 7586 396745",
+        "requested_amount": 400,
+        "purpose": "Neue Buecher fuer die Schulbibliothek",
+        "description": "Neue Buecher fuer die Schulbibliothek in Konstanz - organisiert von Foerderverein Grundschule Konstanz e.V..",
+        "event_date": null,
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Konstanz"
+      }
+    },
+    {
+      "id": "W41",
+      "channel": "web_form",
+      "files": [
+        "W41.json",
+        "attachments/W41_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Duesseldorf e.V.",
+        "amount": 2200,
+        "event_date": "2026-10-09",
+        "region": "Duesseldorf",
+        "in_region": false,
+        "category": "social",
+        "contact_email": "simon.huber@tierschutzverein-friedrichshafen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Duesseldorf)"
+        }
+      },
+      "payload": {
+        "organization_name": "Tierschutzverein Duesseldorf e.V.",
+        "contact_name": "Simon Huber",
+        "contact_email": "simon.huber@tierschutzverein-friedrichshafen.de",
+        "contact_phone": "+49 7511 842411",
+        "requested_amount": 2200,
+        "purpose": "Sanierung des Tierheims",
+        "description": "Sanierung des Tierheims in Duesseldorf.",
+        "event_date": "2026-10-09",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Duesseldorf"
+      }
+    },
+    {
+      "id": "W42",
+      "channel": "web_form",
+      "files": [
+        "W42.json",
+        "attachments/W42_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Berlin e.V.",
+        "amount": 1000,
+        "event_date": "2026-12-16",
+        "region": "Berlin",
+        "in_region": false,
+        "category": "social",
+        "contact_email": "clara.becker14@t-online.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Berlin)"
+        }
+      },
+      "payload": {
+        "organization_name": "Jugendzentrum Berlin e.V.",
+        "contact_name": "Clara Becker",
+        "contact_email": "clara.becker14@t-online.de",
+        "contact_phone": "+49 7511 701949",
+        "requested_amount": 1000,
+        "purpose": "Ferienprogramm fuer Jugendliche",
+        "description": "Ferienprogramm fuer Jugendliche in Berlin.",
+        "event_date": "2026-12-16",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Berlin"
+      }
+    },
+    {
+      "id": "W43",
+      "channel": "web_form",
+      "files": [
+        "W43.json",
+        "attachments/W43_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Muenchen e.V.",
+        "amount": 4500,
+        "event_date": "2026-09-13",
+        "region": "Muenchen",
+        "in_region": false,
+        "category": "environment",
+        "contact_email": "tim.frank@naturfreunde-singen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Muenchen)"
+        }
+      },
+      "payload": {
+        "organization_name": "Naturfreunde Muenchen e.V.",
+        "contact_name": "Tim Frank",
+        "contact_email": "tim.frank@naturfreunde-singen.de",
+        "contact_phone": "+49 7571 219629",
+        "requested_amount": 4500,
+        "purpose": "Baumpflanzaktion am Seeufer",
+        "description": "Baumpflanzaktion am Seeufer in Muenchen.",
+        "event_date": "2026-09-13",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Muenchen"
+      }
+    },
+    {
+      "id": "W44",
+      "channel": "web_form",
+      "files": [
+        "W44.json",
+        "attachments/W44_anlage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "SV Hamburg 1905 e.V.",
+        "amount": 2200,
+        "event_date": "2026-11-03",
+        "region": "Hamburg",
+        "in_region": false,
+        "category": "sports",
+        "contact_email": "anna.richter@sv-radolfzell-1912.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "out-of-region (Hamburg)"
+        }
+      },
+      "payload": {
+        "organization_name": "SV Hamburg 1905 e.V.",
+        "contact_name": "Anna Richter",
+        "contact_email": "anna.richter@sv-radolfzell-1912.de",
+        "contact_phone": "+49 7529 950544",
+        "requested_amount": 2200,
+        "purpose": "Jugendfussballturnier",
+        "description": "Jugendfussballturnier in Hamburg.",
+        "event_date": "2026-11-03",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Hamburg"
+      }
+    },
+    {
+      "id": "W45",
+      "channel": "web_form",
+      "files": [
+        "W45.json"
+      ],
+      "ground_truth": {
+        "organization": null,
+        "amount": 1500,
+        "event_date": "2026-12-10",
+        "region": null,
+        "in_region": true,
+        "category": null,
+        "contact_email": null,
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": false,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "INVALID: organization_name missing -> expect 422"
+        }
+      },
+      "payload": {
+        "contact_name": "Max Schmid",
+        "contact_email": "max.schmid@tsv-ueberlingen-1920.de",
+        "contact_phone": "+49 7576 498855",
+        "requested_amount": 1500,
+        "purpose": "Anschaffung von Jugend-Trikots",
+        "description": "Anschaffung von Jugend-Trikots in Ueberlingen - organisiert von TSV Ueberlingen 1920 e.V..",
+        "event_date": "2026-12-10",
+        "target_audience": "Alle Altersgruppen",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Ueberlingen"
+      }
+    },
+    {
+      "id": "W46",
+      "channel": "web_form",
+      "files": [
+        "W46.json"
+      ],
+      "ground_truth": {
+        "organization": null,
+        "amount": 400,
+        "event_date": "2026-09-25",
+        "region": null,
+        "in_region": true,
+        "category": null,
+        "contact_email": null,
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": false,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "INVALID: bad contact_email -> expect 422"
+        }
+      },
+      "payload": {
+        "organization_name": "TV Meersburg 1926 e.V.",
+        "contact_name": "Lena Maier",
+        "contact_email": "keine-echte-adresse",
+        "contact_phone": "+49 7582 751194",
+        "requested_amount": 400,
+        "purpose": "Turnfest der Jugendabteilung",
+        "description": "Turnfest der Jugendabteilung in Meersburg - organisiert von TV Meersburg 1926 e.V..",
+        "event_date": "2026-09-25",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Meersburg"
+      }
+    },
+    {
+      "id": "W47",
+      "channel": "web_form",
+      "files": [
+        "W47.json"
+      ],
+      "ground_truth": {
+        "organization": null,
+        "amount": 400,
+        "event_date": "2026-10-08",
+        "region": null,
+        "in_region": true,
+        "category": null,
+        "contact_email": null,
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": false,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "INVALID: purpose missing -> expect 422"
+        }
+      },
+      "payload": {
+        "organization_name": "FC Markdorf 1920 e.V.",
+        "contact_name": "Jonas Braun",
+        "contact_email": "jonas.braun@fc-markdorf-1920.de",
+        "contact_phone": "+49 7543 792509",
+        "requested_amount": 400,
+        "description": "Fussballcamp fuer Kinder in Markdorf - organisiert von FC Markdorf 1920 e.V..",
+        "event_date": "2026-10-08",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Markdorf"
+      }
+    },
+    {
+      "id": "W48",
+      "channel": "web_form",
+      "files": [
+        "W48.json"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Stockach e.V.",
+        "amount": 75000,
+        "event_date": "2026-12-10",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "marie.berger21@gmail.com",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "75000 EUR -> amount_range fail"
+        }
+      },
+      "payload": {
+        "organization_name": "Musikverein Stockach e.V.",
+        "contact_name": "Marie Berger",
+        "contact_email": "marie.berger21@gmail.com",
+        "contact_phone": "+49 7510 528361",
+        "requested_amount": 75000,
+        "purpose": "Sommerkonzert im Stadtpark",
+        "description": "Sommerkonzert im Stadtpark in Stockach - organisiert von Musikverein Stockach e.V..",
+        "event_date": "2026-12-10",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Stockach"
+      }
+    },
+    {
+      "id": "W49",
+      "channel": "web_form",
+      "files": [
+        "W49.json"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Salem e.V.",
+        "amount": 1000,
+        "event_date": "2026-02-01",
+        "region": "Salem",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "paul.wolf@kulturverein-salem.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "past event date -> soft rule warning"
+        }
+      },
+      "payload": {
+        "organization_name": "Kulturverein Salem e.V.",
+        "contact_name": "Paul Wolf",
+        "contact_email": "paul.wolf@kulturverein-salem.de",
+        "contact_phone": "+49 7546 841296",
+        "requested_amount": 1000,
+        "purpose": "Kulturwochenende mit lokalen Kuenstlern",
+        "description": "Kulturwochenende mit lokalen Kuenstlern in Salem - organisiert von Kulturverein Salem e.V..",
+        "event_date": "2026-02-01",
+        "target_audience": "Kinder und Jugendliche",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Salem"
+      }
+    },
+    {
+      "id": "W50",
+      "channel": "web_form",
+      "files": [
+        "W50.json"
+      ],
+      "ground_truth": {
+        "organization": "Schachclub Tettnang e.V.",
+        "amount": 50,
+        "event_date": "2026-10-14",
+        "region": "Tettnang",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "laura.keller@schachclub-tettnang.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "50 EUR -> below minimum (if amount_range has a floor)"
+        }
+      },
+      "payload": {
+        "organization_name": "Schachclub Tettnang e.V.",
+        "contact_name": "Laura Keller",
+        "contact_email": "laura.keller@schachclub-tettnang.de",
+        "contact_phone": "+49 7590 718439",
+        "requested_amount": 50,
+        "purpose": "Jugend-Schachturnier",
+        "description": "Jugend-Schachturnier in Tettnang - organisiert von Schachclub Tettnang e.V..",
+        "event_date": "2026-10-14",
+        "target_audience": "Familien",
+        "proposed_visibility": "Logo auf Plakaten, Website und Programmheft",
+        "region": "Tettnang"
+      }
+    },
+    {
+      "id": "O01",
+      "channel": "operator",
+      "files": [
+        "O01.json",
+        "O01_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Foerderverein Grundschule Radolfzell e.V.",
+        "amount": 900,
+        "event_date": "2026-11-27",
+        "region": "Radolfzell",
+        "in_region": true,
+        "category": "education",
+        "contact_email": "sofia.richter@foerderverein-grundschule-radolfzell.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "fields + matching PDF"
+        }
+      }
+    },
+    {
+      "id": "O02",
+      "channel": "operator",
+      "files": [
+        "O02.json",
+        "O02_anfrage_konflikt.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Tierschutzverein Ueberlingen e.V.",
+        "amount": 1400,
+        "event_date": "2026-11-15",
+        "region": "Ueberlingen",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "lukas.schmid@tierschutzverein-ueberlingen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "fields CONFLICT with attached PDF (ground-truth test)"
+        }
+      }
+    },
+    {
+      "id": "O03",
+      "channel": "operator",
+      "files": [
+        "O03.json"
+      ],
+      "ground_truth": {
+        "organization": "Jugendzentrum Meersburg e.V.",
+        "amount": 1800,
+        "event_date": "2026-09-20",
+        "region": "Meersburg",
+        "in_region": true,
+        "category": "social",
+        "contact_email": "emma.maier@jugendzentrum-meersburg.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "fields only, no attachment"
+        }
+      }
+    },
+    {
+      "id": "O04",
+      "channel": "operator",
+      "files": [
+        "O04.json",
+        "O04_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Naturfreunde Markdorf e.V.",
+        "amount": 1400,
+        "event_date": "2026-11-01",
+        "region": "Markdorf",
+        "in_region": true,
+        "category": "environment",
+        "contact_email": "david.braun@naturfreunde-markdorf.de",
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "file only, no fields"
+        }
+      }
+    },
+    {
+      "id": "O05",
+      "channel": "operator",
+      "files": [
+        "O05.json",
+        "O05_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "SV Stockach 1898 e.V.",
+        "amount": 1400,
+        "event_date": "2026-09-25",
+        "region": "Stockach",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "julia.berger@sv-stockach-1898.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "NO contact email (dead-end/B24 test)"
+        }
+      }
+    },
+    {
+      "id": "O06",
+      "channel": "operator",
+      "files": [
+        "O06.json",
+        "O06_daten.xlsx"
+      ],
+      "ground_truth": {
+        "organization": "TSV Salem 1990 e.V.",
+        "amount": 1400,
+        "event_date": "2026-10-19",
+        "region": "Salem",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "simon.wolf@tsv-salem-1990.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "fields + xlsx attachment (B04 test)"
+        }
+      }
+    },
+    {
+      "id": "O07",
+      "channel": "operator",
+      "files": [
+        "O07.json",
+        "O07_anfrage.pdf",
+        "O07_scan.jpg",
+        "O07_daten.xlsx"
+      ],
+      "ground_truth": {
+        "organization": "TV Tettnang 1954 e.V.",
+        "amount": 1800,
+        "event_date": "2026-09-16",
+        "region": "Tettnang",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "clara.keller@tv-tettnang-1954.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "multi-file: PDF + scan JPG + xlsx"
+        }
+      }
+    },
+    {
+      "id": "O08",
+      "channel": "operator",
+      "files": [
+        "O08.json",
+        "O08_scan.jpg"
+      ],
+      "ground_truth": {
+        "organization": "FC Kressbronn 1905 e.V.",
+        "amount": null,
+        "event_date": "2026-12-10",
+        "region": "Kressbronn",
+        "in_region": true,
+        "category": "sports",
+        "contact_email": "tim.wagner@fc-kressbronn-1905.de",
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "scan image only + minimal fields (OCR/vision)"
+        }
+      }
+    },
+    {
+      "id": "O09",
+      "channel": "operator",
+      "files": [
+        "O09.json",
+        "O09_anfrage.pdf"
+      ],
+      "ground_truth": {
+        "organization": "Musikverein Sipplingen e.V.",
+        "amount": 600,
+        "event_date": "2026-11-09",
+        "region": "Sipplingen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "anna.vogel@musikverein-sipplingen.de",
+        "complete": true,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": false,
+          "notes": "autopilot mode, complete"
+        }
+      }
+    },
+    {
+      "id": "O10",
+      "channel": "operator",
+      "files": [
+        "O10.json"
+      ],
+      "ground_truth": {
+        "organization": "Kulturverein Bodman-Ludwigshafen e.V.",
+        "amount": 600,
+        "event_date": "2026-12-14",
+        "region": "Bodman-Ludwigshafen",
+        "in_region": true,
+        "category": "culture",
+        "contact_email": "max.koch@kulturverein-bodman-ludwigshafen.de",
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": true,
+        "expect": {
+          "eligible_hard_rules": true,
+          "needs_followup": true,
+          "notes": "incomplete fields + email (follow-up test)"
+        }
+      }
+    }
+  ]
+}
