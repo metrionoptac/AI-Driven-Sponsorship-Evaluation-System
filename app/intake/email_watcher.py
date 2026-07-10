@@ -122,6 +122,9 @@ class EmailWatcher:
         Gmail's IMAP IDLE is unreliable (aioimaplib returns immediately),
         so we use polling with re-SELECT to refresh mailbox state.
         """
+        # C4: retry sweep -- re-process mails whose processing crashed earlier
+        await self._retry_failed_emails()
+
         # On startup, only process today's unseen emails (not the whole inbox)
         await self._process_todays_unseen()
 
@@ -144,29 +147,36 @@ class EmailWatcher:
         logger.debug("Polling for unseen emails...")
         await self._process_unseen()
 
+    async def _search_unseen_uids(self, today_only: bool = True) -> list[str]:
+        """UID search for unseen mails. UIDs are stable (survive expunges) --
+        required for crash-safe retry (email_log.imap_uid) and folder moves."""
+        criteria = "UNSEEN"
+        if today_only:
+            from datetime import datetime
+            today = datetime.utcnow().strftime("%d-%b-%Y")
+            criteria = f"UNSEEN SINCE {today}"
+        response = await self._client.uid_search(criteria)
+        if response.result != "OK":
+            logger.warning("IMAP UID search failed: %s", response)
+            return []
+        uids_line = response.lines[0] if response.lines else b""
+        if not uids_line or not uids_line.strip():
+            return []
+        return [u.decode() if isinstance(u, bytes) else u for u in uids_line.split()]
+
     async def _process_todays_unseen(self):
         """Fetch only today's unseen emails (used on startup to avoid processing entire inbox)."""
-        from datetime import datetime
-        today = datetime.utcnow().strftime("%d-%b-%Y")
-        response = await self._client.search(f"UNSEEN SINCE {today}")
-        if response.result != "OK":
-            logger.warning("IMAP search failed: %s", response)
-            return
-
-        msg_ids_line = response.lines[0]
-        if not msg_ids_line or not msg_ids_line.strip():
+        uids = await self._search_unseen_uids(today_only=True)
+        if not uids:
             logger.info("No unseen emails from today")
             return
-
-        msg_ids = msg_ids_line.split()
-        logger.info("Found %d unseen emails from today", len(msg_ids))
-
-        for msg_id in msg_ids:
-            msg_id_str = msg_id.decode() if isinstance(msg_id, bytes) else msg_id
+        logger.info("Found %d unseen emails from today", len(uids))
+        for uid in uids:
             try:
-                await self._process_single_email(msg_id_str)
+                await self._process_single_email(uid)
             except Exception:
-                logger.exception("Failed to process email %s", msg_id_str)
+                logger.exception("Failed to process email uid=%s", uid)
+        await self._expunge_moved()
 
     async def _process_unseen(self):
         """Fetch all unseen (unread) emails and ingest them."""
@@ -176,70 +186,163 @@ class EmailWatcher:
         except Exception:
             pass  # If re-select fails, search may still work
 
-        # Search for unseen emails from today only
-        from datetime import datetime
-        today = datetime.utcnow().strftime("%d-%b-%Y")
-        response = await self._client.search(f"UNSEEN SINCE {today}")
-        if response.result != "OK":
-            logger.warning("IMAP search failed: %s", response)
+        uids = await self._search_unseen_uids(today_only=True)
+        if not uids:
             return
-
-        # response.lines[0] contains space-separated message IDs
-        msg_ids_line = response.lines[0]
-        if not msg_ids_line or not msg_ids_line.strip():
-            return
-
-        msg_ids = msg_ids_line.split()
-        logger.info("Found %d unseen emails", len(msg_ids))
-
-        for msg_id in msg_ids:
-            msg_id_str = msg_id.decode() if isinstance(msg_id, bytes) else msg_id
+        logger.info("Found %d unseen emails", len(uids))
+        for uid in uids:
             try:
-                await self._process_single_email(msg_id_str)
+                await self._process_single_email(uid)
             except Exception:
-                logger.exception("Failed to process email %s", msg_id_str)
+                logger.exception("Failed to process email uid=%s", uid)
+        await self._expunge_moved()
 
-    async def _process_single_email(self, msg_id: str):
-        """Fetch a single email by ID, parse it, and ingest."""
-        # Fetch full email
-        response = await self._client.fetch(msg_id, "(RFC822)")
-        if response.result != "OK":
-            logger.warning("Failed to fetch email %s: %s", msg_id, response)
+    async def _retry_failed_emails(self):
+        """C4: re-process inbound mails stuck in processing/failed (crash recovery)."""
+        db = getattr(self.ingestion, "db", None)
+        if not db:
+            return
+        try:
+            stuck = await db.get_failed_inbound_emails()
+        except Exception as e:
+            logger.warning("Retry sweep query failed: %s", e)
+            return
+        if not stuck:
+            return
+        logger.info("Retry sweep: %d mails to re-process", len(stuck))
+        for row in stuck:
+            uid = row.get("imap_uid")
+            if not uid:
+                await db.update_email_log(str(row["id"]), state="failed",
+                                          error="no imap_uid stored -- cannot retry")
+                continue
+            try:
+                await db.update_email_log(str(row["id"]), state="processing")
+                await self._process_single_email(uid, log_id=str(row["id"]))
+            except Exception as e:
+                logger.exception("Retry failed for uid=%s", uid)
+                try:
+                    await db.update_email_log(str(row["id"]), state="failed", error=str(e))
+                except Exception:
+                    pass
+        await self._expunge_moved()
+
+    async def _move_to_processed(self, uid: str):
+        """C5: archive a handled mail into the Processed folder (COPY + \\Deleted;
+        expunge happens once per batch)."""
+        try:
+            await self._client.create("Processed")
+        except Exception:
+            pass  # exists already or server refuses -- non-fatal
+        try:
+            resp = await self._client.uid("copy", uid, "Processed")
+            if resp.result == "OK":
+                await self._client.uid("store", uid, "+FLAGS", r"(\Deleted)")
+                self._pending_expunge = True
+        except Exception as e:
+            logger.debug("Move-to-Processed failed for uid=%s: %s", uid, e)
+
+    async def _expunge_moved(self):
+        """Expunge once per batch (safe with UIDs)."""
+        if getattr(self, "_pending_expunge", False):
+            try:
+                await self._client.expunge()
+            except Exception:
+                pass
+            self._pending_expunge = False
+
+    async def _process_single_email(self, uid: str, log_id: str | None = None):
+        """Fetch a single email by UID, route it, and process (crash-safe)."""
+        # Fetch full email by UID (stable identifier)
+        response = await self._client.uid("fetch", uid, "(RFC822)")
+        if response.result != "OK" or len(response.lines) < 2:
+            logger.warning("Failed to fetch email uid=%s: %s", uid, response)
+            if log_id:
+                db = getattr(self.ingestion, "db", None)
+                if db:
+                    await db.update_email_log(log_id, state="failed",
+                                              error="UID no longer fetchable")
             return
 
-        # Parse email
         raw_bytes = response.lines[1]  # Raw email bytes
         parsed = self._parse_email(raw_bytes)
+        db = getattr(self.ingestion, "db", None)
 
         logger.info(
             "Processing email: from=%s, subject=%s, attachments=%d",
             parsed["from"], parsed["subject"], len(parsed["attachments"]),
         )
 
-        # Mark as seen up-front so any exception cannot cause reprocessing
-        # by a later poll (the main cause of duplicate requests).
+        # Mark as seen up-front so any exception cannot cause duplicate
+        # processing by a later poll. Crash recovery is handled by the
+        # email_log state machine below (C4), not by leaving mails unseen.
         try:
-            await self._client.store(msg_id, "+FLAGS", r"(\Seen)")
+            await self._client.uid("store", uid, "+FLAGS", r"(\Seen)")
         except Exception as e:
-            logger.warning("Failed to mark %s as seen (continuing): %s", msg_id, e)
+            logger.warning("Failed to mark uid=%s as seen (continuing): %s", uid, e)
 
-        # Determine routing deterministically:
-        # If this sender has an ACTIVE request in a state that expects follow-up
-        # input, this email is a reply — not a new request. Route to
-        # FollowupHandler and NEVER fall through to new-request ingest.
-        sender_has_active = False
-        if self.followup_handler:
-            sender_has_active = await self._sender_has_active_request(parsed["from"])
+        # C4: record this mail BEFORE processing -- if we crash, the retry
+        # sweep finds it by state + UID and re-processes it.
+        if db and log_id is None:
+            try:
+                log_id = await db.log_email(
+                    direction="inbound", mail_type="unclassified",
+                    message_id=parsed.get("message_id"),
+                    in_reply_to=parsed.get("in_reply_to"),
+                    references=parsed.get("references"),
+                    imap_uid=uid, sender=parsed["from"],
+                    subject=parsed["subject"], state="processing",
+                )
+            except Exception as e:
+                logger.warning("email_log insert failed (continuing): %s", e)
 
-        should_route_to_followup = sender_has_active or (
-            self.followup_handler and self._looks_like_reply(parsed)
+        try:
+            request_id = await self._route_and_process(parsed, db)
+            if db and log_id:
+                await db.update_email_log(log_id, state="done",
+                                          request_id=request_id)
+            await self._move_to_processed(uid)
+        except Exception as e:
+            if db and log_id:
+                try:
+                    await db.update_email_log(log_id, state="failed", error=str(e))
+                except Exception:
+                    pass
+            raise
+
+    async def _route_and_process(self, parsed: dict, db) -> str | None:
+        """Route a parsed email: bounce / reply / new request. Returns request_id."""
+        # C6: bounces (mailer-daemon) -- flag the affected request, never ingest
+        if self._is_bounce(parsed):
+            return await self._handle_bounce(parsed, db)
+
+        # C3: deterministic reply routing -- does In-Reply-To/References match
+        # a Message-ID WE sent? Then this is a reply to THAT request, period.
+        matched_request_id = None
+        if db:
+            header_ids = self._extract_message_ids(
+                f"{parsed.get('in_reply_to') or ''} {parsed.get('references') or ''}"
+            )
+            if header_ids:
+                try:
+                    matched_request_id = await db.find_request_by_message_ids(header_ids)
+                except Exception as e:
+                    logger.warning("Reference-match lookup failed: %s", e)
+
+        # Fallback heuristic: reply MARKERS only (Re:/AW:, our ref in subject,
+        # In-Reply-To present). B41 fix: "sender has an active request" is NO
+        # LONGER a swallow rule -- now that our own mails carry Message-IDs,
+        # real replies match deterministically above; a fresh-composed mail
+        # from a known sender must be allowed to become a NEW request.
+        looks_like_reply = self._looks_like_reply(parsed)
+        should_route_to_followup = bool(matched_request_id) or (
+            self.followup_handler and looks_like_reply
         )
 
-        if should_route_to_followup:
+        if should_route_to_followup and self.followup_handler:
             logger.info(
-                "Routing to FollowupHandler (active_request=%s, heuristic=%s): from=%s, subject=%s",
-                sender_has_active, self._looks_like_reply(parsed),
-                parsed["from"], parsed["subject"],
+                "Routing to FollowupHandler (ref_match=%s, heuristic=%s): from=%s",
+                bool(matched_request_id), looks_like_reply, parsed["from"],
             )
             try:
                 followup_result = await self.followup_handler.handle_reply(
@@ -249,24 +352,24 @@ class EmailWatcher:
                     in_reply_to=parsed.get("in_reply_to"),
                     references=parsed.get("references"),
                     attachments=parsed["attachments"],
+                    request_id=matched_request_id,
                 )
                 logger.info("FollowupHandler result: %s", followup_result)
             except Exception:
                 logger.exception("FollowupHandler raised")
                 followup_result = {"status": "error"}
 
-            # If the sender has an active request, this email is ALWAYS a reply.
-            # Under no circumstances fall through to new-request ingest.
-            if sender_has_active:
-                return
+            # Header match: this IS a reply to that request -- never fall through.
+            if matched_request_id:
+                return matched_request_id
 
-            # No active request — only fall through if FollowupHandler explicitly
-            # said "not_a_followup". Otherwise treat it as handled.
+            # Heuristic-only routing: fall through if handler said "not mine"
             if followup_result.get("status") != "not_a_followup":
-                return
+                return followup_result.get("request_id")
             logger.info("Not a follow-up, processing as new request")
 
-        # Ingest via UnifiedIngestionService (new request path)
+        # New request path (B41 fix: a same-sender mail WITHOUT matching
+        # References that the handler rejects lands here as a NEW request)
         result = await self.ingestion.ingest_email_with_attachments(
             email_body=parsed["body_text"],
             email_html=parsed["body_html"],
@@ -274,18 +377,50 @@ class EmailWatcher:
             subject=parsed["subject"],
             date=parsed["date"],
             attachments=parsed["attachments"],
+            source_message_id=parsed.get("message_id"),
         )
 
         if result.is_duplicate:
-            logger.info(
-                "Email was duplicate, skipping: from=%s, subject=%s",
-                parsed["from"], parsed["subject"],
-            )
+            logger.info("Email was duplicate, skipping: from=%s, subject=%s",
+                        parsed["from"], parsed["subject"])
         else:
-            logger.info(
-                "Email ingested: request_id=%s, from=%s",
-                result.request_id, parsed["from"],
-            )
+            logger.info("Email ingested: request_id=%s, from=%s",
+                        result.request_id, parsed["from"])
+        return result.request_id
+
+    # ----------------------------------------------------------------
+    # C6: bounce handling
+    # ----------------------------------------------------------------
+
+    @staticmethod
+    def _is_bounce(parsed: dict) -> bool:
+        sender = (parsed.get("from") or "").lower()
+        return "mailer-daemon" in sender or "postmaster" in sender
+
+    @staticmethod
+    def _extract_message_ids(text: str) -> list[str]:
+        import re
+        return re.findall(r"<[^<>\s@]+@[^<>\s]+>", text or "")
+
+    async def _handle_bounce(self, parsed: dict, db) -> str | None:
+        """Match a delivery-failure report to the request whose mail bounced (B39)."""
+        candidate_ids = self._extract_message_ids(
+            f"{parsed.get('body_text') or ''} {parsed.get('in_reply_to') or ''} "
+            f"{parsed.get('references') or ''}"
+        )
+        request_id = None
+        if db and candidate_ids:
+            try:
+                request_id = await db.find_request_by_message_ids(candidate_ids)
+            except Exception as e:
+                logger.warning("Bounce match lookup failed: %s", e)
+        if request_id and db:
+            await db.mark_delivery_failed(request_id)
+            logger.warning("BOUNCE matched request %s -- delivery_failed flagged "
+                           "(applicant did NOT receive our mail)", request_id)
+        else:
+            logger.info("Bounce received, no matching outbound Message-ID -- archived")
+        return request_id
 
     async def _sender_has_active_request(self, sender: str) -> bool:
         """
@@ -336,6 +471,7 @@ class EmailWatcher:
             "from": msg["from"] or "(unknown)",
             "to": msg["to"] or "",
             "date": msg["date"] or "",
+            "message_id": msg["message-id"] or "",
             "in_reply_to": msg["in-reply-to"] or "",
             "references": msg["references"] or "",
             "body_text": "",

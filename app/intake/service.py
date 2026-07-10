@@ -150,6 +150,7 @@ class UnifiedIngestionService:
                     request_id=request_id,
                     company_name=company_name,
                     display_id=display_id,
+                    in_reply_to=metadata.get("source_message_id"),
                 )
             )
             logger.info("Acknowledgment email queued for %s (request %s)", sender_email, request_id)
@@ -176,6 +177,7 @@ class UnifiedIngestionService:
         subject: str,
         date: str,
         attachments: list[dict],
+        source_message_id: str | None = None,
     ) -> IngestionResult:
         """
         Ingest an email and its attachments as a single request.
@@ -190,6 +192,8 @@ class UnifiedIngestionService:
             "email_date": date,
             "has_attachments": len(attachments) > 0,
             "attachment_count": len(attachments),
+            # Smart-IMAP: applicant's Message-ID -> our ack replies to it (threading)
+            "source_message_id": source_message_id,
         }
 
         if attachments:

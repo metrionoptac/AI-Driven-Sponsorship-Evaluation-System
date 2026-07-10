@@ -118,6 +118,7 @@ class EmailSender:
         request_id: str,
         company_name: str = "Sponsoring-Team",
         display_id: str | None = None,
+        in_reply_to: str | None = None,
     ) -> bool:
         """
         Send immediate receipt confirmation when a sponsorship request arrives.
@@ -132,7 +133,11 @@ class EmailSender:
         subject = ACKNOWLEDGMENT_SUBJECT.format(ref=ref)
         body = ACKNOWLEDGMENT_BODY_DE.format(ref=ref, company_name=company_name)
 
-        return await self._send(to_email, subject, body, request_id, "acknowledgment")
+        # Threading: reply to the applicant's original mail (explicit id wins --
+        # it's passed by the watcher before email_log has the request linked)
+        reply_to_id, references = await self._thread_headers(request_id, in_reply_to)
+        return await self._send(to_email, subject, body, request_id, "acknowledgment",
+                                in_reply_to=reply_to_id, references=references)
 
     async def send_completeness_request(
         self,
@@ -178,7 +183,9 @@ class EmailSender:
             form_url=form_url,
         )
 
-        sent = await self._send(to_email, subject, body, request_id, "completeness_request")
+        reply_to_id, references = await self._thread_headers(request_id)
+        sent = await self._send(to_email, subject, body, request_id, "completeness_request",
+                                in_reply_to=reply_to_id, references=references)
 
         # Persist to follow_ups table (tracks retries + missing fields per request)
         if sent and self.db:
@@ -231,7 +238,30 @@ class EmailSender:
         subject_template = subject_map.get(letter_type, DECISION_REJECTION_SUBJECT)
         subject = subject_template.format(ref=ref)
 
-        return await self._send(to_email, subject, letter_content, request_id, f"letter_{letter_type.lower()}")
+        reply_to_id, references = await self._thread_headers(request_id)
+        return await self._send(to_email, subject, letter_content, request_id,
+                                f"letter_{letter_type.lower()}",
+                                in_reply_to=reply_to_id, references=references)
+
+    async def _thread_headers(self, request_id: str,
+                              explicit_in_reply_to: str | None = None) -> tuple[str | None, str | None]:
+        """
+        Smart-IMAP threading: build In-Reply-To/References from the request's
+        email_log Message-ID chain so all our mails join ONE conversation.
+        """
+        in_reply_to, references = explicit_in_reply_to, None
+        if self.db:
+            try:
+                refs = await self.db.get_thread_refs(request_id)
+                in_reply_to = explicit_in_reply_to or refs.get("in_reply_to")
+                references = refs.get("references")
+                if explicit_in_reply_to and references and explicit_in_reply_to not in references:
+                    references = f"{references} {explicit_in_reply_to}"
+                elif explicit_in_reply_to and not references:
+                    references = explicit_in_reply_to
+            except Exception as e:
+                logger.debug("Thread-ref lookup failed for %s: %s", request_id, e)
+        return in_reply_to, references
 
     async def _send(
         self,
@@ -240,35 +270,70 @@ class EmailSender:
         body: str,
         request_id: str,
         email_type: str,
+        in_reply_to: str | None = None,
+        references: str | None = None,
     ) -> bool:
-        """Send email via SMTP. Returns True if sent, False on any error."""
+        """Send email via SMTP with a stored Message-ID (threading). Returns True if sent."""
+        from email.utils import make_msgid
+        domain = self.username.split("@")[-1] if "@" in self.username else None
+        message_id = make_msgid(domain=domain)
+
         try:
             # Run blocking SMTP send in a thread pool
             loop = asyncio.get_event_loop()
             sent = await loop.run_in_executor(
                 None,
                 self._smtp_send_sync,
-                to_email, subject, body,
+                to_email, subject, body, message_id, in_reply_to, references,
             )
             if sent:
                 logger.info(
                     "Email sent: type=%s, to=%s, request=%s, subject=%s",
                     email_type, to_email, request_id, subject[:60],
                 )
+            if self.db:
+                try:
+                    await self.db.log_email(
+                        direction="outbound", mail_type=email_type,
+                        message_id=message_id, in_reply_to=in_reply_to,
+                        references=references, request_id=request_id,
+                        recipient=to_email, subject=subject,
+                        state="done" if sent else "send_failed",
+                    )
+                except Exception as e:
+                    logger.warning("email_log write failed for %s: %s", request_id, e)
             return sent
         except Exception as e:
             logger.warning(
                 "Email send failed (non-fatal): type=%s, to=%s, request=%s, error=%s",
                 email_type, to_email, request_id, e,
             )
+            if self.db:
+                try:
+                    await self.db.log_email(
+                        direction="outbound", mail_type=email_type,
+                        message_id=message_id, request_id=request_id,
+                        recipient=to_email, subject=subject,
+                        state="send_failed", error=str(e),
+                    )
+                except Exception:
+                    pass
             return False
 
-    def _smtp_send_sync(self, to_email: str, subject: str, body: str) -> bool:
+    def _smtp_send_sync(self, to_email: str, subject: str, body: str,
+                        message_id: str, in_reply_to: str | None = None,
+                        references: str | None = None) -> bool:
         """Synchronous SMTP send. Runs in thread pool."""
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = f"{self.from_name} <{self.username}>"
         msg["To"] = to_email
+        # RFC 5322 threading: clients group mails sharing these headers
+        msg["Message-ID"] = message_id
+        if in_reply_to:
+            msg["In-Reply-To"] = in_reply_to
+        if references:
+            msg["References"] = references
 
         # Plain text version
         msg.attach(MIMEText(body, "plain", "utf-8"))

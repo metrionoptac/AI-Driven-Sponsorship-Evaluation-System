@@ -38,14 +38,17 @@ class FollowupHandler:
         in_reply_to: str | None = None,
         references: str | None = None,
         attachments: list[dict] | None = None,
+        request_id: str | None = None,
     ) -> dict:
         """
         Process a reply email that may contain missing information.
 
         Returns dict with status and action taken.
         """
-        # 1. Find the original request
-        request_id = await self._find_original_request(sender, subject, in_reply_to, references)
+        # 1. Find the original request (skip lookup when the watcher already
+        # matched it deterministically via References -> our Message-IDs)
+        if not request_id:
+            request_id = await self._find_original_request(sender, subject, in_reply_to, references)
         if not request_id:
             return {"status": "not_a_followup", "reason": "Could not match to existing request"}
 

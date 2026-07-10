@@ -67,7 +67,106 @@ class Database:
                 v4_sql = f.read()
             async with self._pool.acquire() as conn:
                 await conn.execute(v4_sql)
-        logger.info("Database schema initialized (v1 + v2 + v3 + v4)")
+        # Schema v5 (smart-IMAP: email_log + delivery_failed flag)
+        schema_v5_path = os.path.join(base_dir, "schema_v5.sql")
+        if os.path.exists(schema_v5_path):
+            with open(schema_v5_path, "r") as f:
+                v5_sql = f.read()
+            async with self._pool.acquire() as conn:
+                await conn.execute(v5_sql)
+        logger.info("Database schema initialized (v1 + v2 + v3 + v4 + v5)")
+
+    # ================================================================
+    # Email log (smart-IMAP: threading, routing, crash safety, bounces)
+    # ================================================================
+
+    async def log_email(
+        self, direction: str, mail_type: str,
+        message_id: str | None = None, in_reply_to: str | None = None,
+        references: str | None = None, request_id: str | None = None,
+        imap_uid: str | None = None, sender: str | None = None,
+        recipient: str | None = None, subject: str | None = None,
+        state: str = "done", error: str | None = None,
+    ) -> str:
+        log_id = str(uuid.uuid4())
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                """INSERT INTO email_log
+                   (id, request_id, direction, mail_type, message_id, in_reply_to,
+                    references_ids, imap_uid, sender, recipient, subject, state, error)
+                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)""",
+                uuid.UUID(log_id),
+                uuid.UUID(request_id) if request_id else None,
+                direction, mail_type, message_id, in_reply_to, references,
+                imap_uid, sender, recipient, subject, state, error,
+            )
+        return log_id
+
+    async def update_email_log(self, log_id: str, *, state: str | None = None,
+                               request_id: str | None = None, error: str | None = None):
+        sets, params, idx = ["updated_at = NOW()"], [], 1
+        if state is not None:
+            sets.append(f"state = ${idx}"); params.append(state); idx += 1
+        if request_id is not None:
+            sets.append(f"request_id = ${idx}"); params.append(uuid.UUID(request_id)); idx += 1
+        if error is not None:
+            sets.append(f"error = ${idx}"); params.append(error[:500]); idx += 1
+        params.append(uuid.UUID(log_id))
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                f"UPDATE email_log SET {', '.join(sets)} WHERE id = ${idx}", *params,
+            )
+
+    async def find_request_by_message_ids(self, message_ids: list[str]) -> str | None:
+        """Deterministic reply routing: which request did we send one of these IDs for?"""
+        if not message_ids:
+            return None
+        async with self._pool.acquire() as conn:
+            row = await conn.fetchrow(
+                """SELECT request_id FROM email_log
+                   WHERE direction = 'outbound' AND message_id = ANY($1::text[])
+                     AND request_id IS NOT NULL
+                   ORDER BY created_at DESC LIMIT 1""",
+                message_ids,
+            )
+        return str(row["request_id"]) if row else None
+
+    async def get_thread_refs(self, request_id: str) -> dict:
+        """Message-ID chain for a request -> build In-Reply-To/References headers."""
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                """SELECT message_id, direction FROM email_log
+                   WHERE request_id = $1 AND message_id IS NOT NULL
+                   ORDER BY created_at ASC""",
+                uuid.UUID(request_id),
+            )
+        chain = [r["message_id"] for r in rows]
+        inbound = [r["message_id"] for r in rows if r["direction"] == "inbound"]
+        return {
+            "in_reply_to": (inbound[-1] if inbound else (chain[-1] if chain else None)),
+            "references": " ".join(chain) if chain else None,
+        }
+
+    async def get_failed_inbound_emails(self, limit: int = 50) -> list[dict]:
+        """Inbound mails stuck in processing/failed -> retry sweep re-fetches by UID."""
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                """SELECT id, imap_uid, message_id, sender, subject, state FROM email_log
+                   WHERE direction = 'inbound' AND state IN ('failed', 'processing')
+                     AND created_at < NOW() - INTERVAL '5 minutes'
+                   ORDER BY created_at ASC LIMIT $1""",
+                limit,
+            )
+        return [dict(r) for r in rows]
+
+    async def mark_delivery_failed(self, request_id: str):
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE requests SET delivery_failed = TRUE WHERE id = $1",
+                uuid.UUID(request_id),
+            )
+        await self.audit_log(request_id, "delivery_failed",
+                             details={"reason": "bounce received for outbound email"})
 
     # ================================================================
     # Request CRUD
