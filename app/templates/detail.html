@@ -331,10 +331,19 @@
               </template>
               <p x-show="!thread.length" class="text-center text-gray-400 text-sm py-8">No messages yet.</p>
           </div>
-          <div class="px-4 py-3 bg-white border-t border-gray-200 flex gap-2 flex-shrink-0">
-              <input disabled placeholder="Write a message… (coming with the composer)"
-                     class="flex-1 border border-gray-200 bg-gray-50 rounded-full px-4 py-2 text-sm text-gray-400">
-              <button disabled class="px-4 h-9 rounded-full bg-gray-200 text-gray-400 text-sm font-medium cursor-not-allowed">Send</button>
+          <div class="px-4 py-3 bg-white border-t border-gray-200 flex-shrink-0">
+              <div class="flex gap-2">
+                  <input x-model="composerText" @keydown.enter="sendMessage()"
+                         :disabled="!req?.source_email || sendingMessage"
+                         :placeholder="req?.source_email ? 'Write a message to the applicant…' : 'No applicant email on file'"
+                         class="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50 disabled:text-gray-400">
+                  <button @click="sendMessage()" :disabled="!composerText.trim() || !req?.source_email || sendingMessage"
+                          class="px-4 h-9 rounded-full bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed">
+                      <span x-text="sendingMessage ? 'Sending…' : 'Send'"></span>
+                  </button>
+              </div>
+              <p class="text-[10px] text-gray-400 mt-1.5 pl-2" x-show="req?.source_email"
+                 x-text="'Sends a real email to ' + req.source_email + ' — threaded into this conversation.'"></p>
           </div>
       </div>
     </div>
@@ -353,6 +362,26 @@ function detailPage() {
                                   JSON.parse(localStorage.getItem('convo_prefs') || '{}')),
         convoOpen: (JSON.parse(localStorage.getItem('convo_prefs') || '{}').panel || 'visible') === 'visible',
         convoFull: false, thread: [], unreadCount: 0,
+        composerText: '', sendingMessage: false,
+        async sendMessage() {
+            const text = this.composerText.trim();
+            if (!text || this.sendingMessage) return;
+            // D6 guardrails: confirm on closed/junk requests + always confirm a real send
+            const stateWarn = ['completed', 'junk'].includes(this.req?.state)
+                ? '\n\nNOTE: this request is ' + this.req.state.toUpperCase() + '.' : '';
+            if (!confirm('Send this email to ' + this.req.source_email + '?' + stateWarn + '\n\n"' + text.slice(0, 200) + (text.length > 200 ? '…' : '') + '"')) return;
+            this.sendingMessage = true;
+            try {
+                const r = await fetch('/api/dashboard/request/' + this.req.id + '/message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text }),
+                });
+                if (r.ok) { this.composerText = ''; await this.loadThread(); }
+                else alert('Send failed: ' + ((await r.json()).detail || r.status));
+            } catch (e) { alert('Error: ' + e); }
+            this.sendingMessage = false;
+        },
         displayThread() {
             let items = this.convoPrefs.events === false || this.convoPrefs.events === 'false'
                 ? this.thread.filter(it => it.kind !== 'event') : this.thread;

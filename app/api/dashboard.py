@@ -912,6 +912,60 @@ async def get_sla_stats(days: int = Query(30, ge=7, le=365)):
 
 
 # ----------------------------------------------------------------
+# POST /api/dashboard/request/{id}/message -- Workspace D6: composer
+# ----------------------------------------------------------------
+
+class OperatorMessage(BaseModel):
+    message: str
+
+
+@router.post("/request/{request_id}/message")
+async def send_operator_message(request_id: str, body: OperatorMessage):
+    """Operator sends a free-text email to the applicant from the thread."""
+    db = _get_db()
+    try:
+        rid = uuid.UUID(request_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid request ID")
+    text = (body.message or "").strip()
+    if not text:
+        raise HTTPException(422, "Message is empty")
+    if len(text) > 5000:
+        raise HTTPException(422, "Message too long (max 5000 characters)")
+
+    async with db.acquire() as conn:
+        req = await conn.fetchrow(
+            "SELECT source_email, source_subject, received_via, display_id, state "
+            "FROM requests WHERE id = $1", rid)
+    if not req:
+        raise HTTPException(404, "Request not found")
+    if not req["source_email"]:
+        raise HTTPException(400, "No applicant email on file for this request")
+
+    from app.agents.email_sender import EmailSender
+    from app.config import get_config
+    config = get_config()
+    if not config.smtp.enabled:
+        raise HTTPException(503, "Email sending is disabled (SMTP_ENABLED=false)")
+
+    sender = EmailSender.from_config(config, db=db)
+    sent = await sender.send_operator_message(
+        to_email=req["source_email"],
+        request_id=str(rid),
+        message=text,
+        display_id=req["display_id"],
+        original_subject=(req["source_subject"] if req["received_via"] == "email" else None),
+    )
+    if not sent:
+        raise HTTPException(502, "Send failed — see server log")
+
+    await db.audit_log(str(rid), "operator_message_sent",
+                       details={"to": req["source_email"], "chars": len(text)},
+                       actor="operator")
+    return {"status": "sent", "to": req["source_email"]}
+
+
+# ----------------------------------------------------------------
 # GET /api/dashboard/request/{id}/attachments -- Workspace D7: ALL files
 # ----------------------------------------------------------------
 

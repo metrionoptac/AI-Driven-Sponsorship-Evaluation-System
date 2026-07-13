@@ -251,6 +251,31 @@ class EmailSender:
                                 f"letter_{letter_type.lower()}",
                                 in_reply_to=reply_to_id, references=references)
 
+    async def send_operator_message(
+        self,
+        to_email: str,
+        request_id: str,
+        message: str,
+        display_id: str | None = None,
+        original_subject: str | None = None,
+        company_name: str = "Sponsoring-Team",
+    ) -> bool:
+        """
+        D6 step 2 (composer): free-text message from the operator, sent from
+        the request's thread in the workspace. Threads like every other mail.
+        """
+        if not self.enabled or not to_email:
+            logger.info("Email sender disabled or no recipient — skipping operator message for %s", request_id)
+            return False
+
+        ref = display_id or self._format_ref(request_id)
+        subject = self._reply_subject(original_subject, f"Ihre Sponsoring-Anfrage | Ref: {ref}")
+        body = f"{message}\n\nMit freundlichen Gruessen\n{company_name}"
+
+        reply_to_id, references = await self._thread_headers(request_id)
+        return await self._send(to_email, subject, body, request_id, "operator_message",
+                                in_reply_to=reply_to_id, references=references)
+
     async def _thread_headers(self, request_id: str,
                               explicit_in_reply_to: str | None = None) -> tuple[str | None, str | None]:
         """
