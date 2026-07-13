@@ -25,7 +25,7 @@
                         <!-- D5: reopen the conversation when collapsed -->
                         <button x-show="!convoOpen" @click="convoOpen = true"
                                 class="relative inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-primary-500 text-primary-600 bg-primary-50 hover:bg-primary-100 text-sm font-bold rounded-full transition">
-                            💬 See conversation
+                            Communication History
                             <span x-show="unreadCount > 0"
                                   class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] leading-5 text-center"
                                   x-text="unreadCount"></span>
@@ -190,8 +190,8 @@
            :class="convoFull ? 'fixed inset-4 z-50 shadow-2xl' : 'xl:sticky xl:top-4 max-h-[calc(100vh-2rem)]'">
           <div class="flex items-center px-4 py-3 bg-white border-b border-gray-200 flex-shrink-0">
               <div>
-                  <h3 class="font-semibold text-sm text-gray-800">💬 Conversation</h3>
-                  <p class="text-[11px] text-gray-400"><span x-text="thread.length"></span> items · all channels · kept forever</p>
+                  <h3 class="font-semibold text-sm text-gray-800">Communication History</h3>
+                  <p class="text-[11px] text-gray-400"><span x-text="thread.length"></span> messages · email, form &amp; letters · complete record</p>
               </div>
               <div class="ml-auto flex items-center gap-1">
                   <button @click="convoFull = !convoFull" title="Fullscreen"
@@ -207,7 +207,7 @@
                       <div x-show="it.kind === 'start_card'"
                            class="bg-white border border-gray-200 rounded-xl p-3 mr-10 shadow-sm">
                           <p class="text-[11px] font-bold text-gray-500 mb-1.5"
-                             x-text="(it.channel === 'web_form' ? '📝 Web form submission' : it.channel === 'operator' ? '👤 Created by operator' : '📎 Document intake') + ' · ' + it.channel"></p>
+                             x-text="it.channel === 'web_form' ? 'Web form submission' : it.channel === 'operator' ? 'Created by operator' : 'Document intake · ' + it.channel"></p>
                           <dl class="text-xs space-y-1">
                               <template x-for="[k, v] in Object.entries(it.fields || {})" :key="k">
                                   <div class="flex gap-2"><dt class="text-gray-500 w-28 flex-shrink-0" x-text="k.replace(/_/g,' ')"></dt><dd class="font-medium" x-text="v"></dd></div>
@@ -245,9 +245,9 @@
               <p x-show="!thread.length" class="text-center text-gray-400 text-sm py-8">No messages yet.</p>
           </div>
           <div class="px-4 py-3 bg-white border-t border-gray-200 flex gap-2 flex-shrink-0">
-              <input disabled placeholder="Write a message… (composer — step ⑤)"
+              <input disabled placeholder="Write a message… (coming with the composer)"
                      class="flex-1 border border-gray-200 bg-gray-50 rounded-full px-4 py-2 text-sm text-gray-400">
-              <button disabled class="w-9 h-9 rounded-full bg-gray-200 text-gray-400 cursor-not-allowed">➤</button>
+              <button disabled class="px-4 h-9 rounded-full bg-gray-200 text-gray-400 text-sm font-medium cursor-not-allowed">Send</button>
           </div>
       </div>
     </div>
@@ -277,9 +277,9 @@ function detailPage() {
         eventLabel(it) {
             const d = it.details || {};
             if (it.event === 'form_completion')
-                return '📝 Applicant completed the online form (' + (d.fields_submitted || []).join(', ') + ') · pipeline resumed';
-            if (it.event === 'junk_rescued') return '🛟 Operator rescued from junk — processing';
-            if (it.event === 'classified_junk') return '🚫 Classified as junk (' + (d.category || '?') + ')';
+                return 'Applicant completed the online form (' + (d.fields_submitted || []).join(', ') + ') · pipeline resumed';
+            if (it.event === 'junk_rescued') return 'Operator override: rescued from junk — processing';
+            if (it.event === 'classified_junk') return 'Classified as junk (' + (d.category || '?') + ')';
             return it.event;
         },
         // B48: render nested objects as readable key/value lines (XSS-safe)
