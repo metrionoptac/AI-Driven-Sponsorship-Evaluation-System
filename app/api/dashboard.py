@@ -404,8 +404,13 @@ async def submit_review(request_id: str, action: ReviewAction):
         else:
             extracted_data = dict(ed) if ed else {}
 
-    # If no amount provided by human, prefer AI recommended amount, then fall back to requested
-    if amount is None or amount == 0:
+    # B45: a REJECTION never carries an amount -- zero it unconditionally
+    # (the old fallback used to backfill rejections with the requested amount,
+    # poisoning budget/reporting stats)
+    if decision == "REJECTED":
+        amount = 0
+    elif amount is None or amount == 0:
+        # If no amount provided by human, prefer AI recommended amount, then requested
         amount = (rec["recommended_amount"] if rec else 0) or extracted_data.get("requested_amount") or 0
 
     conditions = []
@@ -897,6 +902,97 @@ async def get_sla_stats(days: int = Query(30, ge=7, le=365)):
         "violations": violations,
         "period_days": days,
     }
+
+
+# ----------------------------------------------------------------
+# GET /api/dashboard/request/{id}/attachments -- Workspace D7: ALL files
+# ----------------------------------------------------------------
+
+def _storage_base() -> "Path":
+    from pathlib import Path
+    from app.config import get_config
+    return Path(get_config().intake.raw_doc_storage_path)
+
+
+@router.get("/request/{request_id}/attachments")
+async def get_request_attachments(request_id: str):
+    """Primary document + linked extra attachments (from the *_attachments.json sidecar)."""
+    from pathlib import Path
+    db = _get_db()
+    try:
+        rid = uuid.UUID(request_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid request ID")
+
+    async with db.acquire() as conn:
+        req = await conn.fetchrow(
+            "SELECT raw_doc_path, source_format FROM requests WHERE id = $1", rid)
+    if not req:
+        raise HTTPException(404, "Request not found")
+
+    base = _storage_base()
+    files = []
+
+    def add(relpath: str, kind: str):
+        p = base / relpath
+        files.append({
+            "filename": Path(relpath).name.split("_", 1)[-1] if "_" in Path(relpath).name else Path(relpath).name,
+            "path": relpath,
+            "kind": kind,
+            "size": p.stat().st_size if p.exists() else None,
+            "exists": p.exists(),
+        })
+
+    raw = req["raw_doc_path"]
+    if raw:
+        add(raw, "primary")
+        sidecar = base / (raw.rsplit(".", 1)[0] + "_attachments.json")
+        if sidecar.exists():
+            try:
+                for extra in json.loads(sidecar.read_text(encoding="utf-8")):
+                    add(extra, "attachment")
+            except (json.JSONDecodeError, OSError):
+                pass
+        body_sidecar = raw.rsplit(".", 1)[0] + "_email_body.txt"
+        if (base / body_sidecar).exists():
+            add(body_sidecar, "email_body")
+
+    return {"request_id": str(rid), "files": files}
+
+
+@router.get("/request/{request_id}/attachment")
+async def download_attachment(request_id: str, p: str):
+    """Serve a stored file belonging to this request (path-traversal guarded)."""
+    from pathlib import Path
+    from fastapi.responses import FileResponse
+    db = _get_db()
+    try:
+        rid = uuid.UUID(request_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid request ID")
+
+    base = _storage_base().resolve()
+    target = (base / p).resolve()
+    if not str(target).startswith(str(base)):
+        raise HTTPException(400, "Invalid path")
+
+    # the file must belong to this request (primary, its sidecars, or a linked extra)
+    async with db.acquire() as conn:
+        raw = await conn.fetchval("SELECT raw_doc_path FROM requests WHERE id = $1", rid)
+    if not raw:
+        raise HTTPException(404, "Request not found")
+    allowed = {raw, raw.rsplit(".", 1)[0] + "_email_body.txt"}
+    sidecar = _storage_base() / (raw.rsplit(".", 1)[0] + "_attachments.json")
+    if sidecar.exists():
+        try:
+            allowed.update(json.loads(sidecar.read_text(encoding="utf-8")))
+        except (json.JSONDecodeError, OSError):
+            pass
+    if p not in allowed:
+        raise HTTPException(403, "File not linked to this request")
+    if not target.exists():
+        raise HTTPException(404, "File missing from storage")
+    return FileResponse(target, filename=Path(p).name)
 
 
 # ----------------------------------------------------------------

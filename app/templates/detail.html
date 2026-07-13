@@ -4,7 +4,7 @@
 {% block nav_requests %}active{% endblock %}
 
 {% block content %}
-<div x-data="detailPage()" x-init="load(); loadThread(); setInterval(() => { load(); loadThread(); }, 10000)">
+<div x-data="detailPage()" x-init="load(); loadThread(); loadAttachments(); setInterval(() => { load(); loadThread(); }, 10000)">
     <a href="/dashboard/requests" class="text-sm text-primary-600 hover:underline mb-4 inline-block">&larr; Back to Requests</a>
 
     <div x-show="loading" class="text-gray-400 py-12 text-center">Loading...</div>
@@ -34,6 +34,74 @@
                     </div>
                     <p class="text-2xl font-bold mt-2" x-text="req.requested_amount ? formatEUR(req.requested_amount) : '-'"></p>
                 </div>
+            </div>
+        </div>
+
+        <!-- ⚠ Flag bar: new info from the applicant after evaluation (train rule) -->
+        <div x-show="newInfoAfterEvaluation" x-cloak
+             class="bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-sm text-amber-800 font-medium">
+            The applicant sent new information AFTER the evaluation — check the Communication History before deciding.
+        </div>
+
+        <!-- Action bar (D7): decide right here when the pipeline waits for a human -->
+        <div x-show="req.state === 'human_review'" x-cloak
+             class="bg-white rounded-xl border-2 border-purple-200 p-4 shadow-sm">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="text-xs font-bold text-purple-700 uppercase tracking-wide">Human review</span>
+                <span class="text-xs text-gray-500" x-show="req.recommendation">
+                    AI recommends: <b x-text="req.recommendation?.action"></b>
+                    <span x-show="req.recommendation?.recommended_amount"> · <span x-text="formatEUR(req.recommendation.recommended_amount)"></span></span>
+                </span>
+                <div class="w-full flex flex-wrap items-center gap-2 mt-1">
+                    <button @click="reviewDecision = 'APPROVED'; reviewAmount = reviewAmount || req.recommendation?.recommended_amount || req.requested_amount"
+                            :class="reviewDecision === 'APPROVED' ? 'ring-2 ring-green-400' : ''"
+                            class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition">Approve</button>
+                    <button @click="reviewDecision = 'PARTIAL'; reviewAmount = reviewAmount || req.recommendation?.recommended_amount"
+                            :class="reviewDecision === 'PARTIAL' ? 'ring-2 ring-amber-400' : ''"
+                            class="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition">Approve partially</button>
+                    <button @click="reviewDecision = 'REJECTED'; reviewAmount = 0"
+                            :class="reviewDecision === 'REJECTED' ? 'ring-2 ring-red-400' : ''"
+                            class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition">Reject</button>
+                    <label class="text-xs text-gray-500 ml-2">Amount</label>
+                    <input type="number" x-model="reviewAmount" :disabled="reviewDecision === 'REJECTED'"
+                           class="w-28 border border-gray-300 rounded-lg px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-400"> EUR
+                    <input type="text" x-model="reviewNotes" placeholder="Notes (optional)..."
+                           class="flex-1 min-w-40 border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <button @click="submitReview()" :disabled="!reviewDecision || reviewSubmitting"
+                            class="px-5 py-2 bg-primary-600 text-white text-sm font-bold rounded-lg hover:bg-primary-700 transition disabled:opacity-40">
+                        <span x-text="reviewSubmitting ? 'Submitting…' : 'Submit decision'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Junk view (D3/D4): slim -- verdict + rescue, no pipeline panels -->
+        <div x-show="req.state === 'junk'" x-cloak
+             class="bg-white rounded-xl border-2 border-gray-300 p-5 shadow-sm">
+            <h3 class="font-semibold text-sm text-gray-700 mb-2">Classified as junk</h3>
+            <p class="text-sm text-gray-600 mb-1" x-text="junkVerdict()"></p>
+            <p class="text-xs text-gray-400 mb-4">No acknowledgment was sent; the request never entered the pipeline. The full message is in the Communication History.</p>
+            <button @click="rescueRequest()" :disabled="rescuing"
+                    class="px-4 py-2 bg-primary-600 text-white text-sm font-bold rounded-lg hover:bg-primary-700 transition disabled:opacity-40">
+                <span x-text="rescuing ? 'Processing…' : 'Not junk — process it'"></span>
+            </button>
+        </div>
+
+        <!-- Pipeline progress (metro line) -->
+        <div x-show="req.state !== 'junk'" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="font-semibold text-sm text-gray-700 mb-4">Pipeline Progress</h3>
+            <div class="flex items-start">
+                <template x-for="(st, i) in pipelineStages" :key="i">
+                    <div class="flex-1 text-center relative">
+                        <div class="absolute top-[11px] left-1/2 w-full h-[3px] -z-0"
+                             :class="i < stageIdx() ? 'bg-green-500' : 'bg-gray-200'"
+                             x-show="i < pipelineStages.length - 1"></div>
+                        <div class="relative z-10 w-6 h-6 mx-auto rounded-full text-xs leading-6 text-white font-bold"
+                             :class="i < stageIdx() ? 'bg-green-500' : (i === stageIdx() && req.state !== 'completed' ? 'bg-purple-500' : (req.state === 'completed' ? 'bg-green-500' : 'bg-gray-300'))"
+                             x-text="i < stageIdx() || req.state === 'completed' ? '✓' : i + 1"></div>
+                        <p class="text-[10px] text-gray-500 mt-1.5 leading-tight" x-text="st"></p>
+                    </div>
+                </template>
             </div>
         </div>
 
@@ -168,6 +236,25 @@
             </div>
         </div>
 
+        <!-- Attachments (D7: ALL files) -->
+        <div x-show="attachments.length" class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
+            <h3 class="font-semibold text-sm text-gray-700 mb-3">Attachments (<span x-text="attachments.length"></span>)</h3>
+            <div class="space-y-2">
+                <template x-for="(f, i) in attachments" :key="i">
+                    <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                        <span class="text-xs font-bold px-2 py-0.5 rounded-full"
+                              :class="f.kind === 'primary' ? 'bg-primary-100 text-primary-700' : (f.kind === 'email_body' ? 'bg-gray-200 text-gray-600' : 'bg-green-100 text-green-700')"
+                              x-text="f.kind === 'primary' ? 'Primary' : (f.kind === 'email_body' ? 'Email body' : 'Attachment')"></span>
+                        <span class="truncate" x-text="f.filename"></span>
+                        <span class="text-xs text-gray-400 flex-shrink-0" x-show="f.size" x-text="Math.round(f.size/1024) + ' KB'"></span>
+                        <a :href="'/api/dashboard/request/' + req.id + '/attachment?p=' + encodeURIComponent(f.path)"
+                           target="_blank" x-show="f.exists"
+                           class="ml-auto text-xs px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 flex-shrink-0">Download</a>
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <!-- Audit Trail -->
         <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <h3 class="font-semibold text-sm text-gray-700 mb-3">Audit Trail</h3>
@@ -224,10 +311,10 @@
                              x-text="it.body || '(content not recorded — mail predates thread logging)'"></p>
                           <p class="text-[10px] text-gray-400 text-right mt-1.5" x-text="formatDate(it.time)"></p>
                       </div>
-                      <!-- outbound mail: us, right, primary tint (D14) -->
+                      <!-- outbound mail: us, right, green chat bubble (user preference) -->
                       <div x-show="it.kind === 'mail' && it.direction === 'outbound'"
-                           class="bg-primary-50 border border-primary-100 rounded-xl rounded-br-sm p-3 ml-10 shadow-sm">
-                          <p class="text-[11px] font-bold text-primary-700 mb-1">→ System · <span x-text="it.mail_type"></span>
+                           class="bg-green-100 border border-green-200 rounded-xl rounded-br-sm p-3 ml-10 shadow-sm">
+                          <p class="text-[11px] font-bold text-green-700 mb-1">→ System · <span x-text="it.mail_type"></span>
                              <span x-show="it.send_state === 'send_failed'" class="text-red-600">· ⚠ send failed</span></p>
                           <p class="text-[11px] text-gray-400 mb-1.5" x-show="it.subject" x-text="'“' + it.subject + '”'"></p>
                           <p class="text-xs text-gray-800 whitespace-pre-wrap leading-relaxed"
@@ -263,6 +350,68 @@ function detailPage() {
         req: null, loading: true, showLetter: false,
         // D5: conversation thread state
         convoOpen: true, convoFull: false, thread: [], unreadCount: 0,
+        // D7: workspace state
+        attachments: [],
+        reviewDecision: null, reviewAmount: null, reviewNotes: '', reviewSubmitting: false,
+        rescuing: false,
+        pipelineStages: ['Received', 'Intake', 'Complete-\nness', 'Eligibility', 'Research +\nEvaluation', 'Recommen-\ndation', 'Decision', 'Letter'],
+        stageIdx() {
+            const m = { received: 1, extracted: 2, awaiting_info: 2, eligibility_check: 3,
+                        eligible: 4, evaluating: 4, evaluated: 5, recommending: 5,
+                        recommended: 6, human_review: 6, decided: 7, completed: 8, rejected: 8 };
+            return m[this.req?.state] ?? 0;
+        },
+        get newInfoAfterEvaluation() {
+            if (!this.req || this.req.state !== 'human_review') return false;
+            const recAt = this.req.recommendation?.recommended_at;
+            if (!recAt) return false;
+            const rec = new Date(recAt).getTime();
+            return this.thread.some(it =>
+                (it.kind === 'mail' && it.direction === 'inbound' || it.kind === 'event' && it.event === 'form_completion')
+                && new Date(it.time).getTime() > rec);
+        },
+        junkVerdict() {
+            const e = (this.req?.audit_trail || []).find(a => a.action === 'classified_junk');
+            if (!e) return 'Classifier verdict not recorded.';
+            let d = e.detail || e.details || {};
+            if (typeof d === 'string') { try { d = JSON.parse(d); } catch (_) { d = {}; } }
+            const conf = d.confidence ? Math.round(d.confidence * 100) + '%' : '?';
+            return 'Classifier: ' + (d.category || 'junk') + ' (' + conf + ') — ' + (d.reason || 'no reason recorded');
+        },
+        async loadAttachments() {
+            const id = window.location.pathname.split('/').pop();
+            try {
+                const r = await fetch('/api/dashboard/request/' + id + '/attachments');
+                if (r.ok) this.attachments = (await r.json()).files || [];
+            } catch (e) { console.error('Attachments load failed', e); }
+        },
+        async submitReview() {
+            if (!this.reviewDecision) return;
+            this.reviewSubmitting = true;
+            try {
+                const r = await fetch('/api/dashboard/review/' + this.req.id, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        decision: this.reviewDecision,
+                        decided_amount: this.reviewDecision === 'REJECTED' ? 0 : parseFloat(this.reviewAmount) || null,
+                        notes: this.reviewNotes || null,
+                    }),
+                });
+                if (r.ok) { this.reviewDecision = null; this.reviewNotes = ''; await this.load(); await this.loadThread(); }
+                else alert('Failed to submit decision');
+            } catch (e) { alert('Error: ' + e); }
+            this.reviewSubmitting = false;
+        },
+        async rescueRequest() {
+            this.rescuing = true;
+            try {
+                const r = await fetch('/api/intake/rescue/' + this.req.id, { method: 'POST' });
+                if (r.ok) { setTimeout(() => { this.load(); this.loadThread(); }, 1500); }
+                else alert('Rescue failed: ' + (await r.text()));
+            } catch (e) { alert('Error: ' + e); }
+            this.rescuing = false;
+        },
         async loadThread() {
             const id = window.location.pathname.split('/').pop();
             try {

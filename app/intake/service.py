@@ -255,16 +255,25 @@ class UnifiedIngestionService:
 
                 # Save additional attachments linked to same request
                 if len(attachments) > 1:
+                    import json as _json
+                    extra_paths = []
                     for att in attachments[1:]:
                         att_path = await self.storage.save(
                             att["data"],
                             att["filename"] or "attachment",
                             "email_attachment",
                         )
+                        extra_paths.append(att_path)
                         logger.info(
                             "Saved additional attachment for request %s: %s",
                             result.request_id, att_path,
                         )
+                    # Workspace D7: sidecar links the extras to the request so
+                    # the attachments panel can list them (same as web form)
+                    sidecar = result.storage_path.rsplit(".", 1)[0] + "_attachments.json"
+                    await self.storage.save_raw(
+                        _json.dumps(extra_paths, ensure_ascii=False).encode("utf-8"), sidecar,
+                    )
 
             return result
         else:
