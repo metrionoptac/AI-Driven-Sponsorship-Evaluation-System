@@ -1,7 +1,7 @@
 {
   "generated": "2026-07-08",
   "seed": 42,
-  "total": 110,
+  "total": 111,
   "region_config": "Stadtwerke Bodensee (in-region = Bodensee towns)",
   "samples": [
     {
@@ -3410,6 +3410,30 @@
           "eligible_hard_rules": true,
           "needs_followup": true,
           "notes": "incomplete fields + email (follow-up test)"
+        }
+      }
+    },
+    {
+      "id": "J01",
+      "channel": "email",
+      "files": [
+        "J01.eml"
+      ],
+      "ground_truth": {
+        "organization": null,
+        "amount": null,
+        "event_date": null,
+        "region": null,
+        "in_region": false,
+        "category": null,
+        "contact_email": null,
+        "complete": false,
+        "missing_fields": [],
+        "is_sponsorship": false,
+        "expect": {
+          "eligible_hard_rules": false,
+          "needs_followup": false,
+          "notes": "junk probe: one-word body, too short for rules -> Haiku must junk it (canonical B43 reproduction; expect state=junk, NO ack)"
         }
       }
     }

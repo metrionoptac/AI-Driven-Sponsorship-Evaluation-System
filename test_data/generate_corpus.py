@@ -530,6 +530,20 @@ for idx, (sid, desc, cfg) in enumerate(OP_SCENARIOS):
               notes=desc))
 
 # ================================================================
+# J01 -- one-word junk probe (added 2026-07-13 after user's live "hi" test
+# exposed B43; deterministic, uses no randomness so all prior samples stay
+# byte-identical when regenerating)
+# ================================================================
+write_eml(os.path.join(DIR_EMAILS, "J01.eml"),
+          "kartik.probe@gmail.com", "hello there", "hi", [])
+record("J01", "email", ["J01.eml"],
+       gt(None, None, None, None, in_region=False, complete=False,
+          is_sponsorship=False, expect_eligible=False,
+          notes="junk probe: one-word body, too short for rules -> Haiku must junk it "
+                "(canonical B43 reproduction; expect state=junk, NO ack)"))
+print("wrote J01.eml (junk probe)")
+
+# ================================================================
 # Manifest
 # ================================================================
 with open(os.path.join(OUT, "manifest.json"), "w", encoding="utf-8") as f:

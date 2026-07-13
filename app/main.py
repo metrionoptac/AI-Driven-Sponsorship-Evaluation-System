@@ -176,6 +176,7 @@ async def lifespan(app: FastAPI):
         email_watcher = EmailWatcher(
             config.intake, ingestion_service,
             followup_handler=followup_handler,
+            llm_config=config.llm,  # D1: Haiku stage of classify-before-ack
         )
         task = asyncio.create_task(email_watcher.start())
         _background_tasks.append(task)

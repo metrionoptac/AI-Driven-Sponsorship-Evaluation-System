@@ -137,6 +137,28 @@ class UnifiedIngestionService:
             request_id, source_channel, source_format, filename,
         )
 
+        # D2/D3: junk short-circuit -- the watcher's classifier said this is
+        # not a sponsorship request. Keep the row (visible under the Junk
+        # category), but: NO acknowledgment (silence), NO pipeline run.
+        if metadata.get("classified_junk"):
+            cj = metadata["classified_junk"]
+            if self.db:
+                await self.db.update_state(request_id, "junk", actor="email_classifier")
+                await self.db.audit_log(request_id, "classified_junk", new_state="junk",
+                                        actor="email_classifier", details=cj)
+            logger.info(
+                "Junk request %s parked (category=%s, %.0f%%): no ack, no pipeline -- %s",
+                request_id, cj.get("category"), (cj.get("confidence") or 0) * 100,
+                cj.get("reason", "")[:80],
+            )
+            return IngestionResult(
+                request_id=request_id,
+                is_duplicate=False,
+                source_channel=source_channel,
+                storage_path=storage_path,
+                display_id=display_id,
+            )
+
         # 5. Send acknowledgment email (fire-and-forget, non-blocking)
         # Email channel AND web form (B34): both carry an applicant address.
         # (Operator channel: staff entered it -- no auto-ack to the applicant.)
@@ -161,7 +183,11 @@ class UnifiedIngestionService:
         # 6. Dispatch to pipeline executor (non-blocking)
         if self.pipeline_executor:
             asyncio.create_task(
-                self._execute_pipeline(request_id)
+                self._execute_pipeline(
+                    request_id,
+                    # D1: watcher already classified -> IntakeAgent skips Step 1
+                    skip_classification=bool(metadata.get("pre_classified")),
+                )
             )
 
         return IngestionResult(
@@ -181,6 +207,7 @@ class UnifiedIngestionService:
         date: str,
         attachments: list[dict],
         source_message_id: str | None = None,
+        classification: dict | None = None,
     ) -> IngestionResult:
         """
         Ingest an email and its attachments as a single request.
@@ -198,6 +225,13 @@ class UnifiedIngestionService:
             # Smart-IMAP: applicant's Message-ID -> our ack replies to it (threading)
             "source_message_id": source_message_id,
         }
+
+        # D1: the watcher classified this fresh mail BEFORE ingest
+        if classification is not None:
+            metadata["pre_classified"] = True
+            if not classification.get("should_process", True):
+                # D2/D3: junk -> row for the GUI, but NO ack, NO pipeline
+                metadata["classified_junk"] = classification
 
         if attachments:
             # Primary attachment is the sponsorship request document.
@@ -375,7 +409,7 @@ class UnifiedIngestionService:
             extracted_data["contact"] = contact
         return extracted_data
 
-    async def _execute_pipeline(self, request_id: str):
+    async def _execute_pipeline(self, request_id: str, skip_classification: bool = False):
         """
         Execute full pipeline in background:
         1. IntakeAgent: parse document -> extract structured data
@@ -615,6 +649,7 @@ class UnifiedIngestionService:
                 # The raw_bytes will be extracted as PLAIN_TEXT — that's the primary text.
                 # For attachment emails, pass email_body so it's included as cover letter.
                 email_body=email_body if not is_body_only else None,
+                skip_classification=skip_classification,
             )
 
             # Operator-typed fields are ground truth: the quality gate may

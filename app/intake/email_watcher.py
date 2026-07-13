@@ -19,6 +19,9 @@ from email.parser import BytesParser
 from aioimaplib import aioimaplib
 
 from app.config import IntakeConfig
+from app.document.email_classifier import (
+    classify_email, classify_email_with_llm, EmailCategory,
+)
 from app.intake.service import UnifiedIngestionService
 
 logger = logging.getLogger(__name__)
@@ -40,10 +43,11 @@ class EmailWatcher:
     """
 
     def __init__(self, config: IntakeConfig, ingestion_service: UnifiedIngestionService,
-                 followup_handler=None):
+                 followup_handler=None, llm_config=None):
         self.config = config
         self.ingestion = ingestion_service
         self.followup_handler = followup_handler
+        self.llm_config = llm_config  # D1: enables Haiku stage of classify-before-ack
         self._running = False
         self._client: aioimaplib.IMAP4_SSL | None = None
 
@@ -370,6 +374,10 @@ class EmailWatcher:
 
         # New request path (B41 fix: a same-sender mail WITHOUT matching
         # References that the handler rejects lands here as a NEW request)
+        # D1/D12: classify the FRESH mail BEFORE ingest -- junk must never get
+        # an ack (D2) or a pipeline run. Thread mail never reaches this point.
+        classification = await self._classify_fresh_mail(parsed)
+
         result = await self.ingestion.ingest_email_with_attachments(
             email_body=parsed["body_text"],
             email_html=parsed["body_html"],
@@ -378,6 +386,7 @@ class EmailWatcher:
             date=parsed["date"],
             attachments=parsed["attachments"],
             source_message_id=parsed.get("message_id"),
+            classification=classification,
         )
 
         if result.is_duplicate:
@@ -387,6 +396,51 @@ class EmailWatcher:
             logger.info("Email ingested: request_id=%s, from=%s",
                         result.request_id, parsed["from"])
         return result.request_id
+
+    # ----------------------------------------------------------------
+    # D1: classify-before-ack (junk gate at the door)
+    # ----------------------------------------------------------------
+
+    async def _classify_fresh_mail(self, parsed: dict) -> dict:
+        """
+        Two-stage junk gate for FRESH mail (D1/D12): rule-based first (free),
+        Haiku only when rules are unsure. Returns a plain dict for the
+        ingestion service: should_process / category / confidence / reason.
+        """
+        classification = classify_email(
+            sender=parsed["from"],
+            subject=parsed["subject"],
+            body_text=parsed["body_text"],
+            headers=parsed.get("headers", {}),
+            in_reply_to=parsed.get("in_reply_to"),
+            references=parsed.get("references"),
+            attachments=parsed["attachments"],
+        )
+        if (classification.category == EmailCategory.UNKNOWN
+                and self.llm_config and getattr(self.llm_config, "anthropic_api_key", None)):
+            try:
+                from anthropic import AsyncAnthropic
+                client = AsyncAnthropic(api_key=self.llm_config.anthropic_api_key)
+                classification = await classify_email_with_llm(
+                    sender=parsed["from"],
+                    subject=parsed["subject"],
+                    body_text=parsed["body_text"],
+                    anthropic_client=client,
+                    model=getattr(self.llm_config, "haiku_model", "claude-haiku-4-5-20251001"),
+                )
+            except Exception as e:
+                logger.warning("LLM classification failed (treating as unknown-junk): %s", e)
+        logger.info(
+            "Fresh-mail classification: category=%s, confidence=%.2f, should_process=%s (%s)",
+            classification.category.value, classification.confidence,
+            classification.should_process, classification.method,
+        )
+        return {
+            "should_process": classification.should_process,
+            "category": classification.category.value,
+            "confidence": classification.confidence,
+            "reason": classification.reason,
+        }
 
     # ----------------------------------------------------------------
     # C6: bounce handling
@@ -471,6 +525,7 @@ class EmailWatcher:
             "from": msg["from"] or "(unknown)",
             "to": msg["to"] or "",
             "date": msg["date"] or "",
+            "headers": {k: str(v) for k, v in msg.items()},  # D1: for auto-reply rule checks
             "message_id": msg["message-id"] or "",
             "in_reply_to": msg["in-reply-to"] or "",
             "references": msg["references"] or "",

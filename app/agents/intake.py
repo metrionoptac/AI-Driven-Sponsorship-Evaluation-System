@@ -77,6 +77,7 @@ class IntakeAgent:
         email_in_reply_to: str | None = None,
         email_references: str | None = None,
         email_attachments: list[dict] | None = None,
+        skip_classification: bool = False,
     ) -> IntakeResult:
         """
         Process a document through the full intake pipeline.
@@ -103,7 +104,9 @@ class IntakeAgent:
 
         try:
             # --- Step 1: Email classification (if from email channel) ---
-            if source_channel == "email":
+            # D1: skipped when the watcher already classified at the door
+            # (classify-before-ack) or when a human rescued a junk request.
+            if source_channel == "email" and not skip_classification:
                 t0 = _time.time()
                 logger.info("[%s] Step 1/7: EMAIL CLASSIFICATION starting...", request_id)
                 result.classification = await self._classify_email(
