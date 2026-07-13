@@ -184,6 +184,7 @@ async def list_requests(
     state: str | None = None,
     decision: str | None = None,
     search: str | None = None,
+    received_via: str | None = None,
 ):
     db = _get_db()
     offset = (page - 1) * per_page
@@ -229,6 +230,12 @@ async def list_requests(
     if decision:
         conditions.append(f"d.decision = ${idx}")
         params.append(decision)
+        idx += 1
+
+    if received_via:
+        # D9: source-of-intake filter (email / web_form / operator / upload / api / folder)
+        conditions.append(f"r.received_via = ${idx}")
+        params.append(received_via)
         idx += 1
 
     if search:
@@ -1102,12 +1109,15 @@ async def get_request_thread(request_id: str):
 
 @router.get("/live/latest")
 async def get_latest_request():
-    """Returns the most recently created request for auto-detection."""
+    """
+    Most recent request for the live tracker. Junk is EXCLUDED -- a parked
+    newsletter must never hijack the live view (B42 scenario).
+    """
     db = _get_db()
     async with db.acquire() as conn:
         row = await conn.fetchrow(
-            "SELECT id, state, source_email, source_subject, created_at "
-            "FROM requests ORDER BY created_at DESC LIMIT 1"
+            "SELECT id, state, source_email, source_subject, received_via, created_at "
+            "FROM requests WHERE state != 'junk' ORDER BY created_at DESC LIMIT 1"
         )
     if not row:
         return {"request_id": None}

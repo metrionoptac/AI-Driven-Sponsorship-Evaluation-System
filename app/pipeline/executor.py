@@ -122,6 +122,20 @@ class PipelineExecutor:
                 result.decision = "REJECTED"
                 result.decided_amount = 0
 
+                # B44: record the decision -- auto-rejections used to leave NO
+                # decisions row, making them invisible in lists/Rejected tab
+                if self.db:
+                    try:
+                        await self.db.save_decision(
+                            request_id=request_id, decision="REJECTED",
+                            decided_amount=0, decided_by="eligibility_agent",
+                            decision_mode="AUTO_ELIGIBILITY",
+                            notes="Formal rejection at eligibility: "
+                                  + "; ".join((eligibility.rejection_reasons or [])[:3]),
+                        )
+                    except Exception as e:
+                        logger.warning("[%s] save_decision failed: %s", request_id, e)
+
                 # Generate formal rejection letter (standard template, factual reasons)
                 await self._set_state(request_id, PipelineState.COMPLETING)
                 completion = await self.completion_agent.complete(

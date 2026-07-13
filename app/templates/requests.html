@@ -24,6 +24,16 @@
 
         <!-- Search + Upload on the right -->
         <div class="ml-auto flex items-center gap-2 pb-2">
+            <!-- D9: source-of-intake filter -->
+            <select x-model="sourceFilter" @change="page = 1; load()"
+                    class="border border-gray-300 rounded-lg px-2 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="" x-text="t('req.src_all')">All sources</option>
+                <option value="email">Email</option>
+                <option value="web_form" x-text="t('req.src_webform')">Web form</option>
+                <option value="operator" x-text="t('req.src_operator')">Manual</option>
+                <option value="upload">Upload</option>
+                <option value="api">API</option>
+            </select>
             <input type="text" x-model="searchQuery" @input.debounce.300ms="page = 1; load()"
                    :placeholder="t('req.search')"
                    class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-44 focus:outline-none focus:ring-2 focus:ring-primary-500">
@@ -303,7 +313,7 @@
     </div>
 
     <!-- ===== TAB: ALL / COMPLETED / REJECTED (table layout) ===== -->
-    <div x-show="activeTab === 'all' || activeTab === 'completed' || activeTab === 'rejected'">
+    <div x-show="activeTab === 'all' || activeTab === 'completed' || activeTab === 'rejected' || activeTab === 'junk'">
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="data-table">
@@ -398,7 +408,9 @@ function requestsPage() {
             { key: 'review', get label() { return t('req.needs_review'); }, count: 0 },
             { key: 'completed', get label() { return t('req.completed'); }, count: 0 },
             { key: 'rejected', get label() { return t('req.rejected'); }, count: 0 },
+            { key: 'junk', get label() { return t('req.junk'); }, count: 0 },
         ],
+        sourceFilter: '',
 
         // Pipeline step definitions (for In Progress cards)
         pipelineSteps: [
@@ -466,8 +478,10 @@ function requestsPage() {
                 this.tabs[0].count = stats.total || 0;
                 this.tabs[1].count = activeStates.reduce((s, k) => s + (bs[k] || 0), 0);
                 this.tabs[2].count = bs['human_review'] || 0;
+                // B44: rejected counted by DECISION; D3: junk by state
                 this.tabs[3].count = bs['completed'] || 0;
-                this.tabs[4].count = (bs['rejected'] || 0);
+                this.tabs[4].count = stats.decisions?.REJECTED?.count || 0;
+                this.tabs[5].count = bs['junk'] || 0;
             } catch(e) { console.error('Count load failed', e); }
         },
 
@@ -503,9 +517,14 @@ function requestsPage() {
             } else if (this.activeTab === 'completed') {
                 params.set('state', 'completed');
             } else if (this.activeTab === 'rejected') {
-                params.set('state', 'rejected');
+                // B44: rejected = by DECISION (auto-rejects complete with state
+                // 'completed' but decision REJECTED -- state filter missed them)
+                params.set('decision', 'REJECTED');
+            } else if (this.activeTab === 'junk') {
+                params.set('state', 'junk');    // D3/D9
             }
             // 'all' = no state filter
+            if (this.sourceFilter) params.set('received_via', this.sourceFilter);  // D9
 
             try {
                 const r = await fetch('/api/dashboard/requests?' + params);

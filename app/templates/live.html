@@ -94,7 +94,7 @@
             <span x-show="isBlocked(stage.id)">!</span>
             <span x-show="isHumanReview(stage.id)"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></span>
           </div>
-          <span class="mt-2 text-xs font-medium text-center leading-tight" style="hyphens: none; -webkit-hyphens: none; -ms-hyphens: none; word-break: normal; overflow-wrap: normal;" :class="isActive(stage.id) ? 'text-blue-600 font-bold' : (isComplete(stage.id) ? 'text-green-600' : (isHumanReview(stage.id) ? 'text-purple-600 font-bold' : 'text-gray-400'))" x-text="stage.label"></span>
+          <span class="mt-2 text-xs font-medium text-center leading-tight" style="hyphens: none; -webkit-hyphens: none; -ms-hyphens: none; word-break: normal; overflow-wrap: normal;" :class="isActive(stage.id) ? 'text-blue-600 font-bold' : (isComplete(stage.id) ? 'text-green-600' : (isHumanReview(stage.id) ? 'text-purple-600 font-bold' : 'text-gray-400'))" x-text="i === 0 ? stageOneLabel() : stage.label"></span>
         </div>
       </template>
     </div>
@@ -315,7 +315,7 @@
           <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
           <div class="flex-1 min-w-0">
             <p class="text-xs font-medium text-gray-700 truncate" x-text="data?.request?.raw_doc_path?.split('/').pop() || 'attachment'"></p>
-            <p class="text-xs text-gray-400" x-text="(data?.request?.source_format || '').toUpperCase()"></p>
+            <p class="text-xs text-gray-400" x-text="sourceFormatLabel()"></p>
           </div>
           <a x-show="trackingId" :href="'/api/dashboard/request/' + trackingId + '/pdf'" target="_blank" class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition" x-text="t('src.download')">Download</a>
         </div>
@@ -419,7 +419,7 @@ function livePage() {
     sections: { source: false, extraction: true, completeness: true, eligibility: true, research: true, evaluation: true, recommendation: true },
 
     get stages() { return [
-      { id: 'received', label: t('stage.email_detected') },
+      { id: 'received', label: t('stage.email_detected') },  // label overridden per channel via stageOneLabel()
       { id: 'extracted', label: t('stage.intake_agent') },
       { id: 'completeness', label: t('stage.completeness') },
       { id: 'eligible', label: t('stage.eligibility') },
@@ -444,8 +444,15 @@ function livePage() {
           if (d.id && d.id !== this.lastKnownId) {
             this.lastKnownId = d.id;
             if (!this.trackingId || this.trackingId !== d.id) {
-              this.notification = 'New email detected!';
-              this.notificationDetail = `From: ${d.source_email || '?'} | Subject: ${d.source_subject || '?'}`;
+              // B28/D8: banner reflects the actual intake channel
+              const ch = d.received_via || 'email';
+              this.notification = ch === 'web_form' ? 'New web form inquiry received!'
+                                : ch === 'operator' ? 'New request created by operator!'
+                                : ch === 'email'    ? 'New email detected!'
+                                : 'New request received (' + ch + ')!';
+              this.notificationDetail = ch === 'web_form'
+                ? `Applicant: ${d.source_email || '?'}`
+                : `From: ${d.source_email || '?'} | Subject: ${d.source_subject || '?'}`;
               this.trackingId = d.id; this.activity = []; this.data = null; this.reviewAmount = null; this.lastKnownState = null; this.letterSent = false; this.sendingLetter = false;
               history.replaceState(null, '', '/dashboard/live?id=' + d.id);
               this.startPolling();
@@ -568,6 +575,14 @@ function livePage() {
     stateOrder: { 'received': 0, 'parsing': 1, 'extracted': 1, 'awaiting_info': 2, 'eligibility_check': 3, 'eligible': 3, 'rejected': 3, 'evaluating': 4, 'evaluated': 4, 'recommending': 5, 'recommended': 5, 'auto_decided': 6, 'human_review': 6, 'decided': 6, 'completing': 7, 'completed': 7, 'failed': -1 },
     currentStep() { return this.stateOrder[this.data?.request?.state] ?? -1; },
 
+    stageOneLabel() {
+        // B28/D8: first stage named after the actual intake channel
+        const ch = this.data?.request?.received_via;
+        return ch === 'web_form' ? 'Form Received'
+             : ch === 'operator' ? 'Created by Operator'
+             : ch === 'upload' || ch === 'api' || ch === 'folder' ? 'Document Received'
+             : t('stage.email_detected');
+    },
     isComplete(id) { const idx = this.stages.findIndex(s => s.id === id); if (id === 'completeness') return this.currentStep() > 2; return this.currentStep() > idx; },
     isActive(id) { const idx = this.stages.findIndex(s => s.id === id); const state = this.data?.request?.state; if (id === 'completeness' && state === 'awaiting_info') return true; if (id === 'completeness') return false; if (this.isHumanReview(id)) return false; return this.currentStep() === idx; },
     isFuture(id) { return !this.isComplete(id) && !this.isActive(id) && !this.isFailed(id) && !this.isBlocked(id) && !this.isHumanReview(id); },
@@ -606,18 +621,23 @@ function livePage() {
     hasFollowupReply() { return (this.activity || []).some(e => e.action === 'followup_received'); },
     getFollowupFields() { const evt = (this.activity || []).find(e => e.action === 'followup_received'); if (evt?.details?.new_fields) return 'New fields: ' + evt.details.new_fields.join(', '); return 'Reply processed'; },
     getFollowupEmailPreview() {
-      const ref = this.trackingId ? 'SP-2026-' + this.trackingId.substring(this.trackingId.length - 8).toUpperCase() : '';
+      // B35: real display_id, never a UUID-derived pseudo reference
+      const ref = this.data?.request?.display_id
+                || (this.trackingId ? this.trackingId.substring(0, 8) : '');
       const fields = this.missingFields().map(f => this.fieldLabel(f));
       const formUrl = window.location.origin + '/complete/' + this.trackingId;
       return `Sehr geehrte Damen und Herren,\n\nvielen Dank fuer Ihre Sponsoring-Anfrage (Ref: ${ref}).\n\nDamit wir Ihre Anfrage bearbeiten koennen, benoetigen wir noch:\n\n${fields.map((f,i) => '  ' + (i+1) + '. ' + f).join('\n')}\n\nOnline-Formular: ${formUrl}\n\nMit freundlichen Gruessen\nSponsoring-Team`;
     },
     sourceFormatLabel() {
+      // B38 cousin: honest labels, no 'UNKNOWN' for structured form data
       const via = this.data?.request?.received_via || '';
       const fmt = this.data?.request?.source_format || '';
-      if (via === 'email' && fmt && fmt !== 'email') return 'Email + ' + fmt.toUpperCase();
-      if (via === 'web_form' && fmt && fmt !== 'web_form') return 'Webform + ' + fmt.toUpperCase();
-      if (via === 'upload') return 'Upload: ' + (fmt || 'document').toUpperCase();
-      return (fmt || via || 'unknown').toUpperCase();
+      const f = (fmt === 'unknown' || !fmt) ? '' : fmt.toUpperCase();
+      if (via === 'web_form') return f && fmt !== 'web_form' ? 'Web form + ' + f : 'Web form (structured data)';
+      if (via === 'email') return f && fmt !== 'email' ? 'Email + ' + f : 'Email';
+      if (via === 'operator') return 'Operator entry' + (f ? ' + ' + f : '');
+      if (via === 'upload') return 'Upload' + (f ? ': ' + f : '');
+      return f || via.toUpperCase() || 'DOCUMENT';
     },
     evalDimensions() { const e = this.data?.evaluation; if (!e) return []; return [ { label: t('eval.strategic_fit'), score: e.strategic_fit_score || 0 }, { label: t('eval.community'), score: e.community_impact_score || 0 }, { label: t('eval.visibility'), score: e.visibility_value_score || 0 }, { label: t('eval.cost'), score: e.cost_effectiveness_score || 0 } ]; },
 

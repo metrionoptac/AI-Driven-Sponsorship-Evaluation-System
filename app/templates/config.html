@@ -212,6 +212,41 @@
             </div>
         </div>
 
+        <!-- Section 2b: Conversation / Communication History (D13, per-operator, stored locally) -->
+        <div class="bg-white rounded-xl shadow-sm border p-6 mb-6"
+             x-data="{ prefs: Object.assign({panel: 'visible', events: true, order: 'oldest'}, JSON.parse(localStorage.getItem('convo_prefs') || '{}')),
+                       save() { localStorage.setItem('convo_prefs', JSON.stringify(this.prefs)); } }">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Communication History</h3>
+            <p class="text-sm text-gray-500 mb-4">How the conversation panel behaves on request pages (saved per browser).</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-xs font-medium text-gray-600">Panel default</label>
+                    <select x-model="prefs.panel" @change="save()"
+                            class="w-full border rounded-lg px-3 py-1.5 text-sm mt-1">
+                        <option value="visible">Always visible</option>
+                        <option value="hidden">Hidden (open via button)</option>
+                        <option value="auto">Auto-open on new information</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-gray-600">System events in thread</label>
+                    <select x-model="prefs.events" @change="save()"
+                            class="w-full border rounded-lg px-3 py-1.5 text-sm mt-1">
+                        <option :value="true">Show (form completions, rescues)</option>
+                        <option :value="false">Hide — messages only</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-gray-600">Message order</label>
+                    <select x-model="prefs.order" @change="save()"
+                            class="w-full border rounded-lg px-3 py-1.5 text-sm mt-1">
+                        <option value="oldest">Oldest first</option>
+                        <option value="newest">Newest first</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <!-- Section 3: Email Automation -->
         <div class="bg-white rounded-xl shadow-sm border p-6 mb-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-2" x-text="t('cfg.email_automation')">Email Automation</h3>
