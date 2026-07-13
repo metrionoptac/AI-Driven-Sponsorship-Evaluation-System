@@ -87,20 +87,43 @@ class Database:
         imap_uid: str | None = None, sender: str | None = None,
         recipient: str | None = None, subject: str | None = None,
         state: str = "done", error: str | None = None,
+        body_text: str | None = None,
     ) -> str:
         log_id = str(uuid.uuid4())
         async with self._pool.acquire() as conn:
             await conn.execute(
                 """INSERT INTO email_log
                    (id, request_id, direction, mail_type, message_id, in_reply_to,
-                    references_ids, imap_uid, sender, recipient, subject, state, error)
-                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)""",
+                    references_ids, imap_uid, sender, recipient, subject, state, error,
+                    body_text)
+                   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)""",
                 uuid.UUID(log_id),
                 uuid.UUID(request_id) if request_id else None,
                 direction, mail_type, message_id, in_reply_to, references,
                 imap_uid, sender, recipient, subject, state, error,
+                body_text,
             )
         return log_id
+
+    async def get_thread(self, request_id: str) -> list[dict]:
+        """All mails of a request, time-ordered (thread view, Workspace D5)."""
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                """SELECT id, direction, mail_type, message_id, sender, recipient,
+                          subject, state, body_text, operator_seen, created_at
+                   FROM email_log WHERE request_id = $1 ORDER BY created_at ASC""",
+                uuid.UUID(request_id),
+            )
+        return [dict(r) for r in rows]
+
+    async def mark_thread_seen(self, request_id: str):
+        """Operator opened the thread -> inbound messages are no longer 'unread'."""
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                """UPDATE email_log SET operator_seen = TRUE, updated_at = NOW()
+                   WHERE request_id = $1 AND direction = 'inbound' AND NOT operator_seen""",
+                uuid.UUID(request_id),
+            )
 
     async def update_email_log(self, log_id: str, *, state: str | None = None,
                                request_id: str | None = None, error: str | None = None):

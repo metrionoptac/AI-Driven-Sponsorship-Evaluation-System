@@ -296,6 +296,7 @@ class EmailWatcher:
                     references=parsed.get("references"),
                     imap_uid=uid, sender=parsed["from"],
                     subject=parsed["subject"], state="processing",
+                    body_text=parsed.get("body_text"),  # thread view (D5)
                 )
             except Exception as e:
                 logger.warning("email_log insert failed (continuing): %s", e)

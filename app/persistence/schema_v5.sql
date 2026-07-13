@@ -31,3 +31,7 @@ CREATE INDEX IF NOT EXISTS idx_email_log_state ON email_log(state);
 
 -- Bounce flag on requests (B39): completeness/ack mail could not be delivered
 ALTER TABLE requests ADD COLUMN IF NOT EXISTS delivery_failed BOOLEAN DEFAULT FALSE;
+
+-- Workspace step 2 (thread view): message bodies + operator read-marker
+ALTER TABLE email_log ADD COLUMN IF NOT EXISTS body_text TEXT;
+ALTER TABLE email_log ADD COLUMN IF NOT EXISTS operator_seen BOOLEAN DEFAULT FALSE;

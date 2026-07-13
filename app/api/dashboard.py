@@ -189,8 +189,11 @@ async def list_requests(
     offset = (page - 1) * per_page
 
     query = """
-        SELECT r.id, r.state, r.source_format, r.received_via, r.created_at,
+        SELECT r.id, r.display_id, r.state, r.source_format, r.received_via, r.created_at,
                r.source_email,
+               (SELECT COUNT(*) FROM email_log el
+                 WHERE el.request_id = r.id AND el.direction = 'inbound'
+                   AND NOT el.operator_seen) AS unread_messages,
                e.extracted_data->>'organization_name' as org_name,
                e.extracted_data->>'organization_type' as org_type,
                e.extracted_data->>'requested_amount' as requested_amount,
@@ -894,6 +897,107 @@ async def get_sla_stats(days: int = Query(30, ge=7, le=365)):
         "violations": violations,
         "period_days": days,
     }
+
+
+# ----------------------------------------------------------------
+# GET /api/dashboard/request/{id}/thread -- Workspace D5: the conversation
+# ----------------------------------------------------------------
+
+@router.get("/request/{request_id}/thread")
+async def get_request_thread(request_id: str):
+    """
+    The full conversation of a request, time-ordered:
+    mails (email_log, in/out with bodies), a synthesized start card for
+    web-form/operator channels, and system events (form completion, rescue).
+    Opening the thread marks inbound mail as seen (unread-flag reset).
+    """
+    db = _get_db()
+    try:
+        rid = uuid.UUID(request_id)
+    except ValueError:
+        raise HTTPException(400, "Invalid request ID")
+
+    async with db.acquire() as conn:
+        req = await conn.fetchrow(
+            "SELECT received_via, source_email, source_subject, display_id, "
+            "state, created_at FROM requests WHERE id = $1", rid,
+        )
+        if not req:
+            raise HTTPException(404, "Request not found")
+        events = await conn.fetch(
+            """SELECT action, details, created_at FROM audit_log
+               WHERE request_id = $1
+                 AND action IN ('form_completion', 'junk_rescued', 'classified_junk')
+               ORDER BY created_at ASC""", rid,
+        )
+        extraction = await conn.fetchrow(
+            "SELECT extracted_data FROM extraction_results WHERE request_id = $1 "
+            "ORDER BY created_at DESC LIMIT 1", rid,
+        )
+
+    items = []
+
+    # Start card for channels that don't begin with an applicant email
+    if req["received_via"] in ("web_form", "operator", "upload", "api", "folder"):
+        card_fields = {}
+        if extraction:
+            ext = extraction["extracted_data"]
+            if isinstance(ext, str):
+                ext = json.loads(ext)
+            for k in ("organization_name", "requested_amount", "purpose",
+                      "event_date", "region"):
+                if ext.get(k) not in (None, "", {}):
+                    card_fields[k] = ext[k]
+            contact = ext.get("contact") or {}
+            if contact.get("email"):
+                card_fields["contact"] = f"{contact.get('name') or ''} <{contact['email']}>".strip()
+        items.append({
+            "kind": "start_card",
+            "channel": req["received_via"],
+            "fields": card_fields,
+            "time": req["created_at"],
+        })
+
+    mails = await db.get_thread(str(rid))
+    for m in mails:
+        items.append({
+            "kind": "mail",
+            "direction": m["direction"],
+            "mail_type": m["mail_type"],
+            "sender": m["sender"],
+            "recipient": m["recipient"],
+            "subject": m["subject"],
+            "body": m["body_text"],
+            "send_state": m["state"],
+            "time": m["created_at"],
+        })
+
+    for e in events:
+        det = e["details"]
+        if isinstance(det, str):
+            try:
+                det = json.loads(det)
+            except (json.JSONDecodeError, TypeError):
+                det = {}
+        items.append({
+            "kind": "event",
+            "event": e["action"],
+            "details": det or {},
+            "time": e["created_at"],
+        })
+
+    items.sort(key=lambda x: x["time"])
+
+    # Opening the thread = reading it
+    await db.mark_thread_seen(str(rid))
+
+    return _serialize({
+        "request_id": str(rid),
+        "display_id": req["display_id"],
+        "channel": req["received_via"],
+        "state": req["state"],
+        "items": items,
+    })
 
 
 # ----------------------------------------------------------------

@@ -323,7 +323,15 @@
                         <template x-for="(req, idx) in requests" :key="req.id || idx">
                             <tr class="cursor-pointer hover:bg-gray-50" @click="window.location='/dashboard/request/'+req.id">
                                 <td class="font-mono text-xs" x-text="req.display_id || (req.id ? String(req.id).substring(0,8)+'...' : '-')"></td>
-                                <td class="font-medium" x-text="req.org_name || req.source_email || '-'"></td>
+                                <td class="font-medium">
+                                    <span x-text="req.org_name || req.source_email || '-'"></span>
+                                    <!-- D10: unread applicant messages -->
+                                    <span x-show="req.unread_messages > 0"
+                                          class="ml-1.5 inline-flex items-center gap-1 bg-red-100 text-red-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                                          :title="req.unread_messages + ' unread message(s)'">
+                                        💬 <span x-text="req.unread_messages"></span>
+                                    </span>
+                                </td>
                                 <td x-text="req.requested_amount ? formatEUR(Number(req.requested_amount)) : '-'"></td>
                                 <td><span class="badge badge-blue" x-text="categoryLabel(req.purpose_category)"></span></td>
                                 <td><span class="badge" :class="stateColor(req.state || '')" x-text="DE.stateLabel(req.state || '')"></span></td>

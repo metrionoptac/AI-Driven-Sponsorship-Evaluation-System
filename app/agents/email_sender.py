@@ -307,6 +307,7 @@ class EmailSender:
                         references=references, request_id=request_id,
                         recipient=to_email, subject=subject,
                         state="done" if sent else "send_failed",
+                        body_text=body,  # thread view (Workspace D5)
                     )
                 except Exception as e:
                     logger.warning("email_log write failed for %s: %s", request_id, e)
