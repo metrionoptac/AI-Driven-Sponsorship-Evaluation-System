@@ -119,6 +119,7 @@ class EmailSender:
         company_name: str = "Sponsoring-Team",
         display_id: str | None = None,
         in_reply_to: str | None = None,
+        original_subject: str | None = None,
     ) -> bool:
         """
         Send immediate receipt confirmation when a sponsorship request arrives.
@@ -130,7 +131,8 @@ class EmailSender:
 
         # B35: use the REAL display_id so the applicant's reference matches the dashboard
         ref = display_id or self._format_ref(request_id)
-        subject = ACKNOWLEDGMENT_SUBJECT.format(ref=ref)
+        # B47: keep the applicant's subject so Gmail threads the conversation
+        subject = self._reply_subject(original_subject, ACKNOWLEDGMENT_SUBJECT.format(ref=ref))
         body = ACKNOWLEDGMENT_BODY_DE.format(ref=ref, company_name=company_name)
 
         # Threading: reply to the applicant's original mail (explicit id wins --
@@ -148,6 +150,7 @@ class EmailSender:
         base_url: str = "http://localhost:8000",
         display_id: str | None = None,
         completion_token: str | None = None,
+        original_subject: str | None = None,
     ) -> bool:
         """
         Send a follow-up email asking for missing information.
@@ -159,7 +162,8 @@ class EmailSender:
 
         # B35: use the REAL display_id so the applicant's reference matches the dashboard
         ref = display_id or self._format_ref(request_id)
-        subject = COMPLETENESS_SUBJECT.format(ref=ref)
+        # B47: keep the applicant's subject so Gmail threads the conversation
+        subject = self._reply_subject(original_subject, COMPLETENESS_SUBJECT.format(ref=ref))
 
         # Format missing fields as a readable list — single label source
         # (was a local, incomplete dict: 'visibility' etc. leaked untranslated)
@@ -217,6 +221,8 @@ class EmailSender:
         letter_content: str,
         letter_type: str,  # APPROVAL, REJECTION, PARTIAL
         company_name: str = "Sponsoring-Team",
+        original_subject: str | None = None,
+        display_id: str | None = None,
     ) -> bool:
         """
         Send the final decision letter to the applicant.
@@ -228,7 +234,8 @@ class EmailSender:
             logger.info("Email sender disabled or no recipient — skipping letter send for %s", request_id)
             return False
 
-        ref = self._format_ref(request_id)
+        # B35/B49: real display_id in the letter subject too
+        ref = display_id or self._format_ref(request_id)
 
         subject_map = {
             "APPROVAL": DECISION_APPROVAL_SUBJECT,
@@ -236,7 +243,8 @@ class EmailSender:
             "REJECTION": DECISION_REJECTION_SUBJECT,
         }
         subject_template = subject_map.get(letter_type, DECISION_REJECTION_SUBJECT)
-        subject = subject_template.format(ref=ref)
+        # B47: keep the applicant's subject so Gmail threads the conversation
+        subject = self._reply_subject(original_subject, subject_template.format(ref=ref))
 
         reply_to_id, references = await self._thread_headers(request_id)
         return await self._send(to_email, subject, letter_content, request_id,
@@ -345,6 +353,20 @@ class EmailSender:
             server.sendmail(self.username, to_email, msg.as_string())
 
         return True
+
+    @staticmethod
+    def _reply_subject(original_subject: str | None, fallback: str) -> str:
+        """
+        B47: Gmail groups conversations by SUBJECT (plus headers) -- a reply
+        must keep the applicant's subject ('Re: <original>') or Gmail shows
+        it as a separate thread even with perfect In-Reply-To/References.
+        """
+        if not original_subject or not original_subject.strip():
+            return fallback
+        s = original_subject.strip()
+        if s.lower().startswith(("re:", "aw:")):
+            return s
+        return f"Re: {s}"
 
     @staticmethod
     def _format_ref(request_id: str) -> str:

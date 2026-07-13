@@ -151,6 +151,9 @@ class UnifiedIngestionService:
                     company_name=company_name,
                     display_id=display_id,
                     in_reply_to=metadata.get("source_message_id"),
+                    # B47: only the email channel has an applicant subject to continue
+                    original_subject=(metadata.get("source_subject")
+                                      if source_channel == "email" else None),
                 )
             )
             logger.info("Acknowledgment email queued for %s (request %s)", sender_email, request_id)
@@ -526,6 +529,8 @@ class UnifiedIngestionService:
                                 display_id=req.get("display_id"),
                                 company_name=self._company_name(),
                                 completion_token=completion_token,
+                                original_subject=(req.get("source_subject")
+                                                  if req.get("received_via") == "email" else None),
                             )
                         )
                         logger.info("[%s] Completeness request queued for %s (missing: %s)",
@@ -703,6 +708,8 @@ class UnifiedIngestionService:
                             display_id=req.get("display_id"),
                             company_name=self._company_name(),
                             completion_token=completion_token,
+                            original_subject=(req.get("source_subject")
+                                              if req.get("received_via") == "email" else None),
                         )
                     )
                     logger.info(
@@ -747,6 +754,8 @@ class UnifiedIngestionService:
                         missing_fields=quality.missing_critical,
                         display_id=req.get("display_id"),
                         company_name=self._company_name(),
+                        original_subject=(req.get("source_subject")
+                                          if req.get("received_via") == "email" else None),
                     )
                 )
                 logger.info(
@@ -779,6 +788,9 @@ class UnifiedIngestionService:
                             request_id=request_id,
                             letter_content=pipeline_result.completion.letter_content,
                             letter_type=pipeline_result.completion.letter_type,
+                            original_subject=(req.get("source_subject")
+                                              if req.get("received_via") == "email" else None),
+                            display_id=req.get("display_id"),
                         )
                     )
                     logger.info(

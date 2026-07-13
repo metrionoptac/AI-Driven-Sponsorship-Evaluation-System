@@ -507,12 +507,17 @@ class PipelineExecutor:
                 "PARTIAL" if decision_result.decision == "PARTIAL" else "REJECTION"
             )
             import asyncio as _asyncio
+            # B49: thread the letter + real reference (same as all other senders)
+            req_row = await self.db.get_request(request_id) if self.db else None
             _asyncio.create_task(
                 self._email_sender.send_letter(
                     to_email=source_email,
                     request_id=request_id,
                     letter_content=completion.letter_content,
                     letter_type=letter_type,
+                    original_subject=(req_row.get("source_subject")
+                                      if req_row and req_row.get("received_via") == "email" else None),
+                    display_id=req_row.get("display_id") if req_row else None,
                 )
             )
             logger.info(

@@ -34,7 +34,7 @@
                     <template x-for="[k,v] in Object.entries(req.extraction || {})" :key="k">
                         <div class="flex">
                             <dt class="w-40 text-gray-500 flex-shrink-0" x-text="k.replace(/_/g,' ')"></dt>
-                            <dd class="font-medium" x-text="typeof v === 'object' ? JSON.stringify(v) : v"></dd>
+                            <dd class="font-medium" x-html="fmtVal(v)"></dd>
                         </div>
                     </template>
                 </dl>
@@ -181,6 +181,20 @@
 function detailPage() {
     return {
         req: null, loading: true, showLetter: false,
+        // B48: render nested objects as readable key/value lines (XSS-safe)
+        esc(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; },
+        fmtVal(v) {
+            if (v === null || v === undefined || v === '') return '<span class="text-gray-400">&ndash;</span>';
+            if (Array.isArray(v)) return v.map(x => this.fmtVal(x)).join(', ');
+            if (typeof v === 'object') {
+                const parts = Object.entries(v)
+                    .filter(([, x]) => x !== null && x !== undefined && x !== '')
+                    .map(([k, x]) => '<span class="text-gray-500">' + this.esc(k.replace(/_/g, ' ')) + ':</span> ' +
+                                     (typeof x === 'object' ? this.fmtVal(x) : this.esc(x)));
+                return parts.length ? parts.join('<br>') : '<span class="text-gray-400">&ndash;</span>';
+            }
+            return this.esc(v);
+        },
         formatEUR(v) { return Math.round(v).toLocaleString('en-US') + ' EUR'; },
         formatDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '-'; },
         stateColor(s) { const m={received:'badge-gray',extracted:'badge-blue',eligible:'badge-blue',evaluated:'badge-yellow',recommended:'badge-yellow',decided:'badge-green',completed:'badge-green',rejected:'badge-red'}; return m[s]||'badge-gray'; },

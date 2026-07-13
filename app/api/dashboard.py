@@ -512,7 +512,10 @@ async def send_letter(request_id: str, body: SendLetterRequest):
         raise HTTPException(400, "Invalid request ID")
 
     async with db.acquire() as conn:
-        req = await conn.fetchrow("SELECT source_email, state FROM requests WHERE id = $1", rid)
+        req = await conn.fetchrow(
+            "SELECT source_email, state, source_subject, received_via, display_id "
+            "FROM requests WHERE id = $1", rid,
+        )
         if not req:
             raise HTTPException(404, "Request not found")
 
@@ -558,6 +561,11 @@ async def send_letter(request_id: str, body: SendLetterRequest):
                 request_id=str(rid),
                 letter_content=body.letter_content,
                 letter_type=letter_type,
+                # B49: thread the letter into the applicant's conversation
+                # and show the REAL reference in the subject
+                original_subject=(req["source_subject"]
+                                  if req["received_via"] == "email" else None),
+                display_id=req["display_id"],
             )
             if sent:
                 logger.info("Letter sent via dashboard: to=%s, request=%s%s", to_email, request_id, edit_note)
