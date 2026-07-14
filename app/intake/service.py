@@ -173,9 +173,8 @@ class UnifiedIngestionService:
                     company_name=company_name,
                     display_id=display_id,
                     in_reply_to=metadata.get("source_message_id"),
-                    # B47: only the email channel has an applicant subject to continue
-                    original_subject=(metadata.get("source_subject")
-                                      if source_channel == "email" else None),
+                    original_subject=self.email_sender.subject_for_reply(
+                        metadata.get("source_subject"), source_channel),
                 )
             )
             logger.info("Acknowledgment email queued for %s (request %s)", sender_email, request_id)
@@ -197,6 +196,54 @@ class UnifiedIngestionService:
             storage_path=storage_path,
             display_id=display_id,
         )
+
+    async def rescue(self, request_id: str) -> dict:
+        """
+        D4 rescue hatch: operator says "not junk — process it."
+
+        Does everything the junk short-circuit skipped during original intake:
+        state transition + audit, the acknowledgment email (the applicant must
+        get their reference BEFORE any completeness request or decision
+        letter), then the pipeline with classification skipped — the human's
+        judgment beats the classifier's.
+
+        Raises LookupError (unknown id) / ValueError (not in junk state).
+        """
+        req = await self.db.get_request(request_id)
+        if not req:
+            raise LookupError("Request not found")
+        if req.get("state") != "junk":
+            raise ValueError(f"Request is not junk (state={req.get('state')})")
+
+        await self.db.update_state(request_id, "received", actor="operator")
+        await self.db.audit_log(request_id, "junk_rescued", old_state="junk",
+                                new_state="received", actor="operator",
+                                details={"note": "operator override: not junk -- process"})
+
+        sender_email = req.get("source_email") or ""
+        channel = req.get("received_via")
+        if self.email_sender and sender_email and channel in ("email", "web_form"):
+            asyncio.create_task(
+                self.email_sender.send_acknowledgment(
+                    to_email=sender_email,
+                    request_id=request_id,
+                    company_name=self._company_name(),
+                    display_id=req.get("display_id"),
+                    # threading headers resolve from email_log inside the sender
+                    original_subject=self.email_sender.subject_for_reply(
+                        req.get("source_subject"), channel),
+                )
+            )
+            logger.info("Rescue acknowledgment queued for %s (request %s)",
+                        sender_email, request_id)
+
+        if self.pipeline_executor:
+            asyncio.create_task(
+                self._execute_pipeline(request_id, skip_classification=True)
+            )
+
+        return {"status": "rescued", "request_id": request_id,
+                "display_id": req.get("display_id"), "state": "received"}
 
     async def ingest_email_with_attachments(
         self,
@@ -572,8 +619,8 @@ class UnifiedIngestionService:
                                 display_id=req.get("display_id"),
                                 company_name=self._company_name(),
                                 completion_token=completion_token,
-                                original_subject=(req.get("source_subject")
-                                                  if req.get("received_via") == "email" else None),
+                                original_subject=self.email_sender.subject_for_reply(
+                                    req.get("source_subject"), req.get("received_via")),
                             )
                         )
                         logger.info("[%s] Completeness request queued for %s (missing: %s)",
@@ -752,8 +799,8 @@ class UnifiedIngestionService:
                             display_id=req.get("display_id"),
                             company_name=self._company_name(),
                             completion_token=completion_token,
-                            original_subject=(req.get("source_subject")
-                                              if req.get("received_via") == "email" else None),
+                            original_subject=self.email_sender.subject_for_reply(
+                                req.get("source_subject"), req.get("received_via")),
                         )
                     )
                     logger.info(
@@ -798,8 +845,8 @@ class UnifiedIngestionService:
                         missing_fields=quality.missing_critical,
                         display_id=req.get("display_id"),
                         company_name=self._company_name(),
-                        original_subject=(req.get("source_subject")
-                                          if req.get("received_via") == "email" else None),
+                        original_subject=self.email_sender.subject_for_reply(
+                            req.get("source_subject"), req.get("received_via")),
                     )
                 )
                 logger.info(
@@ -832,8 +879,8 @@ class UnifiedIngestionService:
                             request_id=request_id,
                             letter_content=pipeline_result.completion.letter_content,
                             letter_type=pipeline_result.completion.letter_type,
-                            original_subject=(req.get("source_subject")
-                                              if req.get("received_via") == "email" else None),
+                            original_subject=self.email_sender.subject_for_reply(
+                                req.get("source_subject"), req.get("received_via")),
                             display_id=req.get("display_id"),
                         )
                     )

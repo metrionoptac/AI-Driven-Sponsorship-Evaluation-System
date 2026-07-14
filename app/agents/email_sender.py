@@ -98,6 +98,15 @@ class EmailSender:
         self.enabled = enabled
         self.db = db
 
+    @staticmethod
+    def subject_for_reply(source_subject: str | None, received_via: str | None) -> str | None:
+        """
+        B47: only the email channel has an applicant subject to continue
+        (Gmail threads on subject). Single home for this rule — call sites
+        must not re-implement the ternary.
+        """
+        return source_subject if received_via == "email" else None
+
     @classmethod
     def from_config(cls, config, db=None) -> "EmailSender":
         """Create from AppConfig.smtp"""
@@ -346,9 +355,11 @@ class EmailSender:
                 try:
                     await self.db.log_email(
                         direction="outbound", mail_type=email_type,
-                        message_id=message_id, request_id=request_id,
+                        message_id=message_id, in_reply_to=in_reply_to,
+                        references=references, request_id=request_id,
                         recipient=to_email, subject=subject,
                         state="send_failed", error=str(e),
+                        body_text=body,  # operator must see WHAT failed to resend it
                     )
                 except Exception:
                     pass

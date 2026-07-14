@@ -529,8 +529,9 @@ class PipelineExecutor:
                     request_id=request_id,
                     letter_content=completion.letter_content,
                     letter_type=letter_type,
-                    original_subject=(req_row.get("source_subject")
-                                      if req_row and req_row.get("received_via") == "email" else None),
+                    original_subject=self._email_sender.subject_for_reply(
+                        req_row.get("source_subject") if req_row else None,
+                        req_row.get("received_via") if req_row else None),
                     display_id=req_row.get("display_id") if req_row else None,
                 )
             )

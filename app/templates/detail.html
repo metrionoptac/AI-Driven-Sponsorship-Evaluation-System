@@ -23,7 +23,7 @@
                 <div class="text-right">
                     <div class="flex items-center gap-3 justify-end">
                         <!-- D5: reopen the conversation when collapsed -->
-                        <button x-show="!convoOpen" @click="convoOpen = true"
+                        <button x-show="!convoOpen" @click="convoOpen = true; loadThread()"
                                 class="relative inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-primary-500 text-primary-600 bg-primary-50 hover:bg-primary-100 text-sm font-bold rounded-full transition">
                             Communication History
                             <span x-show="unreadCount > 0"
@@ -355,12 +355,16 @@
 {% block scripts %}
 <script>
 function detailPage() {
+    // D13: per-operator prefs from Configuration — parsed ONCE; the config
+    // <select> stores strings, so coerce events back to a real boolean here
+    const prefs = Object.assign({panel: 'visible', events: true, order: 'oldest'},
+                                JSON.parse(localStorage.getItem('convo_prefs') || '{}'));
+    prefs.events = prefs.events !== false && prefs.events !== 'false';
     return {
         req: null, loading: true, showLetter: false,
-        // D5: conversation thread state · D13: per-operator prefs from Configuration
-        convoPrefs: Object.assign({panel: 'visible', events: true, order: 'oldest'},
-                                  JSON.parse(localStorage.getItem('convo_prefs') || '{}')),
-        convoOpen: (JSON.parse(localStorage.getItem('convo_prefs') || '{}').panel || 'visible') === 'visible',
+        // D5: conversation thread state
+        convoPrefs: prefs,
+        convoOpen: prefs.panel === 'visible',
         convoFull: false, thread: [], unreadCount: 0,
         composerText: '', sendingMessage: false,
         async sendMessage() {
@@ -383,8 +387,8 @@ function detailPage() {
             this.sendingMessage = false;
         },
         displayThread() {
-            let items = this.convoPrefs.events === false || this.convoPrefs.events === 'false'
-                ? this.thread.filter(it => it.kind !== 'event') : this.thread;
+            let items = this.convoPrefs.events
+                ? this.thread : this.thread.filter(it => it.kind !== 'event');
             return this.convoPrefs.order === 'newest' ? [...items].reverse() : items;
         },
         // D7: workspace state
@@ -431,12 +435,14 @@ function detailPage() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         decision: this.reviewDecision,
-                        decided_amount: this.reviewDecision === 'REJECTED' ? 0 : parseFloat(this.reviewAmount) || null,
+                        // blank -> null (server decides the fallback); an explicit 0 stays 0
+                        decided_amount: this.reviewDecision === 'REJECTED' ? 0
+                            : (Number.isFinite(parseFloat(this.reviewAmount)) ? parseFloat(this.reviewAmount) : null),
                         notes: this.reviewNotes || null,
                     }),
                 });
                 if (r.ok) { this.reviewDecision = null; this.reviewNotes = ''; await this.load(); await this.loadThread(); }
-                else alert('Failed to submit decision');
+                else alert('Failed to submit decision: ' + (((await r.json()).detail) || r.status));
             } catch (e) { alert('Error: ' + e); }
             this.reviewSubmitting = false;
         },
@@ -451,12 +457,15 @@ function detailPage() {
         },
         async loadThread() {
             const id = window.location.pathname.split('/').pop();
+            // D10: only an operator actually LOOKING at the thread marks it
+            // read — background polls and collapsed panels must not
+            const reading = this.convoOpen && !document.hidden;
             try {
-                const r = await fetch('/api/dashboard/request/' + id + '/thread');
+                const r = await fetch('/api/dashboard/request/' + id + '/thread?mark_seen=' + reading);
                 if (r.ok) {
                     const data = await r.json();
                     this.thread = data.items || [];
-                    this.unreadCount = 0;  // opening the thread marks it read
+                    this.unreadCount = data.unread || 0;
                     // D13 'auto': open the panel when new info demands attention
                     if (this.convoPrefs.panel === 'auto' && !this.convoOpen && this.newInfoAfterEvaluation) {
                         this.convoOpen = true;

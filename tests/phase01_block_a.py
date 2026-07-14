@@ -57,7 +57,9 @@ def make_service(db, storage, dedup_enabled=True, with_pipeline=True):
     )
     svc.pipeline_calls = []
 
-    async def _spy(request_id):
+    async def _spy(request_id, **kwargs):
+        # kwargs absorbs dispatch options (e.g. skip_classification) so the
+        # spy survives signature growth on the real _execute_pipeline
         svc.pipeline_calls.append(request_id)
 
     svc._execute_pipeline = _spy

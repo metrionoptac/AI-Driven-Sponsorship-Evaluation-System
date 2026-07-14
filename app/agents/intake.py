@@ -26,9 +26,7 @@ from app.document.pdf_extractor import extract_pdf
 from app.document.image_processor import ocr_image
 from app.document.email_body_processor import parse_eml, parse_msg, html_to_text
 from app.document.docx_parser import extract_docx
-from app.document.email_classifier import (
-    classify_email, classify_email_with_llm, ClassificationResult, EmailCategory,
-)
+from app.document.email_classifier import ClassificationResult, classify_two_stage
 from app.document.text_combiner import combine_texts, TextSource, CombinedText
 from app.document.structured_extraction import extract_structured_data
 from app.document.quality_gate import assess_quality, QualityResult
@@ -310,12 +308,16 @@ class IntakeAgent:
         references: str | None,
         attachments: list[dict],
     ) -> ClassificationResult:
-        """Run email classification (rule-based first, then LLM if uncertain)."""
+        """Run email classification via the shared two-stage helper (fail-open)."""
         sender = email_metadata.get("sender", "")
         subject = email_metadata.get("subject", "")
 
-        # Stage 1: Rule-based
-        classification = classify_email(
+        client = None
+        if self.config.llm.anthropic_api_key:
+            from anthropic import AsyncAnthropic
+            client = AsyncAnthropic(api_key=self.config.llm.anthropic_api_key)
+
+        classification = await classify_two_stage(
             sender=sender,
             subject=subject,
             body_text=email_body,
@@ -323,30 +325,15 @@ class IntakeAgent:
             in_reply_to=in_reply_to,
             references=references,
             attachments=attachments,
+            anthropic_client=client,
+            model=self.config.llm.haiku_model,
         )
 
         logger.info(
-            "Email classification (rule-based): category=%s, confidence=%.2f, reason=%s",
-            classification.category.value, classification.confidence, classification.reason,
+            "Email classification (%s): category=%s, confidence=%.2f, reason=%s",
+            classification.method, classification.category.value,
+            classification.confidence, classification.reason,
         )
-
-        # Stage 2: LLM if rule-based is uncertain
-        if classification.category == EmailCategory.UNKNOWN and self.config.llm.anthropic_api_key:
-            from anthropic import AsyncAnthropic
-            client = AsyncAnthropic(api_key=self.config.llm.anthropic_api_key)
-
-            classification = await classify_email_with_llm(
-                sender=sender,
-                subject=subject,
-                body_text=email_body,
-                anthropic_client=client,
-                model=self.config.llm.haiku_model,
-            )
-
-            logger.info(
-                "Email classification (LLM): category=%s, confidence=%.2f, reason=%s",
-                classification.category.value, classification.confidence, classification.reason,
-            )
 
         return classification
 

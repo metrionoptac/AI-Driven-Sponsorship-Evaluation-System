@@ -9,7 +9,7 @@ Two-stage approach:
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -96,6 +96,9 @@ def classify_email(
     If uncertain, returns UNKNOWN for LLM classification (Stage 2).
     """
     attachments = attachments or []
+    # RFC 5322 header names are case-insensitive; a lowercase "auto-submitted"
+    # must match the same rule as "Auto-Submitted"
+    headers = {k.lower(): v for k, v in (headers or {}).items()}
 
     # --- 1A: Header-based auto-reply detection ---
     result = _check_auto_reply_headers(headers)
@@ -136,7 +139,7 @@ def classify_email(
 def _check_auto_reply_headers(headers: dict) -> ClassificationResult | None:
     """Check email headers for auto-reply indicators."""
     for header_name, expected_values in AUTO_REPLY_HEADERS.items():
-        value = headers.get(header_name, "").lower()
+        value = headers.get(header_name.lower(), "").lower()
         if not value:
             continue
 
@@ -234,7 +237,7 @@ def _check_bounce(sender: str, subject: str) -> ClassificationResult | None:
 
 def _check_newsletter(headers: dict) -> ClassificationResult | None:
     """Detect newsletters and bulk emails."""
-    if headers.get("List-Unsubscribe") or headers.get("List-Id"):
+    if headers.get("list-unsubscribe") or headers.get("list-id"):
         return ClassificationResult(
             category=EmailCategory.NEWSLETTER,
             confidence=0.90,
@@ -303,6 +306,65 @@ def _check_sponsorship_keywords(
         )
 
     return None
+
+
+async def classify_two_stage(
+    sender: str,
+    subject: str,
+    body_text: str,
+    headers: dict,
+    *,
+    in_reply_to: str | None = None,
+    references: str | None = None,
+    attachments: list[dict] | None = None,
+    anthropic_client=None,
+    model: str = "claude-haiku-4-5-20251001",
+    ignore_thread_headers: bool = False,
+) -> ClassificationResult:
+    """
+    The full two-stage classification: rules first (free), Haiku only when the
+    rules are unsure. Single implementation shared by the email watcher's junk
+    gate and IntakeAgent step 1 — do not duplicate the stage wiring elsewhere.
+
+    ignore_thread_headers: set when reply routing already judged this mail
+    "not one of our threads" — the THREAD_REPLY rule must not re-junk it
+    (B41 protection).
+
+    Fail-open guarantee: an email this function cannot confidently classify
+    (rules unsure + LLM unavailable/failed) returns should_process=True.
+    Losing a genuine applicant silently is worse than processing junk.
+    """
+    if ignore_thread_headers:
+        in_reply_to = None
+        references = None
+
+    result = classify_email(
+        sender=sender,
+        subject=subject,
+        body_text=body_text,
+        headers=headers,
+        in_reply_to=in_reply_to,
+        references=references,
+        attachments=attachments,
+    )
+
+    if result.category == EmailCategory.UNKNOWN and anthropic_client is not None:
+        result = await classify_email_with_llm(
+            sender=sender,
+            subject=subject,
+            body_text=body_text,
+            anthropic_client=anthropic_client,
+            model=model,
+        )
+
+    if result.category == EmailCategory.UNKNOWN and not result.should_process:
+        result = replace(
+            result,
+            should_process=True,
+            reason=result.reason + " — uncertain, failing open (never silently junk)",
+        )
+
+    return result
 
 
 async def classify_email_with_llm(

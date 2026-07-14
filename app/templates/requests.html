@@ -478,9 +478,11 @@ function requestsPage() {
                 this.tabs[0].count = stats.total || 0;
                 this.tabs[1].count = activeStates.reduce((s, k) => s + (bs[k] || 0), 0);
                 this.tabs[2].count = bs['human_review'] || 0;
-                // B44: rejected counted by DECISION; D3: junk by state
+                // B44: rejected counted by latest DECISION per request, plus
+                // legacy pre-B44 rows that only have state='rejected' (those
+                // never got a decisions row, so no double count); D3: junk by state
                 this.tabs[3].count = bs['completed'] || 0;
-                this.tabs[4].count = stats.decisions?.REJECTED?.count || 0;
+                this.tabs[4].count = (stats.decisions?.REJECTED?.count || 0) + (bs['rejected'] || 0);
                 this.tabs[5].count = bs['junk'] || 0;
             } catch(e) { console.error('Count load failed', e); }
         },

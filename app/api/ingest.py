@@ -253,11 +253,11 @@ async def receive_webhook(payload: WebhookPayload):
 @router.post("/rescue/{request_id}")
 async def rescue_junk_request(request_id: str):
     """
-    Operator override: "Not junk — process it." Moves a junk-classified
-    request back into the pipeline. The human's judgment beats the
-    classifier's, so classification is skipped on the re-run.
+    Operator override: "Not junk — process it." Delegates to the service,
+    which restores state, sends the ack the junk short-circuit skipped, and
+    re-runs the pipeline without classification (human judgment beats the
+    classifier's).
     """
-    import asyncio
     import uuid as _uuid
 
     service = _get_service()
@@ -268,20 +268,12 @@ async def rescue_junk_request(request_id: str):
     except ValueError:
         raise HTTPException(400, "Invalid request ID")
 
-    req = await service.db.get_request(rid)
-    if not req:
+    try:
+        return await service.rescue(rid)
+    except LookupError:
         raise HTTPException(404, "Request not found")
-    if req.get("state") != "junk":
-        raise HTTPException(409, f"Request is not junk (state={req.get('state')})")
-
-    await service.db.update_state(rid, "received", actor="operator")
-    await service.db.audit_log(rid, "junk_rescued", old_state="junk",
-                               new_state="received", actor="operator",
-                               details={"note": "operator override: not junk -- process"})
-    # Human vouched for it -> classifier does NOT get a second veto
-    asyncio.create_task(service._execute_pipeline(rid, skip_classification=True))
-    return {"status": "rescued", "request_id": rid,
-            "display_id": req.get("display_id"), "state": "received"}
+    except ValueError as e:
+        raise HTTPException(409, str(e))
 
 
 # ----------------------------------------------------------------

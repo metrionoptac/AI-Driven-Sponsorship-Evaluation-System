@@ -66,9 +66,18 @@ async def get_stats():
             "SELECT state, COUNT(*) as count FROM requests GROUP BY state"
         )
 
+        # Latest decision per request (a re-decided request counts once,
+        # under its CURRENT decision) -- keeps tab badges in sync with the
+        # decision-filtered list, which also dedups to the newest row.
         decisions = await conn.fetch(
-            "SELECT decision, COUNT(*) as count, COALESCE(SUM(decided_amount), 0) as total_amount "
-            "FROM decisions WHERE decision NOT IN ('PENDING_REVIEW', 'DEFERRED') GROUP BY decision"
+            """SELECT decision, COUNT(*) as count,
+                      COALESCE(SUM(decided_amount), 0) as total_amount
+               FROM (
+                   SELECT DISTINCT ON (request_id) decision, decided_amount
+                   FROM decisions
+                   WHERE decision NOT IN ('PENDING_REVIEW', 'DEFERRED')
+                   ORDER BY request_id, decided_at DESC
+               ) latest GROUP BY decision"""
         )
 
         strategy = await conn.fetchrow(
@@ -228,7 +237,12 @@ async def list_requests(
             idx += 1
 
     if decision:
-        conditions.append(f"d.decision = ${idx}")
+        if decision == "REJECTED":
+            # Legacy rows (pre-B44 auto-rejects) have state='rejected' but no
+            # decisions row -- the Rejected tab must still reach them
+            conditions.append(f"(d.decision = ${idx} OR (d.decision IS NULL AND r.state = 'rejected'))")
+        else:
+            conditions.append(f"d.decision = ${idx}")
         params.append(decision)
         idx += 1
 
@@ -416,9 +430,20 @@ async def submit_review(request_id: str, action: ReviewAction):
     # poisoning budget/reporting stats)
     if decision == "REJECTED":
         amount = 0
-    elif amount is None or amount == 0:
-        # If no amount provided by human, prefer AI recommended amount, then requested
-        amount = (rec["recommended_amount"] if rec else 0) or extracted_data.get("requested_amount") or 0
+    elif amount is None:
+        # Blank amount (an explicit 0 is respected, not treated as blank):
+        # fall back to the AI recommendation first. Without one, only a FULL
+        # approval may default to the requested amount -- backfilling a
+        # PARTIAL with 100% of the ask is a contradiction, so demand a number.
+        rec_amount = rec["recommended_amount"] if rec else None
+        if rec_amount:
+            amount = rec_amount
+        elif decision == "PARTIAL":
+            raise HTTPException(
+                422, "Partial approval needs an explicit amount "
+                     "(no AI recommendation available to fall back on)")
+        else:
+            amount = extracted_data.get("requested_amount") or 0
 
     conditions = []
     if rec and rec["conditions"]:
@@ -578,8 +603,8 @@ async def send_letter(request_id: str, body: SendLetterRequest):
                 letter_type=letter_type,
                 # B49: thread the letter into the applicant's conversation
                 # and show the REAL reference in the subject
-                original_subject=(req["source_subject"]
-                                  if req["received_via"] == "email" else None),
+                original_subject=EmailSender.subject_for_reply(
+                    req["source_subject"], req["received_via"]),
                 display_id=req["display_id"],
             )
             if sent:
@@ -954,7 +979,7 @@ async def send_operator_message(request_id: str, body: OperatorMessage):
         request_id=str(rid),
         message=text,
         display_id=req["display_id"],
-        original_subject=(req["source_subject"] if req["received_via"] == "email" else None),
+        original_subject=EmailSender.subject_for_reply(req["source_subject"], req["received_via"]),
     )
     if not sent:
         raise HTTPException(502, "Send failed — see server log")
@@ -1061,12 +1086,15 @@ async def download_attachment(request_id: str, p: str):
 # ----------------------------------------------------------------
 
 @router.get("/request/{request_id}/thread")
-async def get_request_thread(request_id: str):
+async def get_request_thread(request_id: str, mark_seen: bool = False):
     """
     The full conversation of a request, time-ordered:
     mails (email_log, in/out with bodies), a synthesized start card for
     web-form/operator channels, and system events (form completion, rescue).
-    Opening the thread marks inbound mail as seen (unread-flag reset).
+
+    mark_seen: pass true only when the operator actually has the thread on
+    screen — background polls must NOT wipe the unread flags (D10). The
+    response carries `unread` (inbound mails not yet seen) for badges.
     """
     db = _get_db()
     try:
@@ -1145,14 +1173,20 @@ async def get_request_thread(request_id: str):
 
     items.sort(key=lambda x: x["time"])
 
-    # Opening the thread = reading it
-    await db.mark_thread_seen(str(rid))
+    unread = sum(
+        1 for m in mails
+        if m["direction"] == "inbound" and not m["operator_seen"]
+    )
+    if mark_seen and unread:
+        await db.mark_thread_seen(str(rid))
+        unread = 0
 
     return _serialize({
         "request_id": str(rid),
         "display_id": req["display_id"],
         "channel": req["received_via"],
         "state": req["state"],
+        "unread": unread,
         "items": items,
     })
 

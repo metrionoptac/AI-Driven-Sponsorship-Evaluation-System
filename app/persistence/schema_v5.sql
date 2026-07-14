@@ -35,3 +35,7 @@ ALTER TABLE requests ADD COLUMN IF NOT EXISTS delivery_failed BOOLEAN DEFAULT FA
 -- Workspace step 2 (thread view): message bodies + operator read-marker
 ALTER TABLE email_log ADD COLUMN IF NOT EXISTS body_text TEXT;
 ALTER TABLE email_log ADD COLUMN IF NOT EXISTS operator_seen BOOLEAN DEFAULT FALSE;
+
+-- Unread-badge subquery (list view runs it per request row): partial index keeps it cheap
+CREATE INDEX IF NOT EXISTS idx_email_log_unread
+    ON email_log(request_id) WHERE direction = 'inbound' AND NOT operator_seen;

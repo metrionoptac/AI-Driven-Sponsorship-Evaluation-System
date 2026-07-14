@@ -19,9 +19,7 @@ from email.parser import BytesParser
 from aioimaplib import aioimaplib
 
 from app.config import IntakeConfig
-from app.document.email_classifier import (
-    classify_email, classify_email_with_llm, EmailCategory,
-)
+from app.document.email_classifier import classify_two_stage
 from app.intake.service import UnifiedIngestionService
 
 logger = logging.getLogger(__name__)
@@ -50,6 +48,7 @@ class EmailWatcher:
         self.llm_config = llm_config  # D1: enables Haiku stage of classify-before-ack
         self._running = False
         self._client: aioimaplib.IMAP4_SSL | None = None
+        self._llm_client = None  # lazily built AsyncAnthropic, reused across mails
 
     async def start(self):
         """
@@ -402,13 +401,30 @@ class EmailWatcher:
     # D1: classify-before-ack (junk gate at the door)
     # ----------------------------------------------------------------
 
+    def _get_llm_client(self):
+        """Lazily build ONE AsyncAnthropic client and reuse it for every mail."""
+        if (self._llm_client is None and self.llm_config
+                and getattr(self.llm_config, "anthropic_api_key", None)):
+            try:
+                from anthropic import AsyncAnthropic
+                self._llm_client = AsyncAnthropic(api_key=self.llm_config.anthropic_api_key)
+            except Exception as e:
+                logger.warning("Could not build Anthropic client for junk gate: %s", e)
+        return self._llm_client
+
     async def _classify_fresh_mail(self, parsed: dict) -> dict:
         """
         Two-stage junk gate for FRESH mail (D1/D12): rule-based first (free),
         Haiku only when rules are unsure. Returns a plain dict for the
         ingestion service: should_process / category / confidence / reason.
+
+        ignore_thread_headers: every mail reaching this point was already
+        judged "not one of our threads" by reply routing, so the classifier's
+        THREAD_REPLY rule must not re-junk it (B41 protection). And if
+        classification stays uncertain (no LLM key, LLM down), the shared
+        helper fails OPEN — uncertain mail enters the pipeline, never junk.
         """
-        classification = classify_email(
+        classification = await classify_two_stage(
             sender=parsed["from"],
             subject=parsed["subject"],
             body_text=parsed["body_text"],
@@ -416,21 +432,10 @@ class EmailWatcher:
             in_reply_to=parsed.get("in_reply_to"),
             references=parsed.get("references"),
             attachments=parsed["attachments"],
+            anthropic_client=self._get_llm_client(),
+            model=getattr(self.llm_config, "haiku_model", None) or "claude-haiku-4-5-20251001",
+            ignore_thread_headers=True,
         )
-        if (classification.category == EmailCategory.UNKNOWN
-                and self.llm_config and getattr(self.llm_config, "anthropic_api_key", None)):
-            try:
-                from anthropic import AsyncAnthropic
-                client = AsyncAnthropic(api_key=self.llm_config.anthropic_api_key)
-                classification = await classify_email_with_llm(
-                    sender=parsed["from"],
-                    subject=parsed["subject"],
-                    body_text=parsed["body_text"],
-                    anthropic_client=client,
-                    model=getattr(self.llm_config, "haiku_model", "claude-haiku-4-5-20251001"),
-                )
-            except Exception as e:
-                logger.warning("LLM classification failed (treating as unknown-junk): %s", e)
         logger.info(
             "Fresh-mail classification: category=%s, confidence=%.2f, should_process=%s (%s)",
             classification.category.value, classification.confidence,
@@ -477,41 +482,18 @@ class EmailWatcher:
             logger.info("Bounce received, no matching outbound Message-ID -- archived")
         return request_id
 
-    async def _sender_has_active_request(self, sender: str) -> bool:
-        """
-        Direct DB check: does this sender already have a request in a state
-        that expects a reply (i.e., awaiting_info, extracted, received,
-        human_review)? If yes, any incoming email from this sender is a
-        reply, not a new request.
-        """
-        handler = self.followup_handler
-        db = getattr(handler, "db", None) if handler else None
-        if not db or not sender:
-            return False
-        try:
-            async with db.acquire() as conn:
-                row = await conn.fetchval(
-                    """
-                    SELECT 1 FROM requests
-                    WHERE source_email = $1
-                      AND state IN ('received', 'extracted', 'awaiting_info', 'human_review')
-                    LIMIT 1
-                    """,
-                    sender,
-                )
-                return row is not None
-        except Exception as e:
-            logger.warning("Active-request lookup failed for %s: %s", sender, e)
-            return False
-
     @staticmethod
     def _looks_like_reply(parsed: dict) -> bool:
         """Heuristic: does this email look like a reply to our completeness request?"""
         subject = (parsed.get("subject") or "").lower()
         # Check for Re:/AW: prefix (reply indicators)
         is_reply = subject.startswith("re:") or subject.startswith("aw:")
-        # Check for our reference number in subject
-        has_ref = "sp-2026-" in subject
+        # Our reference number in subject OR body — since B47 the reply subject
+        # is "Re: <applicant subject>" (no ref), but every outbound body carries
+        # the SP ref and replies quote it, so the body check keeps this fallback
+        # alive when a mail client strips the threading headers.
+        body = (parsed.get("body_text") or "").lower()
+        has_ref = "sp-2026-" in subject or "sp-2026-" in body
         # Check for In-Reply-To header
         has_in_reply_to = bool(parsed.get("in_reply_to"))
         return is_reply or has_ref or has_in_reply_to
