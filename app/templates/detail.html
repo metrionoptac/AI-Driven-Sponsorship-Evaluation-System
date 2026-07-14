@@ -24,10 +24,10 @@
                     <div class="flex items-center gap-3 justify-end">
                         <!-- D5: reopen the conversation when collapsed -->
                         <button x-show="!convoOpen" @click="convoOpen = true; loadThread()"
-                                class="relative inline-flex items-center gap-1.5 px-3 py-1.5 border-2 border-primary-500 text-primary-600 bg-primary-50 hover:bg-primary-100 text-sm font-bold rounded-full transition">
-                            Communication History
+                                class="relative inline-flex items-center gap-1.5 px-4 py-1.5 border-[1.5px] border-primary-600 text-primary-700 bg-primary-50 hover:bg-primary-100 text-sm font-bold rounded-full transition">
+                            See conversation
                             <span x-show="unreadCount > 0"
-                                  class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] leading-5 text-center"
+                                  class="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-[18px] h-[18px] text-[10px] leading-[18px] text-center"
                                   x-text="unreadCount"></span>
                         </button>
                         <span class="badge text-base px-3 py-1" :class="stateColor(req.state)" x-text="DE.stateLabel(req.state)"></span>
@@ -302,10 +302,19 @@
                           </dl>
                           <p class="text-[10px] text-gray-400 text-right mt-1.5" x-text="formatDate(it.time)"></p>
                       </div>
+                      <!-- inbound bounce: delivery-failure notice (mailer-daemon), amber -->
+                      <div x-show="it.kind === 'mail' && it.direction === 'inbound' && isBounce(it)"
+                           class="bg-amber-50 border border-amber-300 rounded-xl p-3 mr-10 shadow-sm">
+                          <p class="text-[11px] font-bold text-amber-700 mb-1">⚠ Delivery failure — our email did not reach the applicant</p>
+                          <p class="text-[11px] text-gray-400 mb-1.5" x-show="it.subject" x-text="'“' + it.subject + '”'"></p>
+                          <p class="text-xs text-gray-700 whitespace-pre-wrap leading-relaxed"
+                             x-text="it.body || '(no details recorded)'"></p>
+                          <p class="text-[10px] text-gray-400 text-right mt-1.5" x-text="formatDate(it.time)"></p>
+                      </div>
                       <!-- inbound mail: applicant, left, white -->
-                      <div x-show="it.kind === 'mail' && it.direction === 'inbound'"
+                      <div x-show="it.kind === 'mail' && it.direction === 'inbound' && !isBounce(it)"
                            class="bg-white border border-gray-200 rounded-xl rounded-bl-sm p-3 mr-10 shadow-sm">
-                          <p class="text-[11px] font-bold text-gray-500 mb-1">← <span x-text="it.sender"></span><span class="font-normal"> · <span x-text="it.mail_type"></span></span></p>
+                          <p class="text-[11px] font-bold text-gray-500 mb-1">← <span x-text="it.sender"></span><span class="font-normal"> · <span x-text="mailTypeLabel(it.mail_type, 'inbound')"></span></span></p>
                           <p class="text-[11px] text-gray-400 mb-1.5" x-show="it.subject" x-text="'“' + it.subject + '”'"></p>
                           <p class="text-xs text-gray-800 whitespace-pre-wrap leading-relaxed"
                              x-text="it.body || '(content not recorded — mail predates thread logging)'"></p>
@@ -314,7 +323,7 @@
                       <!-- outbound mail: us, right, green chat bubble (user preference) -->
                       <div x-show="it.kind === 'mail' && it.direction === 'outbound'"
                            class="bg-green-100 border border-green-200 rounded-xl rounded-br-sm p-3 ml-10 shadow-sm">
-                          <p class="text-[11px] font-bold text-green-700 mb-1">→ System · <span x-text="it.mail_type"></span>
+                          <p class="text-[11px] font-bold text-green-700 mb-1">→ <span x-text="it.mail_type === 'operator_message' ? 'You' : 'System'"></span> · <span x-text="mailTypeLabel(it.mail_type, 'outbound')"></span>
                              <span x-show="it.send_state === 'send_failed'" class="text-red-600">· ⚠ send failed</span></p>
                           <p class="text-[11px] text-gray-400 mb-1.5" x-show="it.subject" x-text="'“' + it.subject + '”'"></p>
                           <p class="text-xs text-gray-800 whitespace-pre-wrap leading-relaxed"
@@ -472,6 +481,26 @@ function detailPage() {
                     }
                 }
             } catch (e) { console.error('Thread load failed', e); }
+        },
+        isBounce(it) {
+            const s = (it.sender || '').toLowerCase();
+            return it.mail_type === 'bounce' || s.includes('mailer-daemon')
+                || s.includes('postmaster') || s.includes('mail-daemon');
+        },
+        mailTypeLabel(type, direction) {
+            const m = {
+                unclassified: direction === 'inbound' ? 'Applicant email' : 'Message',
+                request: 'Applicant email',
+                reply: 'Applicant reply',
+                acknowledgment: 'Acknowledgment',
+                completeness_request: 'Completeness request',
+                operator_message: 'Message',
+                letter_approval: 'Decision letter · approval',
+                letter_partial: 'Decision letter · partial',
+                letter_rejection: 'Decision letter · rejection',
+                bounce: 'Delivery failure',
+            };
+            return m[type] || (type || 'message').replace(/_/g, ' ');
         },
         eventLabel(it) {
             const d = it.details || {};
